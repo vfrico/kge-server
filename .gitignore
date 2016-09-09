@@ -1,5 +1,8 @@
 .ipynb_checkpoints/
 aquimismo
+aquimismo2
+wikidatamap.bin
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

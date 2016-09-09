@@ -27,6 +27,8 @@ class Dataset():
     
     def add_element(self, element, complete_list, only_uri=False):
         "Add element to a list of the dataset."
+        
+        # An URI is a string type
         if only_uri is True and type(element) is not type(""):
             return False
         elif element is False:
@@ -41,21 +43,30 @@ class Dataset():
             return len(complete_list)-1
         
 
-    def extract_entity(self,entity):
+    def extract_entity(self, entity, filters={'wdt-entity':True,'wdt-reference':False,'wdt-statement':True,'wdt-prop':True,'literal':False,'bnode':False}):
         "Check the type of the entity and returns an URI or entity item"
         if entity["type"] == "uri":
             # Not all 'uri' values are valid entities
             uri = entity["value"].split('/')
-            
-            if uri[2] == 'www.wikidata.org' and (uri[3] == "reference" or uri[4] == "statement"):
+            if uri[2] == 'www.wikidata.org' and (uri[3] == "reference" and filters['wdt-reference']):
+                return entity["value"]
+            elif uri[2] == 'www.wikidata.org' and (uri[4] == "statement" and filters['wdt-statement']):
+                return entity["value"]
+            elif uri[2] == 'www.wikidata.org' and (uri[3] == "entity" and filters['wdt-entity']):
+                return entity["value"]
+            elif uri[2] == 'www.wikidata.org' and (uri[3] == "prop" and filters['wdt-prop']):
+                return entity["value"]
+            elif uri[2] == 'www.wikidata.org':
                 return False
             else:
                 return entity["value"]
             
-        elif entity["type"] == "literal":
+        elif entity["type"] == "literal" and filters['literal']:
             return entity
-        elif entity["type"] == "bnode":
+        elif entity["type"] == "bnode" and filters['literal']:
             return entity
+        else:
+            return False
 
     def load_dataset_from_json(self, json, only_uri=False):
         "Receives a dict with three components ('object', 'subject' and 'predicate') and loads it into the dataset object"
@@ -74,7 +85,7 @@ class Dataset():
         headers = {"Accept" : "application/json"}
         response = requests.get(self.WIKIDATA_ENDPOINT + query, headers=headers)
         jsonlist = response.json()["results"]["bindings"]
-        
+        #print(json.dumps(jsonlist, indent=4, sort_keys=True))
         self.load_dataset_from_json(jsonlist, only_uri=only_uri)
     
     def save_to_binary(self, filepath):
