@@ -194,4 +194,7 @@ WHERE {{ ?wikidata wdt:P950 ?bne .
         response = requests.get(self.WIKIDATA_ENDPOINT + query, headers=headers)
         # if response.status_code is not 200:
         #     raise Exception("Error on endpoint. HTTP status code: "+str(response.status_code))
-        return response.status_code, response.json()["results"]["bindings"]
+        if response.status_code is not 200:
+            return response.status_code, response.text
+        else:
+            return response.status_code, response.json()["results"]["bindings"]
