@@ -90,10 +90,11 @@ class Dataset():
         "Receives a Sparql query and fills dataset object with the response"
         # headers = {"Accept" : "application/json"}
         # response = requests.get(self.WIKIDATA_ENDPOINT + query, headers=headers)
-        # if response.status_code is not 200:
-        #     raise Exception("Error on endpoint. HTTP status code: "+str(response.status_code))
-
-        jsonlist = self.execute_query(query)
+        result_query = self.execute_query(query)
+        if result_query[0] is not 200:
+            raise Exception("Error on endpoint. HTTP status code: "+str(response.status_code))
+        else:
+            jsonlist = result_query[1]
         # print(json.dumps(jsonlist, indent=4, sort_keys=True))
         self.load_dataset_from_json(jsonlist, only_uri=only_uri)
 
