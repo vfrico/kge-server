@@ -140,6 +140,23 @@ WHERE {{ ?wikidata wdt:P950 ?bne .
 
         return query
 
+    def load_entire_dataset(self, levels, where=""):
+        # Generate select query to get entities count
+        lines = []
+        for level in self.build_levels(levels):
+            lines.append("?"+level[0]+" ?"+level[1]+" ?"+level[2])
+        count_query = """PREFIX wikibase: <http://wikiba.se/ontology>
+        SELECT (count(distinct ?predicate) as ?count)
+        WHERE {{ ?wikidata wdt:P950 ?bne .
+        {0}
+        }} """.format(" . \n".join(lines))
+        code, count_json = self.execute_query(count_query)
+        #print(code, count_json)
+        # Ahora da fallo el endpoint de wikidata, pero...
+        tuples_number = int(count_json)
+
+
+
     def save_to_binary(self, filepath):
         "Saves the dataset object on the disk"
         subs2 = self.train_split()
