@@ -71,3 +71,51 @@ WHERE {{ ?wikidata wdt:P950 ?bne .
                 print("Server has stated an error: {}. Exiting.".format(json1))
                 break
         return all_json
+
+
+    def entidades_comun_bne_json(self, where="", batch=10000):
+        # Primero obtenemos el número de entidades totales:
+        query = """PREFIX wikibase: <http://wikiba.se/ontology>
+SELECT (count(distinct ?wikidata) as ?count)
+WHERE {{
+?wikidata wdt:P950 ?bne .
+{0}
+}} """.format(where)
+        query1 = """PREFIX wikibase: <http://wikiba.se/ontology>
+SELECT ?wikidata ?bne
+WHERE {{
+?wikidata wdt:P950 ?bne .
+{0}
+}} LIMIT {1} OFFSET {2}""" #format(where, limit, offset)
+
+        headers = {"Accept" : "application/json"}
+        response = requests.get(self.WD_ENDPOINT + query, headers=headers)
+        if response.status_code is not 200:
+            return False, "Error occurred on http request. Code"+str(response.status_code)
+        json_data = response.json()['results']['bindings']
+        total_number = int(json_data[0]['count']['value'])
+
+        # Hacer sucesivas requests para obtener el total de elementos
+        total_json = []
+        limit = batch
+        repeats = int(total_number/batch)+1
+        offset = 0
+        for i in range(0, repeats):
+            if total_number > batch:
+                limit = batch
+            else:
+                limit = total_number
+
+            response = requests.get(self.WD_ENDPOINT + query1.format(where, limit, offset), headers=headers)
+            if response.status_code is not 200:
+                return False, "Error occurred on http request. Code"+str(response.status_code)
+            json_data = response.json()['results']['bindings']
+            total_json = total_json + json_data
+            offset += limit
+            total_number -= limit
+        return True, total_json
+
+    def get_entidades_comun_bne(self, where="", batch=10000):
+        key, value = ("wikidata", "bne")
+        status, json_data = self.entidades_comun_bne_json(where=where, batch=batch)
+        return [(item[key]['value'], item[value]['value']) for item in json_data]
