@@ -88,12 +88,12 @@ class Dataset():
 
     def load_dataset_from_query(self, query, only_uri=False):
         "Receives a Sparql query and fills dataset object with the response"
-        headers = {"Accept" : "application/json"}
-        response = requests.get(self.WIKIDATA_ENDPOINT + query, headers=headers)
-        if response.status_code is not 200:
-            raise Exception("Error on endpoint. HTTP status code: "+str(response.status_code))
+        # headers = {"Accept" : "application/json"}
+        # response = requests.get(self.WIKIDATA_ENDPOINT + query, headers=headers)
+        # if response.status_code is not 200:
+        #     raise Exception("Error on endpoint. HTTP status code: "+str(response.status_code))
 
-        jsonlist = response.json()["results"]["bindings"]
+        jsonlist = self.execute_query(query)
         # print(json.dumps(jsonlist, indent=4, sort_keys=True))
         self.load_dataset_from_json(jsonlist, only_uri=only_uri)
 
@@ -151,3 +151,10 @@ class Dataset():
         x_test = [tuple(x) for x in data[-int(train_samples/2):]]
 
         return {"train_subs":x_train, "valid_subs":x_val, "test_subs":x_test}
+
+    def execute_query(self, query, headers={"Accept" : "application/json"}):
+        "Returns a tuple of status code and json generated"
+        response = requests.get(self.WIKIDATA_ENDPOINT + query, headers=headers)
+        # if response.status_code is not 200:
+        #     raise Exception("Error on endpoint. HTTP status code: "+str(response.status_code))
+        return response.status_code, response.json()["results"]["bindings"]
