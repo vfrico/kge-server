@@ -12,8 +12,23 @@ class Dataset():
     relations_dict = {}
     subs = []
 
+    def __init__(new_endpoint=None):
+        """Creates the dataset class
+
+        The default endpoint is the original from wikidata.
+        :param new_endpoint: The URI of the SPARQL endpoint
+        """
+        if new_endpoint is not None:
+            WIKIDATA_ENDPOINT = new_endpoint
+
     def show(self, verbose=False):
-        "Show all elements of the dataset "
+        """Show all elements of the dataset
+
+        By default prints only one line with the number of entities, relations
+        and triplets. If verbose, prints every list. Use wisely
+
+        :param verbose: bool -- If true prints every item of all lists
+        """
         print("%d entities, %d relations, %d tripletas" %
               (len(self.entities), len(self.relations), len(self.subs)))
         if verbose is True:
@@ -29,7 +44,14 @@ class Dataset():
 
 
     def add_element(self, element, complete_list, complete_list_dict, only_uri=False):
-        "Add element to a list of the dataset."
+        """Add element to a list of the dataset. Avoids duplicate elements.
+
+        :param element: The element that will be added to list
+        :param complete_list: The list in which will be added
+        :param complete_list_dict: The dict which represents the list.
+        :param only_uri: bool -- Allow load objects distincts than URI's
+        :return: int -- The id on the list of the added element
+        """
 
         # An URI is a string type
         if only_uri is True and type(element) is not type(""):
@@ -50,7 +72,23 @@ class Dataset():
 
 
     def extract_entity(self, entity, filters={'wdt-entity':True,'wdt-reference':False,'wdt-statement':True,'wdt-prop':True,'literal':False,'bnode':False}):
-        "Check the type of the entity and returns an URI or entity item"
+        """Given an entity, returns the valid representation, ready to be saved
+
+        The filter argument allows to avoid adding elements into lists that
+        will not be used. It is a dictionary with the shape: {'filter': bool}.
+        The valid filters (and default) are:
+            *wdt-entity* - True
+            *wdt-reference* - False
+            *wdt-statement* - True
+            *wdt-prop* - True
+            *literal* - False
+            *bnode* - False
+
+        :param entity: The entity to be analyzed
+        :param filters: A dictionary to allow entities to pass filter or not
+        :return: entity or False
+        """
+
         if entity["type"] == "uri":
             # Not all 'uri' values are valid entities
             uri = entity["value"].split('/')
@@ -75,7 +113,15 @@ class Dataset():
             return False
 
     def load_dataset_from_json(self, json, only_uri=False):
-        "Receives a dict with three components ('object', 'subject' and 'predicate') and loads it into the dataset object"
+        """Loads the dataset object with a JSON
+
+        The JSON structure required is:
+        {'object': {}, 'subject': {}, 'predicate': {}}
+
+        :param json: A list of dictionary parsed from JSON
+        :param only_uri: bool -- Allow load objects distincts than URI's
+        """
+
         for triplet in json:
             id_obj = self.add_element(self.extract_entity(triplet["object"]), self.entities, self.entities_dict, only_uri=only_uri)
             id_subj = self.add_element(self.extract_entity(triplet["subject"]), self.entities, self.entities_dict, only_uri=only_uri)
@@ -87,7 +133,15 @@ class Dataset():
                 self.subs.append((id_obj, id_subj, id_pred))
 
     def load_dataset_from_query(self, query, only_uri=False):
-        "Receives a Sparql query and fills dataset object with the response"
+        """Receives a Sparql query and fills dataset object with the response
+
+        The method will execute the query itself and will call to other method
+        to fill in the dataset object
+
+        :param query: A valid SPARQL query
+        :param only_uri: bool -- Allow load objects distincts than URI's
+        """
+
         # headers = {"Accept" : "application/json"}
         # response = requests.get(self.WIKIDATA_ENDPOINT + query, headers=headers)
         result_query = self.execute_query(query)
@@ -99,13 +153,25 @@ class Dataset():
         self.load_dataset_from_json(jsonlist, only_uri=only_uri)
 
     def load_dataset_from_nlevels(self, nlevels, extra_params="", only_uri=False):
-        "Builds a nlevels query, executes, and loads data on object"
+        """Builds a nlevels query, executes, and loads data on object
+
+        :deprecated:
+        :param nlevels: Deep of the search on wikidata graph
+        :param extra_params: Extra SPARQL instructions for the query
+        :param only_uri: bool -- Allow load objects distincts than URI's
+        """
+
         query = self.build_n_levels_query(nlevels)+" "+extra_params
         print(query)
         return self.load_dataset_from_query(query, only_uri=only_uri)
 
     def build_levels(self, n_levels):
-        "This function generates a list, needed on `build_n_levels_query`"
+        """Generates a simple *chain* of triplets for the desired levels
+
+        :param n_levels: Deep of the search on wikidata graph
+        :return: list -- A list of chained triplets
+        """
+
         ob1 = "wikidata"
         pre = "predicate"
         ob2 = "object"
@@ -127,7 +193,12 @@ class Dataset():
         return tripletas
 
     def build_n_levels_query(self, n_levels=3):
-        "Given a number of levels, build a sparql query"
+        """Builds a CONSTRUCT SPARQL query of the desired deep
+
+        :param n_levels: Deep of the search on wikidata graph
+        :return: string -- The desired chained query
+        """
+
         lines = []
         for level in self.build_levels(n_levels):
             lines.append("?"+level[0]+" ?"+level[1]+" ?"+level[2])
@@ -141,7 +212,15 @@ WHERE {{ ?wikidata wdt:P950 ?bne .
         return query
 
     def load_entire_dataset(self, levels, where="", batch=100000, verbose=True):
-        """This method loads the dataset by quering desired levels to Wikidata"""
+        """Loads the dataset by quering to Wikidata on the desired levels
+
+        :param levels: Deep of the search
+        :param where: Extra where statements for SPARQL query
+        :param batch: Number of elements returned each query
+        :param verbose: True for showing all steps the method do
+        :return: bool -- True if operation was successful
+        """
+
         # Generate select query to get entities count
         lines = []
         for level in self.build_levels(levels):
@@ -185,7 +264,15 @@ WHERE {{ ?wikidata wdt:P950 ?bne .
 
 
     def save_to_binary(self, filepath):
-        "Saves the dataset object on the disk"
+        """Saves the dataset object on the disk
+
+        The dataset will be saved with the required format for reading
+        from the original library, and is prepared to be trained.
+
+        :param filepath: The path of the file where should be saved
+        :return: bool -- True if operation was successful
+        """
+
         subs2 = self.train_split()
         all_dataset = {
             'entities': self.entities,
@@ -204,7 +291,12 @@ WHERE {{ ?wikidata wdt:P950 ?bne .
         return True
 
     def load_from_binary(self, filepath):
-        "Loads the dataset object from the disk"
+        """Loads the dataset object from the disk
+
+        Loads this dataset object with the binary file
+        :param filepath: The path of the binary file
+        """
+
         try:
             f = open(filepath, "rb")
         except FileNotFoundError:
@@ -220,7 +312,17 @@ WHERE {{ ?wikidata wdt:P950 ?bne .
         return True
 
     def train_split(self, ratio=0.8):
-        "Split subs into three lists: train, valid and test"
+        """Split subs into three lists: train, valid and test
+
+        The triplets should have a specific name and size to be compatible
+        with the original library. Splits the original triplets (self.subs) in
+        three different lists: *train_subs*, *valid_subs* and *test_subs*.
+        The 'ratio' param will leave that quantity for train_subs, and the
+        rest will be a half for valid and the other half for test
+
+        :param ratio: The ratio of all triplets required for *train_subs*
+        """
+
         data = np.matrix(self.subs)
         indices = np.arange(data.shape[0])
         np.random.shuffle(indices)
@@ -234,7 +336,11 @@ WHERE {{ ?wikidata wdt:P950 ?bne .
         return {"train_subs":x_train, "valid_subs":x_val, "test_subs":x_test}
 
     def execute_query(self, query, headers={"Accept" : "application/json"}):
-        "Returns a tuple of status code and json generated"
+        """Executes a SPARQL query to the endpoint
+
+        :returns: A tuple compound of (http_status, json_or_error)
+        """
+
         response = requests.get(self.WIKIDATA_ENDPOINT + query, headers=headers)
         # if response.status_code is not 200:
         #     raise Exception("Error on endpoint. HTTP status code: "+str(response.status_code))
