@@ -71,7 +71,17 @@ class Dataset():
             return id_item
 
 
-    def extract_entity(self, entity, filters={'wdt-entity':True,'wdt-reference':False,'wdt-statement':True,'wdt-prop':True,'literal':False,'bnode':False}):
+    def exist_element(self, element, complete_list_dict):
+        try:
+            # Item is on the list, return same id
+            elem_id = complete_list_dict[element]
+            return True
+
+        except (KeyError,ValueError):
+            # Item is not on the list
+            return False
+
+    def extract_entity(self, entity, filters={'wdt-entity':True,'wdt-reference':False,'wdt-statement':False,'wdt-prop':True,'literal':False,'bnode':False}):
         """Given an entity, returns the valid representation, ready to be saved
 
         The filter argument allows to avoid adding elements into lists that
@@ -103,6 +113,7 @@ class Dataset():
             elif uri[2] == 'www.wikidata.org':
                 return False
             else:
+                #Only discards certain Wikidata urls, the rest are valid
                 return entity["value"]
 
         elif entity["type"] == "literal" and filters['literal']:
@@ -210,6 +221,96 @@ WHERE {{ ?wikidata wdt:P950 ?bne .
 }} """.format(" . ".join(lines), " . \n".join(lines))
 
         return query
+
+    def load_dataset_recurrently(self, levels, verbose=True):
+        "Make one query for each element"
+        # TODO-> Primera consulta-> devuelve ~30000 objetos. Realizar ese nº de consultas contra esos objetos
+        # para encadenar todas las entidades que sean necesarias, una por una, hasta llenar el dataset.
+        # NO HACER UNA CONSULTA CONSTRUCT CON ALL-> El ENDPOINT de wikidata se satura
+        # ¿Paralelizar las requests de los objetos?
+
+        count_query = """
+            PREFIX wikibase: <http://wikiba.se/ontology>
+            SELECT (count(distinct ?wikidata) as ?count)
+            WHERE {
+                ?wikidata wdt:P950 ?bne .
+            }"""
+
+        if verbose:
+            print("The count query is: \n", count_query)
+        sts, count_json = self.execute_query(count_query)
+        if verbose:
+            print(sts, count_json)
+        entities_number = int(count_json[0]['count']['value'])
+
+        # fill a list with elements
+        first_query = """
+            PREFIX wikibase: <http://wikiba.se/ontology>
+            SELECT ?wikidata
+            WHERE {
+                ?wikidata wdt:P950 ?bne .
+            }
+            """
+        if verbose:
+            print("The first query is: \n", first_query)
+        sts, first_json = self.execute_query(first_query)
+        if verbose:
+            print(sts, len(first_json))
+        entities_number = int(count_json[0]['count']['value'])
+
+
+        new_queue = [entity['wikidata']['value'] for entity in first_json] #.split("/")[-1]
+        el_queue = []
+
+        # Loop for depth levels
+        for level in range(0,levels):
+            # Loop for every item on the queue
+            print("loop %d" % level)
+            el_queue = new_queue
+            new_queue = []
+            print (len(el_queue))
+            for element in el_queue:
+                
+                el_query = """PREFIX wikibase: <http://wikiba.se/ontology>
+                    SELECT ?predicate ?object
+                    WHERE {{
+                        wd:{0} ?predicate ?object .
+                    }}
+                    """.format(element.split("/")[-1])
+                if verbose:
+                    print("The element query is: \n", el_query)
+                # Get all related elements
+                sts, el_json = self.execute_query(el_query)
+                if verbose:
+                    print(sts, len(el_json))
+
+                # Add element to entities queue
+                id_obj = self.add_element(element, self.entities, self.entities_dict)
+                # For related elements, get all relations and objects
+                for relation in el_json:
+                    pred = self.extract_entity(relation['predicate'])
+                    obj = self.extract_entity(relation['object'])
+                    if pred is not False and obj is not False:
+                        # Add to the queue
+                        if not self.exist_element(obj, self.entities_dict):
+                            new_queue.append(obj)
+
+                        # Add relation
+                        id_pred = self.add_element(pred, self.relations, self.relations_dict)
+                        id_subj = self.add_element(obj, self.entities, self.entities_dict)
+                        if id_subj is not False or id_pred is not False:
+                            self.subs.append((id_obj, id_subj, id_pred))
+
+        # for only one level:
+        # Fill the entity list with very first elements
+        # For each of this elements:
+            # Insert into list
+            # Query all properties and objects related
+            # Save all valid properties and objects
+            # valid objects (elements) are added to a 2nd round list IFF no están en la lista principal (Si ya están en la lista principal, entonces ya han sido analizados)
+
+        print("Finalizado")
+        first_level_query = ""
 
     def load_entire_dataset(self, levels, where="", batch=100000, verbose=True):
         """Loads the dataset by quering to Wikidata on the desired levels
