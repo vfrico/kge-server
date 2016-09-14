@@ -140,21 +140,48 @@ WHERE {{ ?wikidata wdt:P950 ?bne .
 
         return query
 
-    def load_entire_dataset(self, levels, where=""):
+    def load_entire_dataset(self, levels, where="", batch=100000, verbose=True):
+        """This method loads the dataset by quering desired levels to Wikidata"""
         # Generate select query to get entities count
         lines = []
         for level in self.build_levels(levels):
             lines.append("?"+level[0]+" ?"+level[1]+" ?"+level[2])
         count_query = """PREFIX wikibase: <http://wikiba.se/ontology>
-        SELECT (count(distinct ?predicate) as ?count)
-        WHERE {{ ?wikidata wdt:P950 ?bne .
-        {0}
-        }} """.format(" . \n".join(lines))
+            SELECT (count(distinct ?object) as ?count)
+            WHERE {{ ?wikidata wdt:P950 ?bne .
+            {1}
+            {0}
+            }} """.format(" . \n".join(lines), where)
+        if verbose:
+            print("Query is: "+count_query)
         code, count_json = self.execute_query(count_query)
-        #print(code, count_json)
-        # Ahora da fallo el endpoint de wikidata, pero...
-        tuples_number = int(count_json)
+        if verbose:
+            print(code, count_json)
+        tuples_number = int(count_json[0]['count']['value'])
 
+        # Generate several LIMIT & OFFSET queries
+        batch = 100000
+        base_query = self.build_n_levels_query(n_levels=levels)
+        # Number of queries to do: add one more to last iteration
+        n_queries = int(tuples_number / batch) + 1
+        json_total = []
+
+        for query in range(0, n_queries):
+            if verbose:
+                print("\n\nEmpieza ronda {} de {}".format(query, n_queries))
+            limit_string = " LIMIT {} OFFSET {}".format(batch, 0*batch)
+            #print(str(query)+"\n\n"+base_query + limit_string)
+            sts, resp = self.execute_query(base_query + limit_string)
+            if sts is not 200:
+                print (resp)
+
+            if verbose:
+                print(sts, len(resp))
+                print("Guardando en el dataset...")
+            self.load_dataset_from_json(resp)
+            if verbose:
+                print("Guardado!")
+                self.show()
 
 
     def save_to_binary(self, filepath):
