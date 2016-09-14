@@ -77,12 +77,12 @@ class Dataset():
         The filter argument allows to avoid adding elements into lists that
         will not be used. It is a dictionary with the shape: {'filter': bool}.
         The valid filters (and default) are:
-            *wdt-entity* - True
-            *wdt-reference* - False
-            *wdt-statement* - True
-            *wdt-prop* - True
-            *literal* - False
-            *bnode* - False
+            * *wdt-entity* - True
+            * *wdt-reference* - False
+            * *wdt-statement* - True
+            * *wdt-prop* - True
+            * *literal* - False
+            * *bnode* - False
 
         :param entity: The entity to be analyzed
         :param filters: A dictionary to allow entities to pass filter or not

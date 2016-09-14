@@ -118,18 +118,21 @@
 
 <dl class="method">
 <dt id="dataset.Dataset.extract_entity">
-<code class="descname">extract_entity</code><span class="sig-paren">(</span><em>entity</em>, <em>filters={'wdt-statement': True</em>, <em>'literal': False</em>, <em>'bnode': False</em>, <em>'wdt-reference': False</em>, <em>'wdt-entity': True</em>, <em>'wdt-prop': True}</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.extract_entity" title="Permalink to this definition">¶</a></dt>
+<code class="descname">extract_entity</code><span class="sig-paren">(</span><em>entity</em>, <em>filters={'literal': False</em>, <em>'wdt-reference': False</em>, <em>'wdt-prop': True</em>, <em>'wdt-entity': True</em>, <em>'wdt-statement': True</em>, <em>'bnode': False}</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.extract_entity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given an entity, returns the valid representation, ready to be saved</p>
 <p>The filter argument allows to avoid adding elements into lists that
 will not be used. It is a dictionary with the shape: {&#8216;filter&#8217;: bool}.
 The valid filters (and default) are:</p>
 <blockquote>
-<div><em>wdt-entity</em> - True
-<em>wdt-reference</em> - False
-<em>wdt-statement</em> - True
-<em>wdt-prop</em> - True
-<em>literal</em> - False
-<em>bnode</em> - False</div></blockquote>
+<div><ul class="simple">
+<li><em>wdt-entity</em> - True</li>
+<li><em>wdt-reference</em> - False</li>
+<li><em>wdt-statement</em> - True</li>
+<li><em>wdt-prop</em> - True</li>
+<li><em>literal</em> - False</li>
+<li><em>bnode</em> - False</li>
+</ul>
+</div></blockquote>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
