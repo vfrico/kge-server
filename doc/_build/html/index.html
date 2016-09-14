@@ -1,0 +1,362 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Welcome to Practicum’s documentation! &#8212; Practicum 1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Practicum 1 documentation" href="#" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-practicum-s-documentation">
+<h1>Welcome to Practicum&#8217;s documentation!<a class="headerlink" href="#welcome-to-practicum-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+</div>
+<span class="target" id="module-dataset"></span><dl class="class">
+<dt id="dataset.Dataset">
+<em class="property">class </em><code class="descclassname">dataset.</code><code class="descname">Dataset</code><span class="sig-paren">(</span><em>new_endpoint=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="dataset.Dataset.add_element">
+<code class="descname">add_element</code><span class="sig-paren">(</span><em>element</em>, <em>complete_list</em>, <em>complete_list_dict</em>, <em>only_uri=False</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.add_element" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add element to a list of the dataset. Avoids duplicate elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>element</strong> &#8211; The element that will be added to list</li>
+<li><strong>complete_list</strong> &#8211; The list in which will be added</li>
+<li><strong>complete_list_dict</strong> &#8211; The dict which represents the list.</li>
+<li><strong>only_uri</strong> &#8211; bool &#8211; Allow load objects distincts than URI&#8217;s</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">int &#8211; The id on the list of the added element</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dataset.Dataset.build_levels">
+<code class="descname">build_levels</code><span class="sig-paren">(</span><em>n_levels</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.build_levels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a simple <em>chain</em> of triplets for the desired levels</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n_levels</strong> &#8211; Deep of the search on wikidata graph</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list &#8211; A list of chained triplets</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dataset.Dataset.build_n_levels_query">
+<code class="descname">build_n_levels_query</code><span class="sig-paren">(</span><em>n_levels=3</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.build_n_levels_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds a CONSTRUCT SPARQL query of the desired deep</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n_levels</strong> &#8211; Deep of the search on wikidata graph</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">string &#8211; The desired chained query</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dataset.Dataset.execute_query">
+<code class="descname">execute_query</code><span class="sig-paren">(</span><em>query</em>, <em>headers={'Accept': 'application/json'}</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.execute_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes a SPARQL query to the endpoint</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A tuple compound of (http_status, json_or_error)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dataset.Dataset.extract_entity">
+<code class="descname">extract_entity</code><span class="sig-paren">(</span><em>entity</em>, <em>filters={'wdt-statement': True</em>, <em>'literal': False</em>, <em>'bnode': False</em>, <em>'wdt-reference': False</em>, <em>'wdt-entity': True</em>, <em>'wdt-prop': True}</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.extract_entity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an entity, returns the valid representation, ready to be saved</p>
+<p>The filter argument allows to avoid adding elements into lists that
+will not be used. It is a dictionary with the shape: {&#8216;filter&#8217;: bool}.
+The valid filters (and default) are:</p>
+<blockquote>
+<div><em>wdt-entity</em> - True
+<em>wdt-reference</em> - False
+<em>wdt-statement</em> - True
+<em>wdt-prop</em> - True
+<em>literal</em> - False
+<em>bnode</em> - False</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>entity</strong> &#8211; The entity to be analyzed</li>
+<li><strong>filters</strong> &#8211; A dictionary to allow entities to pass filter or not</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">entity or False</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dataset.Dataset.load_dataset_from_json">
+<code class="descname">load_dataset_from_json</code><span class="sig-paren">(</span><em>json</em>, <em>only_uri=False</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.load_dataset_from_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the dataset object with a JSON</p>
+<p>The JSON structure required is:
+{&#8216;object&#8217;: {}, &#8216;subject&#8217;: {}, &#8216;predicate&#8217;: {}}</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>json</strong> &#8211; A list of dictionary parsed from JSON</li>
+<li><strong>only_uri</strong> &#8211; bool &#8211; Allow load objects distincts than URI&#8217;s</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dataset.Dataset.load_dataset_from_nlevels">
+<code class="descname">load_dataset_from_nlevels</code><span class="sig-paren">(</span><em>nlevels</em>, <em>extra_params=''</em>, <em>only_uri=False</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.load_dataset_from_nlevels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds a nlevels query, executes, and loads data on object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Deprecated:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>nlevels</strong> &#8211; Deep of the search on wikidata graph</li>
+<li><strong>extra_params</strong> &#8211; Extra SPARQL instructions for the query</li>
+<li><strong>only_uri</strong> &#8211; bool &#8211; Allow load objects distincts than URI&#8217;s</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dataset.Dataset.load_dataset_from_query">
+<code class="descname">load_dataset_from_query</code><span class="sig-paren">(</span><em>query</em>, <em>only_uri=False</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.load_dataset_from_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Receives a Sparql query and fills dataset object with the response</p>
+<p>The method will execute the query itself and will call to other method
+to fill in the dataset object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>query</strong> &#8211; A valid SPARQL query</li>
+<li><strong>only_uri</strong> &#8211; bool &#8211; Allow load objects distincts than URI&#8217;s</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dataset.Dataset.load_entire_dataset">
+<code class="descname">load_entire_dataset</code><span class="sig-paren">(</span><em>levels</em>, <em>where=''</em>, <em>batch=100000</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.load_entire_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the dataset by quering to Wikidata on the desired levels</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>levels</strong> &#8211; Deep of the search</li>
+<li><strong>where</strong> &#8211; Extra where statements for SPARQL query</li>
+<li><strong>batch</strong> &#8211; Number of elements returned each query</li>
+<li><strong>verbose</strong> &#8211; True for showing all steps the method do</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">bool &#8211; True if operation was successful</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dataset.Dataset.load_from_binary">
+<code class="descname">load_from_binary</code><span class="sig-paren">(</span><em>filepath</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.load_from_binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the dataset object from the disk</p>
+<p>Loads this dataset object with the binary file
+:param filepath: The path of the binary file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="dataset.Dataset.save_to_binary">
+<code class="descname">save_to_binary</code><span class="sig-paren">(</span><em>filepath</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.save_to_binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the dataset object on the disk</p>
+<p>The dataset will be saved with the required format for reading
+from the original library, and is prepared to be trained.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filepath</strong> &#8211; The path of the file where should be saved</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bool &#8211; True if operation was successful</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dataset.Dataset.show">
+<code class="descname">show</code><span class="sig-paren">(</span><em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show all elements of the dataset</p>
+<p>By default prints only one line with the number of entities, relations
+and triplets. If verbose, prints every list. Use wisely</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>verbose</strong> &#8211; bool &#8211; If true prints every item of all lists</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dataset.Dataset.train_split">
+<code class="descname">train_split</code><span class="sig-paren">(</span><em>ratio=0.8</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.train_split" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split subs into three lists: train, valid and test</p>
+<p>The triplets should have a specific name and size to be compatible
+with the original library. Splits the original triplets (self.subs) in
+three different lists: <em>train_subs</em>, <em>valid_subs</em> and <em>test_subs</em>.
+The &#8216;ratio&#8217; param will leave that quantity for train_subs, and the
+rest will be a half for valid and the other half for test</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ratio</strong> &#8211; The ratio of all triplets required for <em>train_subs</em></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to Practicum&#8217;s documentation!</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Víctor Fernández Rico.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+      |
+      <a href="_sources/index.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
