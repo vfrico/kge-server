@@ -5,8 +5,10 @@ import numpy as np
 import threading
 from queries import Queries
 
+
 class Dataset():
-    WIKIDATA_ENDPOINT = """https://query.wikidata.org/bigdata/namespace/wdq/sparql?query="""
+    WIKIDATA_ENDPOINT = \
+        """https://query.wikidata.org/bigdata/namespace/wdq/sparql?query="""
     entities = []
     entities_dict = {}
     relations = []
@@ -20,10 +22,9 @@ class Dataset():
         :param new_endpoint: The URI of the SPARQL endpoint
         """
         if new_endpoint is not None:
-            WIKIDATA_ENDPOINT = new_endpoint
+            self.WIKIDATA_ENDPOINT = new_endpoint
 
         self.th_semaphore = threading.Semaphore(thread_limiter)
-
 
     def show(self, verbose=False):
         """Show all elements of the dataset
@@ -46,8 +47,8 @@ class Dataset():
             for sub in self.subs:
                 print(sub)
 
-
-    def add_element(self, element, complete_list, complete_list_dict, only_uri=False):
+    def add_element(self, element, complete_list,
+                    complete_list_dict, only_uri=False):
         """Add element to a list of the dataset. Avoids duplicate elements.
 
         :param element: The element that will be added to list
@@ -58,7 +59,7 @@ class Dataset():
         """
 
         # An URI is a string type
-        if only_uri is True and type(element) is not type(""):
+        if only_uri is True and not isinstance(element, str):
             return False
         elif element is False:
             return False
@@ -67,13 +68,12 @@ class Dataset():
             # Item is on the list, return same id
             return complete_list_dict[element]
 
-        except (KeyError,ValueError):
+        except (KeyError, ValueError):
             # Item is not on the list, append and return id
             complete_list.append(element)
             id_item = len(complete_list)-1
             complete_list_dict[element] = id_item
             return id_item
-
 
     def exist_element(self, element, complete_list_dict):
         try:
@@ -81,11 +81,14 @@ class Dataset():
             elem_id = complete_list_dict[element]
             return True
 
-        except (KeyError,ValueError):
+        except (KeyError, ValueError):
             # Item is not on the list
             return False
 
-    def extract_entity(self, entity, filters={'wdt-entity':True,'wdt-reference':False,'wdt-statement':False,'wdt-prop':True,'literal':False,'bnode':False}):
+    def extract_entity(self, entity,
+                       filters={'wdt-entity': True, 'wdt-reference': False,
+                                'wdt-statement': False, 'wdt-prop': True,
+                                'literal': False, 'bnode': False}):
         """Given an entity, returns the valid representation, ready to be saved
 
         The filter argument allows to avoid adding elements into lists that
@@ -106,20 +109,23 @@ class Dataset():
         if entity["type"] == "uri":
             # Not all 'uri' values are valid entities
             uri = entity["value"].split('/')
-            if uri[2] == 'www.wikidata.org' and (uri[3] == "reference" and filters['wdt-reference']):
+            if uri[2] == 'www.wikidata.org' and \
+                    (uri[3] == "reference" and filters['wdt-reference']):
                 return entity["value"]
-            elif uri[2] == 'www.wikidata.org' and (uri[4] == "statement" and filters['wdt-statement']):
+            elif uri[2] == 'www.wikidata.org' and \
+                    (uri[4] == "statement" and filters['wdt-statement']):
                 return entity["value"]
-            elif uri[2] == 'www.wikidata.org' and (uri[3] == "entity" and filters['wdt-entity']):
+            elif uri[2] == 'www.wikidata.org' and \
+                    (uri[3] == "entity" and filters['wdt-entity']):
                 return entity["value"]
-            elif uri[2] == 'www.wikidata.org' and (uri[3] == "prop" and filters['wdt-prop']):
+            elif uri[2] == 'www.wikidata.org' and \
+                    (uri[3] == "prop" and filters['wdt-prop']):
                 return entity["value"]
             elif uri[2] == 'www.wikidata.org':
                 return False
             else:
-                #Only discards certain Wikidata urls, the rest are valid
+                # Only discards certain Wikidata urls, the rest are valid
                 return entity["value"]
-
         elif entity["type"] == "literal" and filters['literal']:
             return entity
         elif entity["type"] == "bnode" and filters['literal']:
@@ -137,10 +143,16 @@ class Dataset():
         :param only_uri: bool -- Allow load objects distincts than URI's
         """
 
-        for triplet in json:
-            id_obj = self.add_element(self.extract_entity(triplet["object"]), self.entities, self.entities_dict, only_uri=only_uri)
-            id_subj = self.add_element(self.extract_entity(triplet["subject"]), self.entities, self.entities_dict, only_uri=only_uri)
-            id_pred = self.add_element(self.extract_entity(triplet["predicate"]), self.relations, self.relations_dict, only_uri=only_uri)
+        for tripl in json:
+            id_obj = self.add_element(self.extract_entity(tripl["object"]),
+                                      self.entities, self.entities_dict,
+                                      only_uri=only_uri)
+            id_subj = self.add_element(self.extract_entity(tripl["subject"]),
+                                       self.entities,
+                                       self.entities_dict, only_uri=only_uri)
+            id_pred = self.add_element(self.extract_entity(tripl["predicate"]),
+                                       self.relations,
+                                       self.relations_dict, only_uri=only_uri)
 
             if id_obj is False or id_subj is False or id_pred is False:
                 continue
@@ -157,17 +169,17 @@ class Dataset():
         :param only_uri: bool -- Allow load objects distincts than URI's
         """
 
-        # headers = {"Accept" : "application/json"}
-        # response = requests.get(self.WIKIDATA_ENDPOINT + query, headers=headers)
         result_query = self.execute_query(query)
         if result_query[0] is not 200:
-            raise Exception("Error on endpoint. HTTP status code: "+str(response.status_code))
+            raise Exception("Error on endpoint. HTTP status code: " +
+                            str(response.status_code))
         else:
             jsonlist = result_query[1]
         # print(json.dumps(jsonlist, indent=4, sort_keys=True))
         self.load_dataset_from_json(jsonlist, only_uri=only_uri)
 
-    def load_dataset_from_nlevels(self, nlevels, extra_params="", only_uri=False):
+    def load_dataset_from_nlevels(self, nlevels,
+                                  extra_params="", only_uri=False):
         """Builds a nlevels query, executes, and loads data on object
 
         :deprecated:
@@ -197,7 +209,7 @@ class Dataset():
 
         tripletas = []
 
-        for level in range(1,n_levels+1):
+        for level in range(1, n_levels+1):
             tripletas.append((ob1, pre, ob2))
             objectCount += 1
             predicateCount += 1
@@ -226,9 +238,8 @@ class Dataset():
 
         return query
 
-
     def __all_entity_triplet__(self, element,
-                                append_queue=lambda: None, verbose=0):
+                               append_queue=lambda: None, verbose=0):
         """Add to dataset all the relations from an entity
 
         This method is runned for one thread. It will check if the Wikidata
@@ -259,7 +270,7 @@ class Dataset():
         # Get all related elements
         sts, el_json = self.execute_query(el_query)
         if verbose > 1:
-            print("HTTP",sts, len(el_json))
+            print("HTTP", sts, len(el_json))
 
         # Check future errors
         if sts is not 200:
@@ -279,8 +290,10 @@ class Dataset():
                     append_queue(obj)
 
                 # Add relation
-                id_pred = self.add_element(pred, self.relations, self.relations_dict)
-                id_subj = self.add_element(obj, self.entities, self.entities_dict)
+                id_pred = self.add_element(pred, self.relations,
+                                           self.relations_dict)
+                id_subj = self.add_element(obj, self.entities,
+                                           self.entities_dict)
                 if id_subj is not False or id_pred is not False:
                     self.subs.append((id_obj, id_subj, id_pred))
 
@@ -336,18 +349,16 @@ class Dataset():
         el_queue = []
 
         # Loop for depth levels
-        for level in range(0,levels):
+        for level in range(0, levels):
             # Loop for every item on the queue
             if verbose > 0:
                 print("Scanning level {} with {} elements"
-                    .format(level+1, len(new_queue)))
+                      .format(level+1, len(new_queue)))
             el_queue = new_queue
             new_queue = []
 
             # pool for threads
             threads = []
-            # Lambda function to add elements to queue
-            add_queue = lambda entity: new_queue.append(entity)
 
             # Scan every entity on queue
             for element in el_queue:
@@ -355,10 +366,10 @@ class Dataset():
                 t = threading.Thread(
                     target=self.__all_entity_triplet__,
                     args=(element, ),
-                    kwargs={'verbose': verbose, 'append_queue': add_queue})
+                    kwargs={'verbose': verbose,
+                            'append_queue': lambda e: new_queue.append(e)})
                 threads.append(t)
                 t.start()
-
 
             if verbose > 0:
                 print("Waiting all threads to end")
@@ -366,11 +377,10 @@ class Dataset():
             for th in threads:
                 th.join()
 
-
         return true
 
-
-    def load_entire_dataset(self, levels, where="", batch=100000, verbose=True):
+    def load_entire_dataset(self, levels,
+                            where="", batch=100000, verbose=True):
         """Loads the dataset by quering to Wikidata on the desired levels
 
         :param levels: Deep of the search
@@ -408,10 +418,10 @@ class Dataset():
             if verbose:
                 print("\n\nEmpieza ronda {} de {}".format(query, n_queries))
             limit_string = " LIMIT {} OFFSET {}".format(batch, 0*batch)
-            #print(str(query)+"\n\n"+base_query + limit_string)
+            # print(str(query)+"\n\n"+base_query + limit_string)
             sts, resp = self.execute_query(base_query + limit_string)
             if sts is not 200:
-                print (resp)
+                print(resp)
 
             if verbose:
                 print(sts, len(resp))
@@ -420,7 +430,6 @@ class Dataset():
             if verbose:
                 print("Guardado!")
                 self.show()
-
 
     def save_to_binary(self, filepath):
         """Saves the dataset object on the disk
@@ -466,7 +475,8 @@ class Dataset():
 
         self.entities = all_dataset['entities']
         self.relations = all_dataset['relations']
-        self.subs = all_dataset['train_subs'] + all_dataset['valid_subs'] + all_dataset['test_subs']
+        self.subs = all_dataset['train_subs'] + all_dataset['valid_subs'] +\
+            all_dataset['test_subs']
         # self.subs = all_dataset['subs']
         return True
 
@@ -492,19 +502,22 @@ class Dataset():
         x_val = [tuple(x) for x in data[-train_samples:-int(train_samples/2)]]
         x_test = [tuple(x) for x in data[-int(train_samples/2):]]
 
-        return {"train_subs":x_train, "valid_subs":x_val, "test_subs":x_test}
+        return {"train_subs": x_train,
+                "valid_subs": x_val,
+                "test_subs": x_test}
 
-    def execute_query(self, query, headers={"Accept" : "application/json"}):
+    def execute_query(self, query, headers={"Accept": "application/json"}):
         """Executes a SPARQL query to the endpoint
 
         :returns: A tuple compound of (http_status, json_or_error)
         """
-        #Thread limiter
+        # Thread limiter
         self.th_semaphore.acquire()
-        response = requests.get(self.WIKIDATA_ENDPOINT + query, headers=headers)
+        response = requests.get(self.WIKIDATA_ENDPOINT+query, headers=headers)
         self.th_semaphore.release()
         # if response.status_code is not 200:
-        #     raise Exception("Error on endpoint. HTTP status code: "+str(response.status_code))
+        #     raise Exception("Error on endpoint. HTTP status code: "+
+        #                      str(response.status_code))
         if response.status_code is not 200:
             return response.status_code, response.text
         else:
