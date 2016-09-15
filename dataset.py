@@ -4,6 +4,8 @@ import pickle
 import numpy as np
 import threading
 from queries import Queries
+from datetime import datetime
+import time
 
 
 class Dataset():
@@ -14,6 +16,14 @@ class Dataset():
     relations = []
     relations_dict = {}
     subs = []
+
+    # Used to show current status
+    status = {'started': 0,
+              'round_curr': 0,
+              'round_total': 0,
+              'it_analyzed': 0,
+              'it_total': 0,
+              'active': False}
 
     def __init__(self, new_endpoint=None, thread_limiter=100):
         """Creates the dataset class
@@ -282,11 +292,11 @@ class Dataset():
                 wd:Q{0} ?predicate ?object .
             }}
             """.format(wikidata_id)
-        if verbose > 1:
+        if verbose > 2:
             print("The element query is: \n", el_query)
         # Get all related elements
         sts, el_json = self.execute_query(el_query)
-        if verbose > 1:
+        if verbose > 2:
             print("HTTP", sts, len(el_json))
 
         # Check future errors
@@ -314,6 +324,9 @@ class Dataset():
                 if id_subj is not False or id_pred is not False:
                     self.subs.append((id_obj, id_subj, id_pred))
 
+        # Only for show status purpose
+        self.status['it_analyzed'] += 1
+
     def load_dataset_recurrently(self, levels, verbose=1):
         """Loads to dataset all entities with BNE ID and their relations
 
@@ -336,10 +349,10 @@ class Dataset():
                 ?wikidata wdt:P950 ?bne .
             }"""
 
-        if verbose > 1:
+        if verbose > 2:
             print("The count query is: \n", count_query)
         sts, count_json = self.execute_query(count_query)
-        if verbose > 1:
+        if verbose > 2:
             print(sts, count_json)
 
         # The number of elements
@@ -356,15 +369,28 @@ class Dataset():
                 ?wikidata wdt:P950 ?bne .
             }
             """
-        if verbose > 1:
+        if verbose > 2:
             print("The first query is: \n", first_query)
         sts, first_json = self.execute_query(first_query)
-        if verbose > 1:
+        if verbose > 2:
             print(sts, len(first_json))
 
         # Create a queue for wikidata elements to be scanned
         new_queue = [entity['wikidata']['value'] for entity in first_json]
         el_queue = []
+
+        if verbose > 1:
+            status_thread = None
+
+            # Initialize status variables
+            self.status['started'] = datetime.now()
+            self.status['it_analyzed'] = 0
+            self.status['active'] = True
+            self.status['round_total'] = levels
+            status_thread = threading.Thread(
+                target=self.__control_thread__,
+                args=(),)
+            status_thread.start()
 
         # Loop for depth levels
         for level in range(0, levels):
@@ -374,6 +400,10 @@ class Dataset():
                       .format(level+1, len(new_queue)))
             el_queue = new_queue
             new_queue = []
+
+            # Initialize some status variables
+            self.status['round_curr'] = level
+            self.status['it_total'] = len(el_queue)
 
             # pool for threads
             threads = []
@@ -395,7 +425,37 @@ class Dataset():
             for th in threads:
                 th.join()
 
+        if verbose > 1:
+            self.status['active'] = False
+
         return True
+
+    def __control_thread__(self):
+        self.status['active'] = True
+        while self.status['active']:
+            ui = input("Enter S to show status: ")
+            if ui is "s" or ui is "S":
+                print(self.__get_status__())
+            elif ui is "q" or ui is "Q":
+                self.status['active'] = False
+
+    def __get_status__(self):
+        elapsed = datetime.now() - self.status['started']
+        try:
+            scanned = 100 * (self.status['it_analyzed'] /
+                             self.status['it_total'])
+        except ZeroDivisionError:
+            scanned = 0
+
+        status_str = ("Elapsed time: {0}s. Depth {1} of {2}."
+                      " Entities scanned: {3:.2f}% ({4} of {5})").format(
+                          elapsed.seconds,
+                          self.status['round_curr']+1,
+                          self.status['round_total'],
+                          scanned,
+                          self.status['it_analyzed'],
+                          self.status['it_total'])
+        return status_str
 
     def load_entire_dataset(self, levels,
                             where="", batch=100000, verbose=True):
