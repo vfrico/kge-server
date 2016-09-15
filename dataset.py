@@ -19,7 +19,8 @@ class Dataset():
         """Creates the dataset class
 
         The default endpoint is the original from wikidata.
-        :param new_endpoint: The URI of the SPARQL endpoint
+        :param str new_endpoint: The URI of the SPARQL endpoint
+        :param int thread_limiter: The number of concurrent HTTP queries
         """
         if new_endpoint is not None:
             self.WIKIDATA_ENDPOINT = new_endpoint
@@ -32,7 +33,7 @@ class Dataset():
         By default prints only one line with the number of entities, relations
         and triplets. If verbose, prints every list. Use wisely
 
-        :param verbose: bool -- If true prints every item of all lists
+        :param bool verbose: If true prints every item of all lists
         """
         print("%d entities, %d relations, %d tripletas" %
               (len(self.entities), len(self.relations), len(self.subs)))
@@ -51,11 +52,12 @@ class Dataset():
                     complete_list_dict, only_uri=False):
         """Add element to a list of the dataset. Avoids duplicate elements.
 
-        :param element: The element that will be added to list
-        :param complete_list: The list in which will be added
-        :param complete_list_dict: The dict which represents the list.
-        :param only_uri: bool -- Allow load objects distincts than URI's
-        :return: int -- The id on the list of the added element
+        :param str element: The element that will be added to list
+        :param list complete_list: The list in which will be added
+        :param dict complete_list_dict: The dict which represents the list.
+        :param bool only_uri: Allow load objects distincts than URI's
+        :return: The id on the list of the added element
+        :rtype: int
         """
 
         # An URI is a string type
@@ -76,6 +78,13 @@ class Dataset():
             return id_item
 
     def exist_element(self, element, complete_list_dict):
+        """Check if element exists on a given list
+
+        :param str element: The element itself
+        :param dict complete_list_dict: The dictionary to search in
+        :return: Wether the item was found or no
+        :rtype: bool
+        """
         try:
             # Item is on the list, return same id
             elem_id = complete_list_dict[element]
@@ -143,8 +152,8 @@ class Dataset():
         The JSON structure required is:
         {'object': {}, 'subject': {}, 'predicate': {}}
 
-        :param json: A list of dictionary parsed from JSON
-        :param only_uri: bool -- Allow load objects distincts than URI's
+        :param list json: A list of dictionary parsed from JSON
+        :param bool only_uri: Allow load objects distincts than URI's
         """
 
         for tripl in json:
@@ -169,8 +178,8 @@ class Dataset():
         The method will execute the query itself and will call to other method
         to fill in the dataset object
 
-        :param query: A valid SPARQL query
-        :param only_uri: bool -- Allow load objects distincts than URI's
+        :param str query: A valid SPARQL query
+        :param bool only_uri: Allow load objects distincts than URI's
         """
 
         result_query = self.execute_query(query)
@@ -187,9 +196,9 @@ class Dataset():
         """Builds a nlevels query, executes, and loads data on object
 
         :deprecated:
-        :param nlevels: Deep of the search on wikidata graph
-        :param extra_params: Extra SPARQL instructions for the query
-        :param only_uri: bool -- Allow load objects distincts than URI's
+        :param int nlevels: Deep of the search on wikidata graph
+        :param str extra_params: Extra SPARQL instructions for the query
+        :param bool only_uri: Allow load objects distincts than URI's
         """
 
         query = self.build_n_levels_query(nlevels)+" "+extra_params
@@ -199,8 +208,9 @@ class Dataset():
     def build_levels(self, n_levels):
         """Generates a simple *chain* of triplets for the desired levels
 
-        :param n_levels: Deep of the search on wikidata graph
-        :return: list -- A list of chained triplets
+        :param int n_levels: Deep of the search on wikidata graph
+        :return: A list of chained triplets
+        :rtype: list
         """
 
         ob1 = "wikidata"
@@ -226,8 +236,9 @@ class Dataset():
     def build_n_levels_query(self, n_levels=3):
         """Builds a CONSTRUCT SPARQL query of the desired deep
 
-        :param n_levels: Deep of the search on wikidata graph
-        :return: string -- The desired chained query
+        :param int n_levels: Deep of the search on wikidata graph
+        :return: The desired chained query
+        :rtype: string
         """
 
         lines = []
@@ -249,9 +260,11 @@ class Dataset():
         This method is runned for one thread. It will check if the Wikidata
         entity is valid, make a SPARQL query and save all triplets on the
         dataset.
-        :param element: The URI of element to be scanned
-        :param append_queue: A function that receives the subject of a triplet
-        :param verbose: The level of verbosity. 0 is low, and 2 is high
+        :param str element: The URI of element to be scanned
+        :param function append_queue: A function that receives the subject of
+                                      a triplet as an argument
+        :param int verbose: The level of verbosity. 0 is low, and 2 is high
+        :return: Nothing
         """
 
         # Extract correctly the id of the wikidata element.
@@ -309,9 +322,10 @@ class Dataset():
         without using SPARQL CONSTRUCT. This method will start concurrently
         some threads to make several SPARQL SELECT queries.
 
-        :param levels: The depth where get triplets related with original item
-        :param verbose: The level of verbosity. 0 is low, and 2 is high
-        :return: bool -- True if operation was successful
+        :param int levels: The depth to get triplets related with original item
+        :param int verbose: The level of verbosity. 0 is low, and 2 is high
+        :return: True if operation was successful
+        :rtype: bool
         """
 
         # Count all Wikidata elements with a BNE entry
@@ -387,11 +401,13 @@ class Dataset():
                             where="", batch=100000, verbose=True):
         """Loads the dataset by quering to Wikidata on the desired levels
 
-        :param levels: Deep of the search
-        :param where: Extra where statements for SPARQL query
-        :param batch: Number of elements returned each query
-        :param verbose: True for showing all steps the method do
-        :return: bool -- True if operation was successful
+        :deprecated:
+        :param int levels: Deep of the search
+        :param str where: Extra where statements for SPARQL query
+        :param int batch: Number of elements returned each query
+        :param bool verbose: True for showing all steps the method do
+        :return: True if operation was successful
+        :rtype: bool
         """
 
         # Generate select query to get entities count
@@ -441,8 +457,9 @@ class Dataset():
         The dataset will be saved with the required format for reading
         from the original library, and is prepared to be trained.
 
-        :param filepath: The path of the file where should be saved
-        :return: bool -- True if operation was successful
+        :param str filepath: The path of the file where should be saved
+        :return: True if operation was successful
+        :rtype: bool
         """
 
         subs2 = self.train_split()
@@ -467,6 +484,8 @@ class Dataset():
 
         Loads this dataset object with the binary file
         :param filepath: The path of the binary file
+        :return: True if operation was successful
+        :rtype: bool
         """
 
         try:
@@ -493,7 +512,9 @@ class Dataset():
         The 'ratio' param will leave that quantity for train_subs, and the
         rest will be a half for valid and the other half for test
 
-        :param ratio: The ratio of all triplets required for *train_subs*
+        :param float ratio: The ratio of all triplets required for *train_subs*
+        :return: A dictionary with splited subs
+        :rtype: dict
         """
 
         data = np.matrix(self.subs)
@@ -513,6 +534,7 @@ class Dataset():
     def execute_query(self, query, headers={"Accept": "application/json"}):
         """Executes a SPARQL query to the endpoint
 
+        :param str query: The SPARQL query
         :returns: A tuple compound of (http_status, json_or_error)
         """
         # Thread limiter
