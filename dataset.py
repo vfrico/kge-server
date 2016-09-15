@@ -101,31 +101,35 @@ class Dataset():
             * *literal* - False
             * *bnode* - False
 
-        :param entity: The entity to be analyzed
-        :param filters: A dictionary to allow entities to pass filter or not
-        :return: entity or False
+        :param dict entity: The entity to be analyzed
+        :param dict filters: A dictionary to allow filter entities
+        :return: The entity itself or False
         """
 
         if entity["type"] == "uri":
             # Not all 'uri' values are valid entities
-            uri = entity["value"].split('/')
-            if uri[2] == 'www.wikidata.org' and \
-                    (uri[3] == "reference" and filters['wdt-reference']):
-                return entity["value"]
-            elif uri[2] == 'www.wikidata.org' and \
-                    (uri[4] == "statement" and filters['wdt-statement']):
-                return entity["value"]
-            elif uri[2] == 'www.wikidata.org' and \
-                    (uri[3] == "entity" and filters['wdt-entity']):
-                return entity["value"]
-            elif uri[2] == 'www.wikidata.org' and \
-                    (uri[3] == "prop" and filters['wdt-prop']):
-                return entity["value"]
-            elif uri[2] == 'www.wikidata.org':
+            try:
+                uri = entity["value"].split('/')
+                if uri[2] == 'www.wikidata.org' and \
+                        (uri[3] == "reference" and filters['wdt-reference']):
+                    return entity["value"]
+                elif uri[2] == 'www.wikidata.org' and \
+                        (uri[4] == "statement" and filters['wdt-statement']):
+                    return entity["value"]
+                elif uri[2] == 'www.wikidata.org' and \
+                        (uri[3] == "entity" and filters['wdt-entity']):
+                    return entity["value"]
+                elif uri[2] == 'www.wikidata.org' and \
+                        (uri[3] == "prop" and filters['wdt-prop']):
+                    return entity["value"]
+                elif uri[2] == 'www.wikidata.org':
+                    return False
+                else:
+                    # Only discards certain Wikidata urls, the rest are valid
+                    return entity["value"]
+            except IndexError:
                 return False
-            else:
-                # Only discards certain Wikidata urls, the rest are valid
-                return entity["value"]
+
         elif entity["type"] == "literal" and filters['literal']:
             return entity
         elif entity["type"] == "bnode" and filters['literal']:
@@ -377,7 +381,7 @@ class Dataset():
             for th in threads:
                 th.join()
 
-        return true
+        return True
 
     def load_entire_dataset(self, levels,
                             where="", batch=100000, verbose=True):
