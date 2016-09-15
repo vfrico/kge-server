@@ -1,0 +1,41 @@
+\begin{theindex}
+\def\bigletter#1{{\Large\sffamily#1}\nopagebreak\vspace{1mm}}
+
+  \bigletter A
+  \item add\_element() (dataset.Dataset method), \hyperpage{1}
+
+  \indexspace
+  \bigletter B
+  \item build\_levels() (dataset.Dataset method), \hyperpage{1}
+  \item build\_n\_levels\_query() (dataset.Dataset method), \hyperpage{1}
+
+  \indexspace
+  \bigletter D
+  \item Dataset (class in dataset), \hyperpage{1}
+  \item dataset (module), \hyperpage{1}
+
+  \indexspace
+  \bigletter E
+  \item execute\_query() (dataset.Dataset method), \hyperpage{1}
+  \item exist\_element() (dataset.Dataset method), \hyperpage{1}
+  \item extract\_entity() (dataset.Dataset method), \hyperpage{1}
+
+  \indexspace
+  \bigletter L
+  \item load\_dataset\_from\_json() (dataset.Dataset method), \hyperpage{2}
+  \item load\_dataset\_from\_nlevels() (dataset.Dataset method), \hyperpage{2}
+  \item load\_dataset\_from\_query() (dataset.Dataset method), \hyperpage{2}
+  \item load\_dataset\_recurrently() (dataset.Dataset method), \hyperpage{2}
+  \item load\_entire\_dataset() (dataset.Dataset method), \hyperpage{3}
+  \item load\_from\_binary() (dataset.Dataset method), \hyperpage{3}
+
+  \indexspace
+  \bigletter S
+  \item save\_to\_binary() (dataset.Dataset method), \hyperpage{3}
+  \item show() (dataset.Dataset method), \hyperpage{3}
+
+  \indexspace
+  \bigletter T
+  \item train\_split() (dataset.Dataset method), \hyperpage{3}
+
+\end{theindex}

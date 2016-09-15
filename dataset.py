@@ -543,7 +543,8 @@ class Dataset():
         """Loads the dataset object from the disk
 
         Loads this dataset object with the binary file
-        :param filepath: The path of the binary file
+
+        :param str filepath: The path of the binary file
         :return: True if operation was successful
         :rtype: bool
         """

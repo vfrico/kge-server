@@ -46,7 +46,7 @@
 </div>
 <span class="target" id="module-dataset"></span><dl class="class">
 <dt id="dataset.Dataset">
-<em class="property">class </em><code class="descclassname">dataset.</code><code class="descname">Dataset</code><span class="sig-paren">(</span><em>new_endpoint=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">dataset.</code><code class="descname">Dataset</code><span class="sig-paren">(</span><em>new_endpoint=None</em>, <em>thread_limiter=100</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="method">
 <dt id="dataset.Dataset.add_element">
 <code class="descname">add_element</code><span class="sig-paren">(</span><em>element</em>, <em>complete_list</em>, <em>complete_list_dict</em>, <em>only_uri=False</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.add_element" title="Permalink to this definition">¶</a></dt>
@@ -56,14 +56,17 @@
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>element</strong> &#8211; The element that will be added to list</li>
-<li><strong>complete_list</strong> &#8211; The list in which will be added</li>
-<li><strong>complete_list_dict</strong> &#8211; The dict which represents the list.</li>
-<li><strong>only_uri</strong> &#8211; bool &#8211; Allow load objects distincts than URI&#8217;s</li>
+<li><strong>element</strong> (<em>str</em>) &#8211; The element that will be added to list</li>
+<li><strong>complete_list</strong> (<em>list</em>) &#8211; The list in which will be added</li>
+<li><strong>complete_list_dict</strong> (<em>dict</em>) &#8211; The dict which represents the list.</li>
+<li><strong>only_uri</strong> (<em>bool</em>) &#8211; Allow load objects distincts than URI&#8217;s</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">int &#8211; The id on the list of the added element</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The id on the list of the added element</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
 </td>
 </tr>
 </tbody>
@@ -78,9 +81,11 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n_levels</strong> &#8211; Deep of the search on wikidata graph</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n_levels</strong> (<em>int</em>) &#8211; Deep of the search on wikidata graph</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list &#8211; A list of chained triplets</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of chained triplets</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
 </tr>
 </tbody>
 </table>
@@ -94,9 +99,11 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n_levels</strong> &#8211; Deep of the search on wikidata graph</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n_levels</strong> (<em>int</em>) &#8211; Deep of the search on wikidata graph</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">string &#8211; The desired chained query</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The desired chained query</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
@@ -110,7 +117,33 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A tuple compound of (http_status, json_or_error)</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>query</strong> (<em>str</em>) &#8211; The SPARQL query</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A tuple compound of (http_status, json_or_error)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dataset.Dataset.exist_element">
+<code class="descname">exist_element</code><span class="sig-paren">(</span><em>element</em>, <em>complete_list_dict</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.exist_element" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if element exists on a given list</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>element</strong> (<em>str</em>) &#8211; The element itself</li>
+<li><strong>complete_list_dict</strong> (<em>dict</em>) &#8211; The dictionary to search in</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Wether the item was found or no</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bool</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -118,7 +151,7 @@
 
 <dl class="method">
 <dt id="dataset.Dataset.extract_entity">
-<code class="descname">extract_entity</code><span class="sig-paren">(</span><em>entity</em>, <em>filters={'literal': False</em>, <em>'wdt-reference': False</em>, <em>'wdt-prop': True</em>, <em>'wdt-entity': True</em>, <em>'wdt-statement': True</em>, <em>'bnode': False}</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.extract_entity" title="Permalink to this definition">¶</a></dt>
+<code class="descname">extract_entity</code><span class="sig-paren">(</span><em>entity</em>, <em>filters={'wdt-entity': True</em>, <em>'wdt-prop': True</em>, <em>'bnode': False</em>, <em>'wdt-reference': False</em>, <em>'wdt-statement': False</em>, <em>'literal': False}</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.extract_entity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given an entity, returns the valid representation, ready to be saved</p>
 <p>The filter argument allows to avoid adding elements into lists that
 will not be used. It is a dictionary with the shape: {&#8216;filter&#8217;: bool}.
@@ -138,12 +171,12 @@ The valid filters (and default) are:</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>entity</strong> &#8211; The entity to be analyzed</li>
-<li><strong>filters</strong> &#8211; A dictionary to allow entities to pass filter or not</li>
+<li><strong>entity</strong> (<em>dict</em>) &#8211; The entity to be analyzed</li>
+<li><strong>filters</strong> (<em>dict</em>) &#8211; A dictionary to allow filter entities</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">entity or False</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The entity itself or False</p>
 </td>
 </tr>
 </tbody>
@@ -161,8 +194,8 @@ The valid filters (and default) are:</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>json</strong> &#8211; A list of dictionary parsed from JSON</li>
-<li><strong>only_uri</strong> &#8211; bool &#8211; Allow load objects distincts than URI&#8217;s</li>
+<li><strong>json</strong> (<em>list</em>) &#8211; A list of dictionary parsed from JSON</li>
+<li><strong>only_uri</strong> (<em>bool</em>) &#8211; Allow load objects distincts than URI&#8217;s</li>
 </ul>
 </td>
 </tr>
@@ -181,9 +214,9 @@ The valid filters (and default) are:</p>
 <tr class="field-odd field"><th class="field-name">Deprecated:</th><td class="field-body"></td>
 </tr>
 <tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>nlevels</strong> &#8211; Deep of the search on wikidata graph</li>
-<li><strong>extra_params</strong> &#8211; Extra SPARQL instructions for the query</li>
-<li><strong>only_uri</strong> &#8211; bool &#8211; Allow load objects distincts than URI&#8217;s</li>
+<li><strong>nlevels</strong> (<em>int</em>) &#8211; Deep of the search on wikidata graph</li>
+<li><strong>extra_params</strong> (<em>str</em>) &#8211; Extra SPARQL instructions for the query</li>
+<li><strong>only_uri</strong> (<em>bool</em>) &#8211; Allow load objects distincts than URI&#8217;s</li>
 </ul>
 </td>
 </tr>
@@ -202,9 +235,37 @@ to fill in the dataset object</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>query</strong> &#8211; A valid SPARQL query</li>
-<li><strong>only_uri</strong> &#8211; bool &#8211; Allow load objects distincts than URI&#8217;s</li>
+<li><strong>query</strong> (<em>str</em>) &#8211; A valid SPARQL query</li>
+<li><strong>only_uri</strong> (<em>bool</em>) &#8211; Allow load objects distincts than URI&#8217;s</li>
 </ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dataset.Dataset.load_dataset_recurrently">
+<code class="descname">load_dataset_recurrently</code><span class="sig-paren">(</span><em>levels</em>, <em>verbose=1</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.load_dataset_recurrently" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads to dataset all entities with BNE ID and their relations</p>
+<p>Due to Wikidata endpoint cann&#8217;t execute queries that take long time
+to complete, it is necessary to consruct the dataset entity by entity,
+without using SPARQL CONSTRUCT. This method will start concurrently
+some threads to make several SPARQL SELECT queries.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>levels</strong> (<em>int</em>) &#8211; The depth to get triplets related with original item</li>
+<li><strong>verbose</strong> (<em>int</em>) &#8211; The level of verbosity. 0 is low, and 2 is high</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">True if operation was successful</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bool</p>
 </td>
 </tr>
 </tbody>
@@ -219,15 +280,20 @@ to fill in the dataset object</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>levels</strong> &#8211; Deep of the search</li>
-<li><strong>where</strong> &#8211; Extra where statements for SPARQL query</li>
-<li><strong>batch</strong> &#8211; Number of elements returned each query</li>
-<li><strong>verbose</strong> &#8211; True for showing all steps the method do</li>
+<tr class="field-odd field"><th class="field-name">Deprecated:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>levels</strong> (<em>int</em>) &#8211; Deep of the search</li>
+<li><strong>where</strong> (<em>str</em>) &#8211; Extra where statements for SPARQL query</li>
+<li><strong>batch</strong> (<em>int</em>) &#8211; Number of elements returned each query</li>
+<li><strong>verbose</strong> (<em>bool</em>) &#8211; True for showing all steps the method do</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">bool &#8211; True if operation was successful</p>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">True if operation was successful</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bool</p>
 </td>
 </tr>
 </tbody>
@@ -238,8 +304,19 @@ to fill in the dataset object</p>
 <dt id="dataset.Dataset.load_from_binary">
 <code class="descname">load_from_binary</code><span class="sig-paren">(</span><em>filepath</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.load_from_binary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Loads the dataset object from the disk</p>
-<p>Loads this dataset object with the binary file
-:param filepath: The path of the binary file</p>
+<p>Loads this dataset object with the binary file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filepath</strong> (<em>str</em>) &#8211; The path of the binary file</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if operation was successful</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -252,9 +329,11 @@ from the original library, and is prepared to be trained.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filepath</strong> &#8211; The path of the file where should be saved</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filepath</strong> (<em>str</em>) &#8211; The path of the file where should be saved</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bool &#8211; True if operation was successful</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if operation was successful</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">bool</td>
 </tr>
 </tbody>
 </table>
@@ -270,7 +349,7 @@ and triplets. If verbose, prints every list. Use wisely</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>verbose</strong> &#8211; bool &#8211; If true prints every item of all lists</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>verbose</strong> (<em>bool</em>) &#8211; If true prints every item of all lists</td>
 </tr>
 </tbody>
 </table>
@@ -289,7 +368,11 @@ rest will be a half for valid and the other half for test</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ratio</strong> &#8211; The ratio of all triplets required for <em>train_subs</em></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ratio</strong> (<em>float</em>) &#8211; The ratio of all triplets required for <em>train_subs</em></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A dictionary with splited subs</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
 </tr>
 </tbody>
 </table>
