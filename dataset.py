@@ -2,6 +2,7 @@ import requests
 import json
 import pickle
 import numpy as np
+import threading
 from queries import Queries
 
 class Dataset():
@@ -12,7 +13,7 @@ class Dataset():
     relations_dict = {}
     subs = []
 
-    def __init__(new_endpoint=None):
+    def __init__(self, new_endpoint=None, thread_limiter=100):
         """Creates the dataset class
 
         The default endpoint is the original from wikidata.
@@ -20,6 +21,9 @@ class Dataset():
         """
         if new_endpoint is not None:
             WIKIDATA_ENDPOINT = new_endpoint
+
+        self.th_semaphore = threading.Semaphore(thread_limiter)
+
 
     def show(self, verbose=False):
         """Show all elements of the dataset
@@ -215,20 +219,85 @@ class Dataset():
             lines.append("?"+level[0]+" ?"+level[1]+" ?"+level[2])
 
         query = """PREFIX wikibase: <http://wikiba.se/ontology>
-construct {{ {0} }}
-WHERE {{ ?wikidata wdt:P950 ?bne .
-{1}
-}} """.format(" . ".join(lines), " . \n".join(lines))
+            construct {{ {0} }}
+            WHERE {{ ?wikidata wdt:P950 ?bne .
+            {1}
+            }} """.format(" . ".join(lines), " . \n".join(lines))
 
         return query
 
-    def load_dataset_recurrently(self, levels, verbose=True):
-        "Make one query for each element"
-        # TODO-> Primera consulta-> devuelve ~30000 objetos. Realizar ese nº de consultas contra esos objetos
-        # para encadenar todas las entidades que sean necesarias, una por una, hasta llenar el dataset.
-        # NO HACER UNA CONSULTA CONSTRUCT CON ALL-> El ENDPOINT de wikidata se satura
-        # ¿Paralelizar las requests de los objetos?
 
+    def __all_entity_triplet__(self, element,
+                                append_queue=lambda: None, verbose=0):
+        """Add to dataset all the relations from an entity
+
+        This method is runned for one thread. It will check if the Wikidata
+        entity is valid, make a SPARQL query and save all triplets on the
+        dataset.
+        :param element: The URI of element to be scanned
+        :param append_queue: A function that receives the subject of a triplet
+        :param verbose: The level of verbosity. 0 is low, and 2 is high
+        """
+
+        # Extract correctly the id of the wikidata element.
+        try:
+            # If either fails to convert the last Q number into int
+            # or the URI hasn't 'entity' keyword, returns without doing nothing
+            wikidata_id = int(element.split("/")[-1][1:])
+            assert element.split("/")[-2] == 'entity'
+        except Exception:
+            return
+
+        el_query = """PREFIX wikibase: <http://wikiba.se/ontology>
+            SELECT ?predicate ?object
+            WHERE {{
+                wd:Q{0} ?predicate ?object .
+            }}
+            """.format(wikidata_id)
+        if verbose > 1:
+            print("The element query is: \n", el_query)
+        # Get all related elements
+        sts, el_json = self.execute_query(el_query)
+        if verbose > 1:
+            print("HTTP",sts, len(el_json))
+
+        # Check future errors
+        if sts is not 200:
+            return
+
+        # Add element to entities queue
+        id_obj = self.add_element(element, self.entities, self.entities_dict)
+
+        # For related elements, get all relations and objects
+        for relation in el_json:
+            pred = self.extract_entity(relation['predicate'])
+            obj = self.extract_entity(relation['object'])
+
+            if pred is not False and obj is not False:
+                # Add to the queue iff the element hasn't been scanned
+                if not self.exist_element(obj, self.entities_dict):
+                    append_queue(obj)
+
+                # Add relation
+                id_pred = self.add_element(pred, self.relations, self.relations_dict)
+                id_subj = self.add_element(obj, self.entities, self.entities_dict)
+                if id_subj is not False or id_pred is not False:
+                    self.subs.append((id_obj, id_subj, id_pred))
+
+    def load_dataset_recurrently(self, levels, verbose=1):
+        """Loads to dataset all entities with BNE ID and their relations
+
+        Due to Wikidata endpoint cann't execute queries that take long time
+        to complete, it is necessary to consruct the dataset entity by entity,
+        without using SPARQL CONSTRUCT. This method will start concurrently
+        some threads to make several SPARQL SELECT queries.
+
+        :param levels: The depth where get triplets related with original item
+        :param verbose: The level of verbosity. 0 is low, and 2 is high
+        :return: bool -- True if operation was successful
+        """
+
+        # Count all Wikidata elements with a BNE entry
         count_query = """
             PREFIX wikibase: <http://wikiba.se/ontology>
             SELECT (count(distinct ?wikidata) as ?count)
@@ -236,14 +305,19 @@ WHERE {{ ?wikidata wdt:P950 ?bne .
                 ?wikidata wdt:P950 ?bne .
             }"""
 
-        if verbose:
+        if verbose > 1:
             print("The count query is: \n", count_query)
         sts, count_json = self.execute_query(count_query)
-        if verbose:
+        if verbose > 1:
             print(sts, count_json)
+
+        # The number of elements
         entities_number = int(count_json[0]['count']['value'])
 
-        # fill a list with elements
+        if verbose > 0:
+            print("Found {} entities".format(entities_number))
+
+        # fill a list with wikidata entries related to BNE elements
         first_query = """
             PREFIX wikibase: <http://wikiba.se/ontology>
             SELECT ?wikidata
@@ -251,66 +325,50 @@ WHERE {{ ?wikidata wdt:P950 ?bne .
                 ?wikidata wdt:P950 ?bne .
             }
             """
-        if verbose:
+        if verbose > 1:
             print("The first query is: \n", first_query)
         sts, first_json = self.execute_query(first_query)
-        if verbose:
+        if verbose > 1:
             print(sts, len(first_json))
-        entities_number = int(count_json[0]['count']['value'])
 
-
-        new_queue = [entity['wikidata']['value'] for entity in first_json] #.split("/")[-1]
+        # Create a queue for wikidata elements to be scanned
+        new_queue = [entity['wikidata']['value'] for entity in first_json]
         el_queue = []
 
         # Loop for depth levels
         for level in range(0,levels):
             # Loop for every item on the queue
-            print("loop %d" % level)
+            if verbose > 0:
+                print("Scanning level {} with {} elements"
+                    .format(level+1, len(new_queue)))
             el_queue = new_queue
             new_queue = []
-            print (len(el_queue))
+
+            # pool for threads
+            threads = []
+            # Lambda function to add elements to queue
+            add_queue = lambda entity: new_queue.append(entity)
+
+            # Scan every entity on queue
             for element in el_queue:
-                
-                el_query = """PREFIX wikibase: <http://wikiba.se/ontology>
-                    SELECT ?predicate ?object
-                    WHERE {{
-                        wd:{0} ?predicate ?object .
-                    }}
-                    """.format(element.split("/")[-1])
-                if verbose:
-                    print("The element query is: \n", el_query)
-                # Get all related elements
-                sts, el_json = self.execute_query(el_query)
-                if verbose:
-                    print(sts, len(el_json))
+                # Generate n threads, start them and save into pool
+                t = threading.Thread(
+                    target=self.__all_entity_triplet__,
+                    args=(element, ),
+                    kwargs={'verbose': verbose, 'append_queue': add_queue})
+                threads.append(t)
+                t.start()
 
-                # Add element to entities queue
-                id_obj = self.add_element(element, self.entities, self.entities_dict)
-                # For related elements, get all relations and objects
-                for relation in el_json:
-                    pred = self.extract_entity(relation['predicate'])
-                    obj = self.extract_entity(relation['object'])
-                    if pred is not False and obj is not False:
-                        # Add to the queue
-                        if not self.exist_element(obj, self.entities_dict):
-                            new_queue.append(obj)
 
-                        # Add relation
-                        id_pred = self.add_element(pred, self.relations, self.relations_dict)
-                        id_subj = self.add_element(obj, self.entities, self.entities_dict)
-                        if id_subj is not False or id_pred is not False:
-                            self.subs.append((id_obj, id_subj, id_pred))
+            if verbose > 0:
+                print("Waiting all threads to end")
+            # Wait for threads to end
+            for th in threads:
+                th.join()
 
-        # for only one level:
-        # Fill the entity list with very first elements
-        # For each of this elements:
-            # Insert into list
-            # Query all properties and objects related
-            # Save all valid properties and objects
-            # valid objects (elements) are added to a 2nd round list IFF no están en la lista principal (Si ya están en la lista principal, entonces ya han sido analizados)
 
-        print("Finalizado")
-        first_level_query = ""
+        return true
+
 
     def load_entire_dataset(self, levels, where="", batch=100000, verbose=True):
         """Loads the dataset by quering to Wikidata on the desired levels
@@ -441,8 +499,10 @@ WHERE {{ ?wikidata wdt:P950 ?bne .
 
         :returns: A tuple compound of (http_status, json_or_error)
         """
-
+        #Thread limiter
+        self.th_semaphore.acquire()
         response = requests.get(self.WIKIDATA_ENDPOINT + query, headers=headers)
+        self.th_semaphore.release()
         # if response.status_code is not 200:
         #     raise Exception("Error on endpoint. HTTP status code: "+str(response.status_code))
         if response.status_code is not 200:
