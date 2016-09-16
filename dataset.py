@@ -9,6 +9,9 @@ import time
 
 
 class Dataset():
+    """
+    Class used to create, modify, export and import Datasets from Wikidata
+    """
     WIKIDATA_ENDPOINT = \
         """https://query.wikidata.org/bigdata/namespace/wdq/sparql?query="""
     entities = []
@@ -36,7 +39,7 @@ class Dataset():
             self.WIKIDATA_ENDPOINT = new_endpoint
 
         self.th_semaphore = threading.Semaphore(thread_limiter)
-        self.query_sem = threading.Semaphore(thread_limiter)
+        # self.query_sem = threading.Semaphore(thread_limiter)
 
     def show(self, verbose=False):
         """Show all elements of the dataset
@@ -219,6 +222,7 @@ class Dataset():
     def build_levels(self, n_levels):
         """Generates a simple *chain* of triplets for the desired levels
 
+        :deprecated:
         :param int n_levels: Deep of the search on wikidata graph
         :return: A list of chained triplets
         :rtype: list
@@ -247,6 +251,7 @@ class Dataset():
     def build_n_levels_query(self, n_levels=3):
         """Builds a CONSTRUCT SPARQL query of the desired deep
 
+        :deprecated:
         :param int n_levels: Deep of the search on wikidata graph
         :return: The desired chained query
         :rtype: string
@@ -264,9 +269,63 @@ class Dataset():
 
         return query
 
-    def __all_entity_triplet__(self, element,
-                               append_queue=lambda: None, verbose=0,
-                               callback=lambda: None):
+    def load_entire_dataset(self, levels,
+                            where="", batch=100000, verbose=True):
+        """Loads the dataset by quering to Wikidata on the desired levels
+
+        :deprecated:
+        :param int levels: Deep of the search
+        :param str where: Extra where statements for SPARQL query
+        :param int batch: Number of elements returned each query
+        :param bool verbose: True for showing all steps the method do
+        :return: True if operation was successful
+        :rtype: bool
+        """
+
+        # Generate select query to get entities count
+        lines = []
+        for level in self.build_levels(levels):
+            lines.append("?"+level[0]+" ?"+level[1]+" ?"+level[2])
+        count_query = """PREFIX wikibase: <http://wikiba.se/ontology>
+            SELECT (count(distinct ?object) as ?count)
+            WHERE {{ ?wikidata wdt:P950 ?bne .
+            {1}
+            {0}
+            }} """.format(" . \n".join(lines), where)
+        if verbose:
+            print("Query is: "+count_query)
+        code, count_json = self.execute_query(count_query)
+        if verbose:
+            print(code, count_json)
+        tuples_number = int(count_json[0]['count']['value'])
+
+        # Generate several LIMIT & OFFSET queries
+        batch = 100000
+        base_query = self.build_n_levels_query(n_levels=levels)
+        # Number of queries to do: add one more to last iteration
+        n_queries = int(tuples_number / batch) + 1
+        json_total = []
+
+        for query in range(0, n_queries):
+            if verbose:
+                print("\n\nEmpieza ronda {} de {}".format(query, n_queries))
+            limit_string = " LIMIT {} OFFSET {}".format(batch, 0*batch)
+            # print(str(query)+"\n\n"+base_query + limit_string)
+            sts, resp = self.execute_query(base_query + limit_string)
+            if sts is not 200:
+                print(resp)
+
+            if verbose:
+                print(sts, len(resp))
+                print("Guardando en el dataset...")
+            self.load_dataset_from_json(resp)
+            if verbose:
+                print("Guardado!")
+                self.show()
+
+    def all_entity_triplet(self, element,
+                           append_queue=lambda: None, verbose=0,
+                           callback=lambda: None):
         """Add to dataset all the relations from an entity
 
         This method is runned for one thread. It will check if the Wikidata
@@ -276,6 +335,7 @@ class Dataset():
         :param function append_queue: A function that receives the subject of
                                       a triplet as an argument
         :param int verbose: The level of verbosity. 0 is low, and 2 is high
+        :param function callback: The callback function. Default is return
         :return: Nothing
         """
 
@@ -287,6 +347,7 @@ class Dataset():
             assert element.split("/")[-2] == 'entity'
         except Exception:
             callback()
+            return
 
         el_query = """PREFIX wikibase: <http://wikiba.se/ontology>
             SELECT ?predicate ?object
@@ -304,6 +365,7 @@ class Dataset():
         # Check future errors
         if sts is not 200:
             callback()
+            return
 
         # Add element to entities queue
         id_obj = self.add_element(element, self.entities, self.entities_dict)
@@ -327,6 +389,7 @@ class Dataset():
                     self.subs.append((id_obj, id_subj, id_pred))
 
         callback()
+        return
 
     def load_dataset_recurrently(self, levels, verbose=1):
         """Loads to dataset all entities with BNE ID and their relations
@@ -389,7 +452,7 @@ class Dataset():
             self.status['active'] = True
             self.status['round_total'] = levels
             status_thread = threading.Thread(
-                target=self.__control_thread__,
+                target=self.control_thread,
                 args=(),)
             status_thread.start()
 
@@ -419,7 +482,7 @@ class Dataset():
 
                 self.th_semaphore.acquire()
                 t = threading.Thread(
-                    target=self.__all_entity_triplet__,
+                    target=self.all_entity_triplet,
                     args=(element, ),
                     kwargs={'verbose': verbose,
                             'append_queue': lambda e: new_queue.append(e),
@@ -438,16 +501,30 @@ class Dataset():
 
         return True
 
-    def __control_thread__(self):
+    def control_thread(self):
+        """
+        Starts a loop waiting for user to request information about progress
+
+        This method should not be called from other method
+        distinct than 'load_dataset_recurrently'
+        """
         self.status['active'] = True
         while self.status['active']:
             ui = input("Enter S to show status: ")
             if ui is "s" or ui is "S":
-                print(self.__get_status__())
+                print(self.get_status())
             elif ui is "q" or ui is "Q":
                 self.status['active'] = False
 
-    def __get_status__(self):
+    def get_status(self):
+        """
+        Returns a formated string with current progress
+
+        This is a helper method and should not be called from
+        other method distinct than 'load_dataset_recurrently'
+        :return: Current download progress
+        :rtype: str
+        """
         elapsed = datetime.now() - self.status['started']
         try:
             scanned = 100 * (self.status['it_analyzed'] /
@@ -466,60 +543,6 @@ class Dataset():
                           self.status['it_total'],
                           threading.active_count())
         return status_str
-
-    def load_entire_dataset(self, levels,
-                            where="", batch=100000, verbose=True):
-        """Loads the dataset by quering to Wikidata on the desired levels
-
-        :deprecated:
-        :param int levels: Deep of the search
-        :param str where: Extra where statements for SPARQL query
-        :param int batch: Number of elements returned each query
-        :param bool verbose: True for showing all steps the method do
-        :return: True if operation was successful
-        :rtype: bool
-        """
-
-        # Generate select query to get entities count
-        lines = []
-        for level in self.build_levels(levels):
-            lines.append("?"+level[0]+" ?"+level[1]+" ?"+level[2])
-        count_query = """PREFIX wikibase: <http://wikiba.se/ontology>
-            SELECT (count(distinct ?object) as ?count)
-            WHERE {{ ?wikidata wdt:P950 ?bne .
-            {1}
-            {0}
-            }} """.format(" . \n".join(lines), where)
-        if verbose:
-            print("Query is: "+count_query)
-        code, count_json = self.execute_query(count_query)
-        if verbose:
-            print(code, count_json)
-        tuples_number = int(count_json[0]['count']['value'])
-
-        # Generate several LIMIT & OFFSET queries
-        batch = 100000
-        base_query = self.build_n_levels_query(n_levels=levels)
-        # Number of queries to do: add one more to last iteration
-        n_queries = int(tuples_number / batch) + 1
-        json_total = []
-
-        for query in range(0, n_queries):
-            if verbose:
-                print("\n\nEmpieza ronda {} de {}".format(query, n_queries))
-            limit_string = " LIMIT {} OFFSET {}".format(batch, 0*batch)
-            # print(str(query)+"\n\n"+base_query + limit_string)
-            sts, resp = self.execute_query(base_query + limit_string)
-            if sts is not 200:
-                print(resp)
-
-            if verbose:
-                print(sts, len(resp))
-                print("Guardando en el dataset...")
-            self.load_dataset_from_json(resp)
-            if verbose:
-                print("Guardado!")
-                self.show()
 
     def save_to_binary(self, filepath):
         """Saves the dataset object on the disk

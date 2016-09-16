@@ -46,8 +46,9 @@
 </div>
 <span class="target" id="module-dataset"></span><dl class="class">
 <dt id="dataset.Dataset">
-<em class="property">class </em><code class="descclassname">dataset.</code><code class="descname">Dataset</code><span class="sig-paren">(</span><em>new_endpoint=None</em>, <em>thread_limiter=100</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<em class="property">class </em><code class="descclassname">dataset.</code><code class="descname">Dataset</code><span class="sig-paren">(</span><em>new_endpoint=None</em>, <em>thread_limiter=32</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class used to create, modify, export and import Datasets from Wikidata</p>
+<dl class="method">
 <dt id="dataset.Dataset.add_element">
 <code class="descname">add_element</code><span class="sig-paren">(</span><em>element</em>, <em>complete_list</em>, <em>complete_list_dict</em>, <em>only_uri=False</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.add_element" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add element to a list of the dataset. Avoids duplicate elements.</p>
@@ -74,6 +75,34 @@
 </dd></dl>
 
 <dl class="method">
+<dt id="dataset.Dataset.all_entity_triplet">
+<code class="descname">all_entity_triplet</code><span class="sig-paren">(</span><em>element</em>, <em>append_queue=&lt;function Dataset.&lt;lambda&gt;&gt;</em>, <em>verbose=0</em>, <em>callback=&lt;function Dataset.&lt;lambda&gt;&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.all_entity_triplet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add to dataset all the relations from an entity</p>
+<p>This method is runned for one thread. It will check if the Wikidata
+entity is valid, make a SPARQL query and save all triplets on the
+dataset.
+:param str element: The URI of element to be scanned
+:param function append_queue: A function that receives the subject of</p>
+<blockquote>
+<div>a triplet as an argument</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>verbose</strong> (<em>int</em>) &#8211; The level of verbosity. 0 is low, and 2 is high</li>
+<li><strong>callback</strong> (<em>function</em>) &#8211; The callback function. Default is return</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Nothing</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="dataset.Dataset.build_levels">
 <code class="descname">build_levels</code><span class="sig-paren">(</span><em>n_levels</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.build_levels" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates a simple <em>chain</em> of triplets for the desired levels</p>
@@ -81,11 +110,13 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n_levels</strong> (<em>int</em>) &#8211; Deep of the search on wikidata graph</td>
+<tr class="field-odd field"><th class="field-name">Deprecated:</th><td class="field-body"></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list of chained triplets</td>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n_levels</strong> (<em>int</em>) &#8211; Deep of the search on wikidata graph</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A list of chained triplets</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
 </tr>
 </tbody>
 </table>
@@ -99,14 +130,24 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n_levels</strong> (<em>int</em>) &#8211; Deep of the search on wikidata graph</td>
+<tr class="field-odd field"><th class="field-name">Deprecated:</th><td class="field-body"></td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The desired chained query</td>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n_levels</strong> (<em>int</em>) &#8211; Deep of the search on wikidata graph</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">string</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The desired chained query</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">string</td>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dataset.Dataset.control_thread">
+<code class="descname">control_thread</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.control_thread" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starts a loop waiting for user to request information about progress</p>
+<p>This method should not be called from other method
+distinct than &#8216;load_dataset_recurrently&#8217;</p>
 </dd></dl>
 
 <dl class="method">
@@ -151,7 +192,7 @@
 
 <dl class="method">
 <dt id="dataset.Dataset.extract_entity">
-<code class="descname">extract_entity</code><span class="sig-paren">(</span><em>entity</em>, <em>filters={'wdt-entity': True</em>, <em>'wdt-prop': True</em>, <em>'bnode': False</em>, <em>'wdt-reference': False</em>, <em>'wdt-statement': False</em>, <em>'literal': False}</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.extract_entity" title="Permalink to this definition">¶</a></dt>
+<code class="descname">extract_entity</code><span class="sig-paren">(</span><em>entity</em>, <em>filters={'literal': False</em>, <em>'bnode': False</em>, <em>'wdt-entity': True</em>, <em>'wdt-reference': False</em>, <em>'wdt-prop': True</em>, <em>'wdt-statement': False}</em><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.extract_entity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given an entity, returns the valid representation, ready to be saved</p>
 <p>The filter argument allows to avoid adding elements into lists that
 will not be used. It is a dictionary with the shape: {&#8216;filter&#8217;: bool}.
@@ -181,6 +222,16 @@ The valid filters (and default) are:</p>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="method">
+<dt id="dataset.Dataset.get_status">
+<code class="descname">get_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#dataset.Dataset.get_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a formated string with current progress</p>
+<p>This is a helper method and should not be called from
+other method distinct than &#8216;load_dataset_recurrently&#8217;
+:return: Current download progress
+:rtype: str</p>
 </dd></dl>
 
 <dl class="method">
