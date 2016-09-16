@@ -4,7 +4,9 @@ import json
 
 class Queries():
     def __init__(self):
-        self.WD_ENDPOINT = "https://query.wikidata.org/bigdata/namespace/wdq/sparql?query="
+        self.WD_ENDPOINT = ("https://query.wikidata.org/bigdata"
+                            "/namespace/wdq/sparql?query=")
+
     def build_levels(self, n_levels):
         "This function generates a list, needed on `build_n_levels_query`"
         ob1 = "wikidata"
@@ -17,7 +19,7 @@ class Queries():
 
         tripletas = []
 
-        for level in range(1,n_levels+1):
+        for level in range(1, n_levels+1):
             tripletas.append((ob1, pre, ob2))
             objectCount += 1
             predicateCount += 1
@@ -41,17 +43,17 @@ WHERE {{ ?wikidata wdt:P950 ?bne .
 
         return query
 
-
     def batch_offset_json(self, query, limit, offset):
         "Return a JSON of a slice from a big query"
         query1 = query+" LIMIT {0} OFFSET {1}".format(limit, offset)
 
-        headers = {"Accept" : "application/json"}
+        headers = {"Accept": "application/json"}
         response = requests.get(self.WD_ENDPOINT + query1, headers=headers)
         if response.status_code is not 200:
-            return False, "Error occurred on http request. Code"+str(response.status_code)
+            return (False, "Error occurred on http request. Code" +
+                    str(response.status_code))
         json_data = response.json()['results']['bindings']
-        return True,json_data
+        return (True, json_data)
 
     def big_query(self, n_levels=3, n_rounds=30, total=1000000):
         "Returns a JSON of a big query. **WARNING**: **MEMORY EATER**"
@@ -72,7 +74,6 @@ WHERE {{ ?wikidata wdt:P950 ?bne .
                 break
         return all_json
 
-
     def entidades_comun_bne_json(self, where="", batch=10000):
         # Primero obtenemos el número de entidades totales:
         query = """PREFIX wikibase: <http://wikiba.se/ontology>
@@ -86,12 +87,13 @@ SELECT ?wikidata ?bne
 WHERE {{
 ?wikidata wdt:P950 ?bne .
 {0}
-}} LIMIT {1} OFFSET {2}""" #format(where, limit, offset)
+}} LIMIT {1} OFFSET {2}"""  # format(where, limit, offset)
 
-        headers = {"Accept" : "application/json"}
+        headers = {"Accept": "application/json"}
         response = requests.get(self.WD_ENDPOINT + query, headers=headers)
         if response.status_code is not 200:
-            return False, "Error occurred on http request. Code"+str(response.status_code)
+            return (False, "Error occurred on http request. Code" +
+                    str(response.status_code))
         json_data = response.json()['results']['bindings']
         total_number = int(json_data[0]['count']['value'])
 
@@ -106,9 +108,12 @@ WHERE {{
             else:
                 limit = total_number
 
-            response = requests.get(self.WD_ENDPOINT + query1.format(where, limit, offset), headers=headers)
+            response = requests.get(self.WD_ENDPOINT +
+                                    query1.format(where, limit, offset),
+                                    headers=headers)
             if response.status_code is not 200:
-                return False, "Error occurred on http request. Code"+str(response.status_code)
+                return (False, "Error occurred on http request. Code" +
+                        str(response.status_code))
             json_data = response.json()['results']['bindings']
             total_json = total_json + json_data
             offset += limit
@@ -117,5 +122,7 @@ WHERE {{
 
     def get_entidades_comun_bne(self, where="", batch=10000):
         key, value = ("wikidata", "bne")
-        status, json_data = self.entidades_comun_bne_json(where=where, batch=batch)
-        return [(item[key]['value'], item[value]['value']) for item in json_data]
+        status, json_data = self.entidades_comun_bne_json(where=where,
+                                                          batch=batch)
+        return [(item[key]['value'],
+                 item[value]['value']) for item in json_data]

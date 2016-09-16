@@ -482,7 +482,7 @@ class Dataset():
             if verbose > 0:
                 print("Scanning level {} with {} elements"
                       .format(level+1, len(new_queue)))
-            el_queue = new_queue
+            el_queue = new_queue[:10000]
             new_queue = []
 
             # Initialize some status variables
