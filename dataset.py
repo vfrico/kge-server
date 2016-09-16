@@ -457,7 +457,7 @@ class Dataset():
 
         status_str = ("Elapsed time: {0}s. Depth {1} of {2}."
                       " Entities scanned: {3:.2f}% ({4} of {5})"
-                      " Current threads running {6}").format(
+                      " Active threads: {6}").format(
                           elapsed.seconds,
                           self.status['round_curr']+1,
                           self.status['round_total'],
