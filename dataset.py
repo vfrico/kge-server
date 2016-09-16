@@ -411,6 +411,8 @@ class Dataset():
             # Scan every entity on queue
             for element in el_queue:
                 # Generate n threads, start them and save into pool
+                while threading.active_count() > 20:
+                    continue
                 t = threading.Thread(
                     target=self.__all_entity_triplet__,
                     args=(element, ),
@@ -448,13 +450,15 @@ class Dataset():
             scanned = 0
 
         status_str = ("Elapsed time: {0}s. Depth {1} of {2}."
-                      " Entities scanned: {3:.2f}% ({4} of {5})").format(
+                      " Entities scanned: {3:.2f}% ({4} of {5})"
+                      " Current threads running {6}").format(
                           elapsed.seconds,
                           self.status['round_curr']+1,
                           self.status['round_total'],
                           scanned,
                           self.status['it_analyzed'],
-                          self.status['it_total'])
+                          self.status['it_total'],
+                          threading.active_count())
         return status_str
 
     def load_entire_dataset(self, levels,
