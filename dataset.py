@@ -25,7 +25,7 @@ class Dataset():
               'it_total': 0,
               'active': False}
 
-    def __init__(self, new_endpoint=None, thread_limiter=100):
+    def __init__(self, new_endpoint=None, thread_limiter=32):
         """Creates the dataset class
 
         The default endpoint is the original from wikidata.
@@ -36,6 +36,7 @@ class Dataset():
             self.WIKIDATA_ENDPOINT = new_endpoint
 
         self.th_semaphore = threading.Semaphore(thread_limiter)
+        self.query_sem = threading.Semaphore(thread_limiter)
 
     def show(self, verbose=False):
         """Show all elements of the dataset
@@ -264,7 +265,8 @@ class Dataset():
         return query
 
     def __all_entity_triplet__(self, element,
-                               append_queue=lambda: None, verbose=0):
+                               append_queue=lambda: None, verbose=0,
+                               callback=lambda: None):
         """Add to dataset all the relations from an entity
 
         This method is runned for one thread. It will check if the Wikidata
@@ -284,7 +286,7 @@ class Dataset():
             wikidata_id = int(element.split("/")[-1][1:])
             assert element.split("/")[-2] == 'entity'
         except Exception:
-            return
+            callback()
 
         el_query = """PREFIX wikibase: <http://wikiba.se/ontology>
             SELECT ?predicate ?object
@@ -301,7 +303,7 @@ class Dataset():
 
         # Check future errors
         if sts is not 200:
-            return
+            callback()
 
         # Add element to entities queue
         id_obj = self.add_element(element, self.entities, self.entities_dict)
@@ -324,8 +326,7 @@ class Dataset():
                 if id_subj is not False or id_pred is not False:
                     self.subs.append((id_obj, id_subj, id_pred))
 
-        # Only for show status purpose
-        self.status['it_analyzed'] += 1
+        callback()
 
     def load_dataset_recurrently(self, levels, verbose=1):
         """Loads to dataset all entities with BNE ID and their relations
@@ -411,13 +412,18 @@ class Dataset():
             # Scan every entity on queue
             for element in el_queue:
                 # Generate n threads, start them and save into pool
-                while threading.active_count() > 20:
-                    continue
+
+                def func_callback():
+                    self.status['it_analyzed'] += 1
+                    self.th_semaphore.release()
+
+                self.th_semaphore.acquire()
                 t = threading.Thread(
                     target=self.__all_entity_triplet__,
                     args=(element, ),
                     kwargs={'verbose': verbose,
-                            'append_queue': lambda e: new_queue.append(e)})
+                            'append_queue': lambda e: new_queue.append(e),
+                            'callback': func_callback})
                 threads.append(t)
                 t.start()
 
@@ -603,9 +609,9 @@ class Dataset():
         :returns: A tuple compound of (http_status, json_or_error)
         """
         # Thread limiter
-        self.th_semaphore.acquire()
+        # self.query_sem.acquire()
         response = requests.get(self.WIKIDATA_ENDPOINT+query, headers=headers)
-        self.th_semaphore.release()
+        # self.query_sem.release()
         # if response.status_code is not 200:
         #     raise Exception("Error on endpoint. HTTP status code: "+
         #                      str(response.status_code))
