@@ -482,12 +482,13 @@ class Dataset():
             if verbose > 0:
                 print("Scanning level {} with {} elements"
                       .format(level+1, len(new_queue)))
-            el_queue = new_queue[:10000]
+            el_queue = new_queue
             new_queue = []
 
             # Initialize some status variables
             self.status['round_curr'] = level
             self.status['it_total'] = len(el_queue)
+            self.status['it_analyzed'] = 0
 
             # pool for threads
             threads = []
