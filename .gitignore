@@ -4,6 +4,8 @@ aquimismo2
 wikidatamap.bin
 *.json
 *.bin
+holographic_embeddings/
+holographic-embeddings/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
