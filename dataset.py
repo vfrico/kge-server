@@ -100,16 +100,25 @@ class Dataset():
         elif element is False:
             return False
 
-        try:
+        if element in complete_list_dict:
             # Item is on the list, return same id
             return complete_list_dict[element]
-
-        except (KeyError, ValueError):
+        else:
             # Item is not on the list, append and return id
             complete_list.append(element)
             id_item = len(complete_list)-1
             complete_list_dict[element] = id_item
             return id_item
+        # try:
+        #     # Item is on the list, return same id
+        #     return complete_list_dict[element]
+        #
+        # except (KeyError, ValueError):
+        #     # Item is not on the list, append and return id
+        #     complete_list.append(element)
+        #     id_item = len(complete_list)-1
+        #     complete_list_dict[element] = id_item
+        #     return id_item
 
     def exist_element(self, element, complete_list_dict):
         """Check if element exists on a given list
@@ -119,14 +128,18 @@ class Dataset():
         :return: Wether the item was found or no
         :rtype: bool
         """
-        try:
-            # Item is on the list, return same id
-            elem_id = complete_list_dict[element]
+        if element in complete_list_dict:
             return True
-
-        except (KeyError, ValueError):
-            # Item is not on the list
+        else:
             return False
+        # try:
+        #     # Item is on the list, return same id
+        #     elem_id = complete_list_dict[element]
+        #     return True
+        #
+        # except (KeyError, ValueError):
+        #     # Item is not on the list
+        #     return False
 
     def extract_entity(self, entity,
                        filters={'wdt-entity': True, 'wdt-reference': False,
@@ -392,8 +405,13 @@ class Dataset():
 
         # For related elements, get all relations and objects
         for relation in el_json:
-            pred = self.extract_entity(relation['predicate'])
-            obj = self.extract_entity(relation['object'])
+            try:
+                pred = self.extract_entity(relation['predicate'])
+                obj = self.extract_entity(relation['object'])
+            except KeyError:
+                print("Error on relation: {}".format(relation))
+                callback()
+                return
 
             if pred is not False and obj is not False:
                 # Add to the queue iff the element hasn't been scanned
@@ -638,9 +656,10 @@ class Dataset():
         data = data[indices]
         train_samples = int((1-ratio) * data.shape[0])
 
-        x_train = [tuple(x) for x in data[:-train_samples]]
-        x_val = [tuple(x) for x in data[-train_samples:-int(train_samples/2)]]
-        x_test = [tuple(x) for x in data[-int(train_samples/2):]]
+        x_train = [tuple(x.tolist()[0]) for x in data[:-train_samples]]
+        x_val = [tuple(x.tolist()[0]) for x in
+                 data[-train_samples:-int(train_samples/2)]]
+        x_test = [tuple(x.tolist()[0]) for x in data[-int(train_samples/2):]]
 
         return {"train_subs": x_train,
                 "valid_subs": x_val,
