@@ -6,6 +6,7 @@ wikidatamap.bin
 *.bin
 holographic_embeddings/
 holographic-embeddings/
+scikit-kge/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
