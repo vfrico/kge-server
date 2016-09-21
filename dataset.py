@@ -23,7 +23,6 @@ import json
 import pickle
 import numpy as np
 import threading
-from queries import Queries
 from datetime import datetime
 import time
 
