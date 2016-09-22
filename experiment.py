@@ -3,8 +3,8 @@
 # coding:utf-8
 #
 # Experiment class: create and train a model
-# Copyright (C) 2016 Maximilian Nickel <mnick@mit.edu>
 # Copyright (C) 2016 Víctor Fernández Rico <vfrico@gmail.com>
+# Copyright (C) 2016 Maximilian Nickel <mnick@mit.edu>
 #
 #   The original file can be found on
 #   <https://github.com/mnick/holographic-embeddings/tree/master/kg/base.py>
@@ -68,7 +68,7 @@ class Experiment(object):
         self.ne = ne                # Negative examples
         self.nb = nbatches          # Number of batches
         self.fout = fout            # Path to store model
-        #self.fin = fin             # Path to imput data
+        # self.fin = fin            # Path to imput data
         self.test_all = test_all    # Evaluate the model each x epochs
         self.no_pairwise = no_pairwise  # True if trainer is no pairwise
         self.mode = mode
@@ -81,8 +81,11 @@ class Experiment(object):
         self.dataset = dataset
 
     def run(self):
-        # parse comandline arguments
+        """Configure ModelTrainer and start the trainer.
 
+        :return: The trained model
+        :rtype: skge.Model
+        """
         if self.mode == 'rank':
             self.callback = self.ranking_callback
         elif self.mode == 'lp':
@@ -98,9 +101,11 @@ class Experiment(object):
         elapsed = timeit.default_timer() - trn.epoch_start
         self.exectimes.append(elapsed)
         if self.no_pairwise:
-            log.info("[%3d] time = %ds, loss = %f" % (trn.epoch, elapsed, trn.loss))
+            print("[%3d] time = %ds, loss = %f" %
+                  (trn.epoch, elapsed, trn.loss))
         else:
-            log.info("[%3d] time = %ds, violations = %d" % (trn.epoch, elapsed, trn.nviolations))
+            print("[%3d] time = %ds, violations = %d" %
+                  (trn.epoch, elapsed, trn.nviolations))
 
         # if we improved the validation error, store model and calc test error
         if self.test_all > 0 and (trn.epoch % self.test_all == 0 or with_eval):
@@ -110,7 +115,8 @@ class Experiment(object):
             fmrr_valid = ranking_scores(pos_v, fpos_v, trn.epoch, 'VALID')
             print("after ranking")
 
-            log.debug("FMRR valid = %f, best = %f" % (fmrr_valid, self.best_valid_score))
+            print("FMRR valid = %f, best = %f" %
+                  (fmrr_valid, self.best_valid_score))
             if fmrr_valid > self.best_valid_score:
                 self.best_valid_score = fmrr_valid
                 pos_t, fpos_t = self.ev_test.positions(trn.model)
@@ -134,19 +140,23 @@ class Experiment(object):
         elapsed = timeit.default_timer() - m.epoch_start
         self.exectimes.append(elapsed)
         if self.no_pairwise:
-            log.info("[%3d] time = %ds, loss = %d" % (m.epoch, elapsed, m.loss))
+            print("[%3d] time = %ds, loss = %d" %
+                  (m.epoch, elapsed, m.loss))
         else:
-            log.info("[%3d] time = %ds, violations = %d" % (m.epoch, elapsed, m.nviolations))
+            print("[%3d] time = %ds, violations = %d" %
+                  (m.epoch, elapsed, m.nviolations))
 
         # if we improved the validation error, store model and calc test error
         if self.test_all > 0 and (m.epoch % self.test_all == 0 or with_eval):
             auc_valid, roc_valid = self.ev_valid.scores(m)
 
-            log.debug("AUC PR valid = %f, best = %f" % (auc_valid, self.best_valid_score))
+            print("AUC PR valid = %f, best = %f" %
+                  (auc_valid, self.best_valid_score))
             if auc_valid > self.best_valid_score:
                 self.best_valid_score = auc_valid
                 auc_test, roc_test = self.ev_test.scores(m)
-                log.debug("AUC PR test = %f, AUC ROC test = %f" % (auc_test, roc_test))
+                print("AUC PR test = %f, AUC ROC test = %f" %
+                      (auc_test, roc_test))
 
                 if self.fout is not None:
                     st = {
@@ -162,21 +172,30 @@ class Experiment(object):
         return True
 
     def train(self):
+        # Compute training vector size
         N = len(self.dataset.entities)
         M = len(self.dataset.relations)
         sz = (N, N, M)
-        subs = self.dataset.train_split()
 
-        true_triples = subs['train_subs'] + subs['test_subs'] + subs['valid_subs']
-        if self.mode == 'rank':
-            self.ev_test = self.evaluator(subs['test_subs'], true_triples, self.neval)
-            self.ev_valid = self.evaluator(subs['valid_subs'], true_triples, self.neval)
-        elif self.mode == 'lp':
-            self.ev_test = self.evaluator(subs['test_subs'], subs['test_labels'])
-            self.ev_valid = self.evaluator(subs['valid_subs'], subs['valid_labels'])
+        # Extract triples from dataset
+        subs = self.dataset.train_split()
+        true_triples = subs['train_subs'] + \
+            subs['test_subs'] + subs['valid_subs']
 
         xs = subs['train_subs']
         ys = np.ones(len(xs))
+
+        # Instantiate the evaluator
+        if self.mode == 'rank':
+            self.ev_test = self.evaluator(subs['test_subs'], true_triples,
+                                          self.neval)
+            self.ev_valid = self.evaluator(subs['valid_subs'], true_triples,
+                                           self.neval)
+        elif self.mode == 'lp':
+            self.ev_test = self.evaluator(subs['test_subs'],
+                                          subs['test_labels'])
+            self.ev_valid = self.evaluator(subs['valid_subs'],
+                                           subs['valid_labels'])
 
         # create sampling objects
         if self.sampler == 'corrupted':
@@ -189,13 +208,16 @@ class Experiment(object):
         else:
             raise ValueError('Unknown sampler (%s)' % self.sampler)
 
+        # Instantiate trainer
         trn = self.setup_trainer(sz, sampler)
-        log.info("Fitting model %s with trainer %s" % (
+        print("Fitting model %s with trainer %s" % (
             trn.model.__class__.__name__,
             trn.__class__.__name__)
         )
+        # Start trainer
         trn.fit(xs, ys)
         self.callback(trn, with_eval=True)
+
         return trn
 
 
@@ -294,10 +316,9 @@ def ranking_scores(pos, fpos, epoch, txt):
 def _print_pos(pos, fpos, epoch, txt):
     mrr, mean_pos, hits = compute_scores(pos)
     fmrr, fmean_pos, fhits = compute_scores(fpos)
-    log.info(
-        "[%3d] %s: MRR = %.2f/%.2f, Mean Rank = %.2f/%.2f, Hits@10 = %.2f/%.2f" %
-        (epoch, txt, mrr, fmrr, mean_pos, fmean_pos, hits, fhits)
-    )
+    print(("[%3d] %s: MRR = %.2f/%.2f, "
+          "Mean Rank = %.2f/%.2f, Hits@10 = %.2f/%.2f") %
+          (epoch, txt, mrr, fmrr, mean_pos, fmean_pos, hits, fhits))
     return fmrr
 
 
