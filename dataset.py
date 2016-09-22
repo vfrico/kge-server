@@ -51,6 +51,7 @@ class Dataset():
         """Creates the dataset class
 
         The default endpoint is the original from wikidata.
+
         :param str new_endpoint: The URI of the SPARQL endpoint
         :param int thread_limiter: The number of concurrent HTTP queries
         """
