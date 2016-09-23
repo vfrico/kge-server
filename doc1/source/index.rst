@@ -13,10 +13,6 @@ Contents:
 
     modules/dataset
 
-.. automodule:: dataset
-.. autoclass:: Dataset
-   :members:
-
 .. automodule:: experiment
 .. autoclass:: Experiment
    :members:

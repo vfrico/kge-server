@@ -1,12 +1,10 @@
+.. _dataset:
 
 
+Dataset class
+=============
 
-DATASET Class
-============================================================
-
-
-
-
+Here is shown all the different methods to use with dataset class
 
 .. automodule:: dataset
 .. autoclass:: Dataset
