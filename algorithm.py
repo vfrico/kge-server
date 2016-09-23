@@ -26,6 +26,8 @@ import numpy as np
 import dataset
 import skge
 import experiment
+import itertools
+import threading
 
 
 class TransEEval(experiment.FilteredRankingEval):
@@ -108,11 +110,65 @@ class ModelTrainer(experiment.Experiment):
         )
         return trainer
 
+
+class Algorithm():
+    """Generate several models to test and choose the right one
+    """
+    def __init__(self, dataset, thread_limiter=8):
+        self.dataset = dataset
+        self.th_semaphore = threading.Semaphore(thread_limiter)
+
+    def find_best(self, margins=[0.2, 2.0], ncomps=range(50, 170, 20),
+                  model_types=[skge.HolE, skge.TransE]):
+        """Find the best training params for a given dataset
+
+        This method makes several trains with different models and
+        parameters, and returns a ModelTrainer Instance.
+        :param list margins: A list of all margins to try
+        :param list ncomps: A list of latent components
+        :param list model_types: A list of models
+        """
+        threads = []
+        model_trainer_list = []
+        for tup in itertools.product(margins, ncomps, model_types):
+
+            modtr = ModelTrainer(self.dataset, model_type=tup[2], max_epochs=50,
+                                 margin=tup[0], ncomp=tup[1])
+            model_trainer_list.append(modtr)
+
+        def callbk_fn(modeltrainer):
+            self.th_semaphore.release()
+            print("Un model trainer ha terminado")
+            # Extract evaluation data
+            tuples = [(e['score'], e['epoch']) for e in modeltrainer.scores]
+            for t in sorted(tuples, key=lambda t: t[0], reverse=True):
+                modeltrainer.best_epoch = t[1]
+
+            print(modeltrainer.__dict__)
+
+        for mt in model_trainer_list:
+            self.th_semaphore.acquire()
+            t = threading.Thread(
+                target=mt.thread_start,
+                args=(callbk_fn, ))
+            threads.append(t)
+            t.start()
+
+        for th in threads:
+            th.join()
+
+        return kwargs_dict
+
 if __name__ == '__main__':
 
-    dataset = dataset.Dataset()
-    dataset.load_from_binary("holographic-embeddings/data/wn18.bin")
+    dtset = dataset.Dataset()
+    # dataset.load_from_binary("holographic-embeddings/data/wn18.bin")
+    dtset.load_from_binary("wdata_15k.bin")
 
-    modeltrainer = ModelTrainer(dataset, model_type=skge.TransE, test_all=50,
-                                max_epochs=200, margin=0.2, ncomp=150)
-    modeltrained = modeltrainer.run()
+    alg = Algorithm(dtset)
+    alg.find_best()
+    # modeltrainer = ModelTrainer(dtset, model_type=skge.HolE, test_all=10,
+    #                             max_epochs=200, margin=0.2, ncomp=50,
+    #                             mode="rank")
+    # modeltrained = modeltrainer.run()
+    # print(modeltrainer.scores)

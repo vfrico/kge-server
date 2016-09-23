@@ -44,7 +44,7 @@ class Experiment(object):
 
     def __init__(self, dataset,
                  margin=2.0, init='nunif', lr=0.1, max_epochs=500,
-                 ne=1, nbatches=100, fout=None, fin=None, test_all=10,
+                 ne=1, nbatches=100, fout=None, fin=None, test_all=50,
                  no_pairwise=False, mode='rank', sampler='random-mode'):
         """
         :param Dataset dataset: The dataset to train
@@ -77,6 +77,9 @@ class Experiment(object):
         self.neval = -1
         self.best_valid_score = -1.0
         self.exectimes = []
+        # Store the score and epochs
+        self.scores = []
+        self.best_epoch = None
 
         self.dataset = dataset
 
@@ -96,6 +99,10 @@ class Experiment(object):
         trainer = self.train()
         return trainer.model
 
+    def thread_start(self, callback):
+        self.run()
+        callback(self)
+
     def ranking_callback(self, trn, with_eval=False):
         # print basic info
         elapsed = timeit.default_timer() - trn.epoch_start
@@ -107,16 +114,22 @@ class Experiment(object):
             print("[%3d] time = %ds, violations = %d" %
                   (trn.epoch, elapsed, trn.nviolations))
 
-        # if we improved the validation error, store model and calc test error
         if self.test_all > 0 and (trn.epoch % self.test_all == 0 or with_eval):
             print("before eval")
             pos_v, fpos_v = self.ev_valid.positions(trn.model)
-            print("after eval, before ranking")
+            print("after eval, {} before ranking")
             fmrr_valid = ranking_scores(pos_v, fpos_v, trn.epoch, 'VALID')
             print("after ranking")
 
             print("FMRR valid = %f, best = %f" %
                   (fmrr_valid, self.best_valid_score))
+
+            # Store fmrr_valid score with params.
+            self.scores.append({'score': fmrr_valid,
+                                'epoch': trn.epoch,
+                                'type': "FMRR"})
+
+            # if improved the validation error, store model and calc test error
             if fmrr_valid > self.best_valid_score:
                 self.best_valid_score = fmrr_valid
                 pos_t, fpos_t = self.ev_test.positions(trn.model)
@@ -152,6 +165,15 @@ class Experiment(object):
 
             print("AUC PR valid = %f, best = %f" %
                   (auc_valid, self.best_valid_score))
+
+            # Store fmrr_valid score with params.
+            self.scores.append({'score': auc_valid,
+                                'epoch': trn.epoch,
+                                'type': "AUC_PR"})
+            self.scores.append({'score': roc_valid,
+                                'epoch': trn.epoch,
+                                'type': "AUC_ROC"})
+
             if auc_valid > self.best_valid_score:
                 self.best_valid_score = auc_valid
                 auc_test, roc_test = self.ev_test.scores(m)
@@ -191,11 +213,14 @@ class Experiment(object):
                                           self.neval)
             self.ev_valid = self.evaluator(subs['valid_subs'], true_triples,
                                            self.neval)
+        # ¹Assuming labels are if triple is either true or false:
         elif self.mode == 'lp':
             self.ev_test = self.evaluator(subs['test_subs'],
-                                          subs['test_labels'])
+                                          # subs['test_labels'])
+                                          np.ones(len(subs['test_subs'])))
             self.ev_valid = self.evaluator(subs['valid_subs'],
-                                           subs['valid_labels'])
+                                           # subs['valid_labels'])
+                                           np.ones(len(subs['valid_subs'])))
 
         # create sampling objects
         if self.sampler == 'corrupted':
@@ -225,16 +250,21 @@ class FilteredRankingEval(object):
 
     def __init__(self, xs, true_triples, neval=-1):
         idx = ddict(list)
+        # tt stands for true triples
         tt = ddict(lambda: {'ss': ddict(list), 'os': ddict(list)})
         self.neval = neval
         self.sz = len(xs)
         for s, o, p in xs:
             idx[p].append((s, o))
 
+        # For each predicate (tt[p]):
+        #    ss is: subjects related to object
+        #    os is: objects related to subject
         for s, o, p in true_triples:
             tt[p]['os'][s].append(o)
             tt[p]['ss'][o].append(s)
 
+        # Unpack dict
         self.idx = dict(idx)
         self.tt = dict(tt)
 
