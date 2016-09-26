@@ -30,7 +30,8 @@ sys.setrecursionlimit(1000)
 #     def __getattr__(cls, name):
 #             return Mock()
 
-MOCK_MODULES = ['numpy']
+MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot',
+                'scipy.interpolate']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = MagicMock()
 
