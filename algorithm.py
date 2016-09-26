@@ -6,7 +6,8 @@
 # Copyright (C) 2016 Víctor Fernández Rico <vfrico@gmail.com>
 # Copyright (C) 2016 Maximilian Nickel <mnick@mit.edu>
 #
-#   The original project is located in GitHub:
+#   This file include original part of the holographic-embeddings
+#   project, which is located in GitHub:
 #   <https://github.com/mnick/holographic-embeddings/>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -110,11 +111,30 @@ class ModelTrainer(experiment.Experiment):
         )
         return trainer
 
+    def get_conf(self):
+        """Returns a dict with all model configuration
+        """
+        return {'ncomp': self.ncomp,
+                'afs': self.afs,
+                'trainer_type': self.trainer_type,
+                'model_type': self.model_type,
+                'evaluator': self.evaluator,
+                'margin': self.margin,
+                'init': self.init,
+                'lr': self.lr,
+                'max_epochs': self.me,
+                'ne': self.ne,
+                'nbatches': self.nb,
+                'test_all': self.test_all,
+                'no_pairwise': self.no_pairwise,
+                'mode': self.mode,
+                'sampler': self.sampler}
+
 
 class Algorithm():
     """Generate several models to test and choose the right one
     """
-    def __init__(self, dataset, thread_limiter=8):
+    def __init__(self, dataset, thread_limiter=4):
         self.dataset = dataset
         self.th_semaphore = threading.Semaphore(thread_limiter)
 
@@ -128,24 +148,37 @@ class Algorithm():
         :param list ncomps: A list of latent components
         :param list model_types: A list of models
         """
+
+        # Create a pool of threads
         threads = []
+
+        # The list of model trainer that will be created
         model_trainer_list = []
+        model_trainer_scores = []
+        num = 0
         for tup in itertools.product(margins, ncomps, model_types):
-
-            modtr = ModelTrainer(self.dataset, model_type=tup[2], max_epochs=50,
-                                 margin=tup[0], ncomp=tup[1])
+            # Fill model trainer
+            modtr = ModelTrainer(self.dataset, model_type=tup[2],
+                                 max_epochs=120, margin=tup[0], ncomp=tup[1],
+                                 th_num=num, test_all=40)
             model_trainer_list.append(modtr)
+            num += 1
 
+        # callback will find best epoch the model get best score
         def callbk_fn(modeltrainer):
             self.th_semaphore.release()
-            print("Un model trainer ha terminado")
+            print("[%d]Un model trainer ha terminado" % modeltrainer.th_num)
             # Extract evaluation data
             tuples = [(e['score'], e['epoch']) for e in modeltrainer.scores]
-            for t in sorted(tuples, key=lambda t: t[0], reverse=True):
-                modeltrainer.best_epoch = t[1]
+            sorted_scores = sorted(tuples, key=lambda t: t[0], reverse=True)
+            print("[{}] {}".format(modeltrainer.th_num, sorted_scores))
+            model_trainer_scores.append((modeltrainer, sorted_scores))
+            # for t in :
+            #     modeltrainer.best_epoch = t[1]
+            #
+            # print(modeltrainer.__dict__)
 
-            print(modeltrainer.__dict__)
-
+        # Launch threads for each model trainer
         for mt in model_trainer_list:
             self.th_semaphore.acquire()
             t = threading.Thread(
@@ -157,7 +190,12 @@ class Algorithm():
         for th in threads:
             th.join()
 
-        return kwargs_dict
+        best = sorted(model_trainer_scores,
+                      key=lambda t: t[1][0], reverse=True)[0]
+
+        return (model_trainer_scores, best)
+
+
 
 if __name__ == '__main__':
 

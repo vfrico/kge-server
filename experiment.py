@@ -42,7 +42,7 @@ np.random.seed(42)
 
 class Experiment(object):
 
-    def __init__(self, dataset,
+    def __init__(self, dataset, th_num=None,
                  margin=2.0, init='nunif', lr=0.1, max_epochs=500,
                  ne=1, nbatches=100, fout=None, fin=None, test_all=50,
                  no_pairwise=False, mode='rank', sampler='random-mode'):
@@ -81,6 +81,7 @@ class Experiment(object):
         self.scores = []
         self.best_epoch = None
 
+        self.th_num = th_num
         self.dataset = dataset
 
     def run(self):
@@ -108,21 +109,21 @@ class Experiment(object):
         elapsed = timeit.default_timer() - trn.epoch_start
         self.exectimes.append(elapsed)
         if self.no_pairwise:
-            print("[%3d] time = %ds, loss = %f" %
-                  (trn.epoch, elapsed, trn.loss))
+            print("[%d][%3d] time = %ds, loss = %f" %
+                  (self.th_num, trn.epoch, elapsed, trn.loss))
         else:
-            print("[%3d] time = %ds, violations = %d" %
-                  (trn.epoch, elapsed, trn.nviolations))
+            print("[%d][%3d] time = %ds, violations = %d" %
+                  (self.th_num, trn.epoch, elapsed, trn.nviolations))
 
         if self.test_all > 0 and (trn.epoch % self.test_all == 0 or with_eval):
-            print("before eval")
+            print("[%d] before eval" % self.th_num)
             pos_v, fpos_v = self.ev_valid.positions(trn.model)
-            print("after eval, {} before ranking")
+            print("[%d] after eval, {} before ranking" % self.th_num)
             fmrr_valid = ranking_scores(pos_v, fpos_v, trn.epoch, 'VALID')
-            print("after ranking")
+            print("[%d] after ranking" % self.th_num)
 
-            print("FMRR valid = %f, best = %f" %
-                  (fmrr_valid, self.best_valid_score))
+            print("[%d] FMRR valid = %f, best = %f" %
+                  (self.th_num, fmrr_valid, self.best_valid_score))
 
             # Store fmrr_valid score with params.
             self.scores.append({'score': fmrr_valid,
@@ -153,18 +154,18 @@ class Experiment(object):
         elapsed = timeit.default_timer() - m.epoch_start
         self.exectimes.append(elapsed)
         if self.no_pairwise:
-            print("[%3d] time = %ds, loss = %d" %
-                  (m.epoch, elapsed, m.loss))
+            print("[%d][%3d] time = %ds, loss = %d" %
+                  (self.th_num, m.epoch, elapsed, m.loss))
         else:
-            print("[%3d] time = %ds, violations = %d" %
-                  (m.epoch, elapsed, m.nviolations))
+            print("[%d][%3d] time = %ds, violations = %d" %
+                  (self.th_num, m.epoch, elapsed, m.nviolations))
 
         # if we improved the validation error, store model and calc test error
         if self.test_all > 0 and (m.epoch % self.test_all == 0 or with_eval):
             auc_valid, roc_valid = self.ev_valid.scores(m)
 
-            print("AUC PR valid = %f, best = %f" %
-                  (auc_valid, self.best_valid_score))
+            print("[%d] AUC PR valid = %f, best = %f" %
+                  (self.th_num, auc_valid, self.best_valid_score))
 
             # Store fmrr_valid score with params.
             self.scores.append({'score': auc_valid,
@@ -177,8 +178,8 @@ class Experiment(object):
             if auc_valid > self.best_valid_score:
                 self.best_valid_score = auc_valid
                 auc_test, roc_test = self.ev_test.scores(m)
-                print("AUC PR test = %f, AUC ROC test = %f" %
-                      (auc_test, roc_test))
+                print("[%d] AUC PR test = %f, AUC ROC test = %f" %
+                      (self.th_num, auc_test, roc_test))
 
                 if self.fout is not None:
                     st = {
