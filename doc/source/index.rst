@@ -11,16 +11,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-    modules/dataset
-
-.. automodule:: experiment
-.. autoclass:: Experiment
-   :members:
-
-.. automodule:: algorithm
-.. autoclass:: ModelTrainer
-   :members:
-
+   
+   modules/modules.rst
 
 
 Indices and tables
