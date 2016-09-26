@@ -19,8 +19,20 @@
 #
 import os
 import sys
-import mock
+from unittest.mock import MagicMock
+# from mock import Mock as MagicMock
 sys.path.insert(0, os.path.abspath('../..'))
+sys.setrecursionlimit(1000)
+
+
+# class Mock(MagicMock):
+#     @classmethod
+#     def __getattr__(cls, name):
+#             return Mock()
+
+MOCK_MODULES = ['numpy']
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = MagicMock()
 
 # -- General configuration ------------------------------------------------
 
@@ -442,8 +454,3 @@ epub_exclude_files = ['search.html']
 intersphinx_mapping = {'https://docs.python.org/': None}
 
 autosummary_generate = True
-
-MOCK_MODULES = ['numpy', 'scipy', 'matplotlib',
-                'matplotlib.pyplot', 'scipy.interpolate']
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.Mock()
