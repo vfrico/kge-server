@@ -19,6 +19,7 @@
 #
 import os
 import sys
+import mock
 sys.path.insert(0, os.path.abspath('../..'))
 
 # -- General configuration ------------------------------------------------
@@ -441,3 +442,8 @@ epub_exclude_files = ['search.html']
 intersphinx_mapping = {'https://docs.python.org/': None}
 
 autosummary_generate = True
+
+MOCK_MODULES = ['numpy', 'scipy', 'matplotlib',
+                'matplotlib.pyplot', 'scipy.interpolate']
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = mock.Mock()
