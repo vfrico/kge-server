@@ -138,7 +138,7 @@ class Algorithm():
         self.dataset = dataset
         self.th_semaphore = threading.Semaphore(thread_limiter)
 
-    def find_best(self, margins=[0.2, 2.0], ncomps=range(50, 170, 20),
+    def find_best(self, margins=[0.2, 2.0], ncomps=range(50, 100, 20),
                   model_types=[skge.HolE, skge.TransE]):
         """Find the best training params for a given dataset
 
@@ -193,8 +193,10 @@ class Algorithm():
         best = sorted(model_trainer_scores,
                       key=lambda t: t[1][0], reverse=True)[0]
 
-        return (model_trainer_scores, best)
-
+        kwdict = best[0].get_conf()
+        kwdict['train_all'] = True
+        new_model_trainer = ModelTrainer(self.dataset, **kwdict)
+        return (model_trainer_scores, best, new_model_trainer)
 
 
 if __name__ == '__main__':

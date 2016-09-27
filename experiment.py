@@ -42,10 +42,10 @@ np.random.seed(42)
 
 class Experiment(object):
 
-    def __init__(self, dataset, th_num=None,
+    def __init__(self, dataset, th_num=0, train_all=False,
                  margin=2.0, init='nunif', lr=0.1, max_epochs=500,
                  ne=1, nbatches=100, fout=None, fin=None, test_all=50,
-                 no_pairwise=False, mode='rank', sampler='random-mode'):
+                 no_pairwise=False, mode='rank', sampler='random-mode', **k):
         """
         :param Dataset dataset: The dataset to train
         :param float margin: Margin for loss function
@@ -60,6 +60,7 @@ class Experiment(object):
         :param bool no_pairwise: If true, trainer used is no pairwise
         :param string mode:
         :param string sampler:
+        :param bool train_all: Train with all triplets or use only train subs
         """
         self.margin = margin        # Margin for loss function
         self.init = init            # Initialization method
@@ -73,6 +74,7 @@ class Experiment(object):
         self.no_pairwise = no_pairwise  # True if trainer is no pairwise
         self.mode = mode
         self.sampler = sampler
+        self.train_all = train_all
 
         self.neval = -1
         self.best_valid_score = -1.0
@@ -205,7 +207,10 @@ class Experiment(object):
         true_triples = subs['train_subs'] + \
             subs['test_subs'] + subs['valid_subs']
 
-        xs = subs['train_subs']
+        if self.train_all:
+            xs = true_triples
+        else:
+            xs = subs['train_subs']
         ys = np.ones(len(xs))
 
         # Instantiate the evaluator
