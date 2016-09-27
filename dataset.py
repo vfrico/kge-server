@@ -52,8 +52,8 @@ class Dataset():
 
         The default endpoint is the original from wikidata.
 
-        :param str new_endpoint: The URI of the SPARQL endpoint
-        :param int thread_limiter: The number of concurrent HTTP queries
+        :param string new_endpoint: The URI of the SPARQL endpoint
+        :param integer thread_limiter: The number of concurrent HTTP queries
         """
         if new_endpoint is not None:
             self.WIKIDATA_ENDPOINT = new_endpoint
@@ -86,12 +86,12 @@ class Dataset():
                     complete_list_dict, only_uri=False):
         """Add element to a list of the dataset. Avoids duplicate elements.
 
-        :param str element: The element that will be added to list
+        :param string element: The element that will be added to list
         :param list complete_list: The list in which will be added
         :param dict complete_list_dict: The dict which represents the list.
         :param bool only_uri: Allow load objects distincts than URI's
         :return: The id on the list of the added element
-        :rtype: int
+        :rtype: integer
         """
 
         # An URI is a string type
@@ -123,7 +123,7 @@ class Dataset():
     def exist_element(self, element, complete_list_dict):
         """Check if element exists on a given list
 
-        :param str element: The element itself
+        :param string element: The element itself
         :param dict complete_list_dict: The dictionary to search in
         :return: Wether the item was found or no
         :rtype: bool
@@ -225,7 +225,7 @@ class Dataset():
         The method will execute the query itself and will call to other method
         to fill in the dataset object
 
-        :param str query: A valid SPARQL query
+        :param string query: A valid SPARQL query
         :param bool only_uri: Allow load objects distincts than URI's
         """
 
@@ -243,8 +243,8 @@ class Dataset():
         """Builds a nlevels query, executes, and loads data on object
 
         :deprecated:
-        :param int nlevels: Deep of the search on wikidata graph
-        :param str extra_params: Extra SPARQL instructions for the query
+        :param integer nlevels: Deep of the search on wikidata graph
+        :param string extra_params: Extra SPARQL instructions for the query
         :param bool only_uri: Allow load objects distincts than URI's
         """
 
@@ -256,7 +256,7 @@ class Dataset():
         """Generates a simple *chain* of triplets for the desired levels
 
         :deprecated:
-        :param int n_levels: Deep of the search on wikidata graph
+        :param integer n_levels: Deep of the search on wikidata graph
         :return: A list of chained triplets
         :rtype: list
         """
@@ -285,7 +285,7 @@ class Dataset():
         """Builds a CONSTRUCT SPARQL query of the desired deep
 
         :deprecated:
-        :param int n_levels: Deep of the search on wikidata graph
+        :param integer n_levels: Deep of the search on wikidata graph
         :return: The desired chained query
         :rtype: string
         """
@@ -307,9 +307,9 @@ class Dataset():
         """Loads the dataset by quering to Wikidata on the desired levels
 
         :deprecated:
-        :param int levels: Deep of the search
-        :param str where: Extra where statements for SPARQL query
-        :param int batch: Number of elements returned each query
+        :param integer levels: Deep of the search
+        :param string where: Extra where statements for SPARQL query
+        :param integer batch: Number of elements returned each query
         :param bool verbose: True for showing all steps the method do
         :return: True if operation was successful
         :rtype: bool
@@ -364,10 +364,10 @@ class Dataset():
         This method is runned for one thread. It will check if the Wikidata
         entity is valid, make a SPARQL query and save all triplets on the
         dataset.
-        :param str element: The URI of element to be scanned
+        :param string element: The URI of element to be scanned
         :param function append_queue: A function that receives the subject of
                                       a triplet as an argument
-        :param int verbose: The level of verbosity. 0 is low, and 2 is high
+        :param integer verbose: The level of verbosity. 0 is low, and 2 is high
         :param function callback: The callback function. Default is return
         :return: Nothing
         """
@@ -437,8 +437,8 @@ class Dataset():
         without using SPARQL CONSTRUCT. This method will start concurrently
         some threads to make several SPARQL SELECT queries.
 
-        :param int levels: The depth to get triplets related with original item
-        :param int verbose: The level of verbosity. 0 is low, and 2 is high
+        :param integer levels: The depth to get triplets
+        :param integer verbose: The level of verbosity. 0 is low, and 2 is high
         :return: True if operation was successful
         :rtype: bool
         """
@@ -562,7 +562,7 @@ class Dataset():
         This is a helper method and should not be called from
         other method distinct than 'load_dataset_recurrently'
         :return: Current download progress
-        :rtype: str
+        :rtype: string
         """
         elapsed = datetime.now() - self.status['started']
         try:
@@ -589,7 +589,7 @@ class Dataset():
         The dataset will be saved with the required format for reading
         from the original library, and is prepared to be trained.
 
-        :param str filepath: The path of the file where should be saved
+        :param string filepath: The path of the file where should be saved
         :return: True if operation was successful
         :rtype: bool
         """
@@ -616,7 +616,7 @@ class Dataset():
 
         Loads this dataset object with the binary file
 
-        :param str filepath: The path of the binary file
+        :param string filepath: The path of the binary file
         :return: True if operation was successful
         :rtype: bool
         """
@@ -668,7 +668,7 @@ class Dataset():
     def execute_query(self, query, headers={"Accept": "application/json"}):
         """Executes a SPARQL query to the endpoint
 
-        :param str query: The SPARQL query
+        :param string query: The SPARQL query
         :returns: A tuple compound of (http_status, json_or_error)
         """
         # Thread limiter

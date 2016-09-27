@@ -49,17 +49,17 @@ class Experiment(object):
         """
         :param Dataset dataset: The dataset to train
         :param float margin: Margin for loss function
-        :param str init: Initialization method
+        :param string init: Initialization method
         :param float lr: Learning rate
-        :param int max_epochs: Maximum number of epochs
-        :param int ne: Number of negative examples
-        :param int nbatches: Number of batches
-        :param str fout: Path to store model and results TODO->CHANGE
-        :param str fin: Path to imput data TODO->CHANGE
-        :param int test_all: Evaluate the modell after x epochs
+        :param integer max_epochs: Maximum number of epochs
+        :param integer ne: Number of negative examples
+        :param integer nbatches: Number of batches
+        :param string fout: Path to store model and results TODO->CHANGE
+        :param string fin: Path to imput data TODO->CHANGE
+        :param integer test_all: Evaluate the modell after x epochs
         :param bool no_pairwise: If true, trainer used is no pairwise
-        :param str mode:
-        :param str sampler:
+        :param string mode:
+        :param string sampler:
         """
         self.margin = margin        # Margin for loss function
         self.init = init            # Initialization method
