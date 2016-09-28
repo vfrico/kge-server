@@ -9,7 +9,9 @@ holographic-embeddings/
 scikit-kge/
 skge/
 *.7z
-
+Annoy_/
+FB15k/
+test.ann
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
