@@ -242,7 +242,7 @@ class Dataset():
         """
         rt_check = True
         for line in file_readable:
-            triple = line.split(separator_char)
+            triple = line.rstrip().split(separator_char)
             rt_check = rt_check and self.add_triple(triple[0],
                                                     triple[2], triple[1])
 
@@ -737,3 +737,63 @@ class Dataset():
             return response.status_code, response.text
         else:
             return response.status_code, response.json()["results"]["bindings"]
+
+
+class Entities():
+    """Class to manage Entities from dataset
+    """
+
+    def __init__(self, dataset):
+        """Creates Entities Object from a dataset
+
+        :param Dataset dataset: The dataset where entities are
+        """
+        self.dataset = dataset
+
+    def get_id(self, entity):
+        """Gets the id given an entity
+
+        :param string entity: The entity string
+        """
+        try:
+            return self.dataset.entities_dict[entity]
+        except (KeyError, ValueError):
+            return -1
+
+    def get_entity(self, id):
+        """Gets the entity given an id
+
+        :param integer id: The id to find
+        """
+        try:
+            return self.dataset.entities[id]
+        except ValueError:
+            return None
+
+
+class Relation():
+    """Class to manage relations from dataset
+    """
+
+    def __init__(self, dataset):
+        self.dataset = dataset
+
+    def get_relation(self, id):
+        """Gets the relation given an id
+
+        :param int id: The relation identifier to find
+        """
+        try:
+            return self.dataset.relations[id]
+        except ValueError:
+            return None
+
+    def get_id(self, relation):
+        """Gets the id given an relation
+
+        :param string entity: The relation string
+        """
+        try:
+            return self.dataset.relations_dict[entity]
+        except (KeyError, ValueError):
+            return -1
