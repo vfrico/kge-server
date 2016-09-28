@@ -141,6 +141,37 @@ class Dataset():
         #     # Item is not on the list
         #     return False
 
+    def add_triple(self, object, subject, pred):
+        """Add the triple (object, subject, pred) to dataset
+
+        This method will add three elements and append the tuple of the
+        relation to the dataset
+
+        :param string object: Object of the triple
+        :param string subject: Subject of the triple
+        :param string pred: Predicate of the triple
+        :return: If the operation was correct
+        :rtype: boolean
+        """
+        # We assume all are valid strings
+        # pred = self.extract_entity(pred)
+        # obj = self.extract_entity(obj)
+        # subj = self.extract_entity(obj)
+
+        if pred is not False and object is not False and subject is not False:
+            # Add relation
+            id_pred = self.add_element(pred, self.relations,
+                                       self.relations_dict)
+            id_subj = self.add_element(subject, self.entities,
+                                       self.entities_dict)
+            id_obj = self.add_element(object, self.entities,
+                                      self.entities_dict)
+            if id_subj is not False or id_pred is not False:
+                self.subs.append((id_obj, id_subj, id_pred))
+                return True
+            else:
+                return False
+
     def extract_entity(self, entity,
                        filters={'wdt-entity': True, 'wdt-reference': False,
                                 'wdt-statement': False, 'wdt-prop': True,
@@ -192,6 +223,30 @@ class Dataset():
             return entity
         else:
             return False
+
+    def load_dataset_from_csv(self, file_readable, separator_char=","):
+        """Given a csv file, loads into the dataset
+
+        This method will not open or close any file, and should be provided
+        only a iterable object which each iteration should provide only
+        one line. Also, if the csv does not use commas, you also should
+        provide the separator char. The code will try to split the line
+        with that separator char.
+        It also will use only the first three columns, being the order:
+        (object, predicate, subject)
+
+        :param Iterable file_readable: An iterator object
+        :param string separator_char: the separator string used in each line
+        :returns: If the process ends correctly
+        :rtype: boolean
+        """
+        rt_check = True
+        for line in file_readable:
+            triple = line.split(separator_char)
+            rt_check = rt_check and self.add_triple(triple[0],
+                                                    triple[2], triple[1])
+
+        return rt_check
 
     def load_dataset_from_json(self, json, only_uri=False):
         """Loads the dataset object with a JSON
