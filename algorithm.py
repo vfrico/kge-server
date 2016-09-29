@@ -200,6 +200,7 @@ class Algorithm():
 
         kwdict = best[0].get_conf()
         kwdict['train_all'] = True
+        kwdict['test_all'] = -1
         new_model_trainer = ModelTrainer(self.dataset, **kwdict)
         return (model_trainer_scores, best, new_model_trainer)
 

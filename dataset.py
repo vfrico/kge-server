@@ -208,7 +208,8 @@ class Dataset():
                         (uri[4] == "statement" and filters['wdt-statement']):
                     return entity["value"]
                 elif uri[2] == 'www.wikidata.org' and \
-                        (uri[3] == "entity" and filters['wdt-entity']):
+                        (uri[3] == "entity" and filters['wdt-entity']) and \
+                        not uri[4] == "statement":
                     return entity["value"]
                 elif uri[2] == 'www.wikidata.org' and \
                         (uri[3] == "prop" and filters['wdt-prop']):
@@ -417,7 +418,7 @@ class Dataset():
                 self.show()
 
     def all_entity_triplet(self, element,
-                           append_queue=lambda: None, verbose=0,
+                           append_queue=lambda x: None, verbose=0,
                            callback=lambda: None):
         """Add to dataset all the relations from an entity
 
@@ -440,7 +441,7 @@ class Dataset():
             assert element.split("/")[-2] == 'entity'
         except Exception:
             callback()
-            return
+            return False
 
         el_query = """PREFIX wikibase: <http://wikiba.se/ontology>
             SELECT ?predicate ?object
@@ -458,11 +459,11 @@ class Dataset():
         # Check future errors
         if sts is not 200:
             callback()
-            return
+            return False
 
         # Add element to entities queue
         id_obj = self.add_element(element, self.entities, self.entities_dict)
-
+        # print("Retrieved %d triplets" % len(el_json))
         # For related elements, get all relations and objects
         for relation in el_json:
             try:
@@ -471,7 +472,7 @@ class Dataset():
             except KeyError:
                 print("Error on relation: {}".format(relation))
                 callback()
-                return
+                return False
 
             if pred is not False and obj is not False:
                 # Add to the queue iff the element hasn't been scanned
@@ -488,9 +489,9 @@ class Dataset():
                     self.splited_subs['updated'] = False
 
         callback()
-        return
+        return True
 
-    def load_dataset_recurrently(self, levels, verbose=1):
+    def load_dataset_recurrently(self, levels, verbose=1, limit_ent=None):
         """Loads to dataset all entities with BNE ID and their relations
 
         Due to Wikidata endpoint cann't execute queries that take long time
@@ -558,11 +559,17 @@ class Dataset():
         # Loop for depth levels
         for level in range(0, levels):
             # Loop for every item on the queue
-            if verbose > 0:
-                print("Scanning level {} with {} elements"
-                      .format(level+1, len(new_queue)))
+
+            # Interchange lists
             el_queue = new_queue
             new_queue = []
+            # Apply limitation
+            if limit_ent is not None:
+                el_queue = el_queue[:limit_ent]
+
+            if verbose > 0:
+                print("Scanning level {} with {} elements"
+                      .format(level+1, len(el_queue)))
 
             # Initialize some status variables
             self.status['round_curr'] = level
