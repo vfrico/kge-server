@@ -61,6 +61,9 @@ class Dataset():
         self.th_semaphore = threading.Semaphore(thread_limiter)
         # self.query_sem = threading.Semaphore(thread_limiter)
 
+        # Instanciate splited subs as false
+        self.splited_subs = {'updated': False}
+
     def show(self, verbose=False):
         """Show all elements of the dataset
 
@@ -168,6 +171,7 @@ class Dataset():
                                       self.entities_dict)
             if id_subj is not False or id_pred is not False:
                 self.subs.append((id_obj, id_subj, id_pred))
+                self.splited_subs['updated'] = False
                 return True
             else:
                 return False
@@ -273,6 +277,7 @@ class Dataset():
                 continue
             else:
                 self.subs.append((id_obj, id_subj, id_pred))
+                self.splited_subs['updated'] = False
 
     def load_dataset_from_query(self, query, only_uri=False):
         """Receives a Sparql query and fills dataset object with the response
@@ -480,6 +485,7 @@ class Dataset():
                                            self.entities_dict)
                 if id_subj is not False or id_pred is not False:
                     self.subs.append((id_obj, id_subj, id_pred))
+                    self.splited_subs['updated'] = False
 
         callback()
         return
@@ -688,6 +694,12 @@ class Dataset():
         self.relations = all_dataset['relations']
         self.subs = all_dataset['train_subs'] + all_dataset['valid_subs'] +\
             all_dataset['test_subs']
+        self.splited_subs = {
+            'updated': True,
+            'train_subs': all_dataset['train_subs'],
+            'valid_subs': all_dataset['valid_subs'],
+            'test_subs': all_dataset['test_subs']
+            }
         # self.subs = all_dataset['subs']
         return True
 
@@ -704,7 +716,13 @@ class Dataset():
         :return: A dictionary with splited subs
         :rtype: dict
         """
+        # test if exist splited_sub and if it is updated
+        if self.splited_subs and self.splited_subs['updated']:
+            return {"train_subs": self.splited_subs['train_subs'],
+                    "valid_subs": self.splited_subs['valid_subs'],
+                    "test_subs": self.splited_subs['test_subs']}
 
+        # if not, build split set and save as updated
         data = np.matrix(self.subs)
         indices = np.arange(data.shape[0])
         np.random.shuffle(indices)
@@ -716,6 +734,12 @@ class Dataset():
                  data[-train_samples:-int(train_samples/2)]]
         x_test = [tuple(x.tolist()[0]) for x in data[-int(train_samples/2):]]
 
+        # Save the splited subs as separate argument. May be heplful
+        self.splited_subs = {'updated': True,
+                             'train_subs': x_train,
+                             'valid_subs': x_val,
+                             'test_subs': x_test
+                             }
         return {"train_subs": x_train,
                 "valid_subs": x_val,
                 "test_subs": x_test}

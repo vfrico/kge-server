@@ -46,7 +46,7 @@ class TransEEval(experiment.FilteredRankingEval):
 class HolEEval(experiment.FilteredRankingEval):
 
     def prepare(self, mdl, p):
-        self.ER = ccorr(mdl.R[p], mdl.E)
+        self.ER = skge.util.ccorr(mdl.R[p], mdl.E)
 
     def scores_o(self, mdl, s, p):
         return np.dot(self.ER, mdl.E[s])
@@ -157,10 +157,15 @@ class Algorithm():
         model_trainer_scores = []
         num = 0
         for tup in itertools.product(margins, ncomps, model_types):
+            if tup[2] == skge.HolE:
+                evaluator = HolEEval
+            else:
+                evaluator = TransEEval
+
             # Fill model trainer
             modtr = ModelTrainer(self.dataset, model_type=tup[2],
                                  max_epochs=120, margin=tup[0], ncomp=tup[1],
-                                 th_num=num, test_all=40)
+                                 th_num=num, test_all=50, eval_type=evaluator)
             model_trainer_list.append(modtr)
             num += 1
 
