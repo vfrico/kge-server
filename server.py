@@ -1,3 +1,22 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# coding:utf-8
+#
+# Dataset class: create, modify, export and import Datasets from Wikidata
+# Copyright (C) 2016  Víctor Fernández Rico <vfrico@gmail.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import sys
 import os
 import dataset
@@ -8,7 +27,9 @@ from annoy import AnnoyIndex
 
 class Server():
     def __init__(self, search_index):
-        """A server works with a SearchIndex.
+        """Creates a server, given a indexed search tree
+
+        :param SearchIndex search_index: A ready search index
         """
         if not search_index or search_index.index is None:
             print("The search index has not been generated")
@@ -28,6 +49,20 @@ class Server():
         :rtype: list
         """
         return self.index.get_nns_by_item(id, k)
+
+    def similarity_by_vector(vector, k):
+        """For each id in vector, return a list with k similar entities
+
+        :param list vector: A list with entity id's
+        :param int k: The similar entities shown for each entity
+        :returns: a matrix array [][]
+        :rtype: list
+        """
+        matrix = []
+        for entity in vector:
+            matrix.append(self.similarity_by_id(entity, k))
+
+        return matrix
 
 
 class SearchIndex():
@@ -66,26 +101,32 @@ class SearchIndex():
         self.ready = True
 
     def save_to_binary(self, filepath):
+        """Dump the search tree on a file on disk
+
+        :param string filepath: The path where the file will be saved
+        :return: If operations had or not errors
+        :rtype: boolean
+        """
         if self.index is None or self.ready is False:
             print("The index is not ready to be saved")
             return False
 
         self.index.save(filepath)
+        return True
 
     def load_from_file(self, filepath, emb_size):
+        """Load the search tree from a file on disk
+
+        :param string filepath: The path where the file will be saved
+        :param int emb_size: The size of embedding vector used
+        :return: If operations had or not errors
+        :rtype: boolean
+        """
         self.index = AnnoyIndex(emb_size)
         self.index.load(filepath)
+        self.ready = True
 
 
 if __name__ == '__main__':
 
-    e_matrix = a.E
-    nrows, nmod = e_matrix.shape
-
-    t = AnnoyIndex(nmod)
-    for i in range(0, nrows):
-        v = list(e_matrix[i])
-        t.add_item(i, v)
-
-    t.build(1000)
-    t.save('test.ann')
+    print("This is server module")

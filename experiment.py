@@ -125,9 +125,10 @@ class Experiment(object):
         else:
             print("[%d][%3d] time = %ds, violations = %d" %
                   (self.th_num, trn.epoch, elapsed, trn.nviolations))
-            self.violations.append(trn.violations)
+            self.violations.append(trn.nviolations)
 
-        if self.test_all > 0 and (trn.epoch % self.test_all == 0 or with_eval):
+        if self.test_all > 0 and (trn.epoch % self.test_all == 0 or with_eval)\
+                and not trn.stop_training:
             print("[%d] before eval" % self.th_num)
             pos_v, fpos_v = self.ev_valid.positions(trn.model)
             print("[%d] after eval, {} before ranking" % self.th_num)
