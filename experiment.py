@@ -81,6 +81,7 @@ class Experiment(object):
         self.exectimes = []
         # Store the score and epochs
         self.scores = []
+        self.violations = []
         self.best_epoch = None
 
         self.th_num = th_num
@@ -124,6 +125,7 @@ class Experiment(object):
         else:
             print("[%d][%3d] time = %ds, violations = %d" %
                   (self.th_num, trn.epoch, elapsed, trn.nviolations))
+            self.violations.append(trn.violations)
 
         if self.test_all > 0 and (trn.epoch % self.test_all == 0 or with_eval):
             print("[%d] before eval" % self.th_num)
@@ -139,6 +141,14 @@ class Experiment(object):
             self.scores.append({'score': fmrr_valid,
                                 'epoch': trn.epoch,
                                 'type': "FMRR"})
+
+            # If scores are too low, is better to stop the trainer
+            if fmrr_valid < 0.1:
+                trn.stop_training = True
+
+            # If violations to the trainer are the same, stop the trainer
+            if self.violations[0] == self.violations[-1]:
+                trn.stop_training = True
 
             # if improved the validation error, store model and calc test error
             if fmrr_valid > self.best_valid_score:

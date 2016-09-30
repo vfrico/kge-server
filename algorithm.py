@@ -139,7 +139,7 @@ class Algorithm():
         self.th_semaphore = threading.Semaphore(thread_limiter)
 
     def find_best(self, margins=[0.2, 2.0], ncomps=range(50, 100, 20),
-                  model_types=[skge.HolE, skge.TransE]):
+                  model_types=[skge.HolE, skge.TransE], **kwargs):
         """Find the best training params for a given dataset
 
         This method makes several trains with different models and
@@ -164,8 +164,8 @@ class Algorithm():
 
             # Fill model trainer
             modtr = ModelTrainer(self.dataset, model_type=tup[2],
-                                 max_epochs=120, margin=tup[0], ncomp=tup[1],
-                                 th_num=num, test_all=50, eval_type=evaluator)
+                                 margin=tup[0], ncomp=tup[1], th_num=num,
+                                 eval_type=evaluator, **kwargs)
             model_trainer_list.append(modtr)
             num += 1
 
