@@ -102,6 +102,14 @@ class Experiment(object):
         trainer = self.train()
         return trainer.model
 
+    def save_trained_model(self, filepath, model):
+        try:
+            bin_file = open(filepath, "wb+")
+        except Exception:
+            print("Failed when loading file")
+
+        return pickle.dump(bin_file, model)
+
     def thread_start(self, callback):
         self.run()
         callback(self)
