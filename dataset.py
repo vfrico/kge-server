@@ -701,6 +701,11 @@ class Dataset():
         self.relations = all_dataset['relations']
         self.subs = all_dataset['train_subs'] + all_dataset['valid_subs'] +\
             all_dataset['test_subs']
+
+        # Fill dicts
+        self._load_elements_into_dict(self.entities_dict, self.entities)
+        self._load_elements_into_dict(self.relations_dict, self.relations)
+
         self.splited_subs = {
             'updated': True,
             'train_subs': all_dataset['train_subs'],
@@ -709,6 +714,15 @@ class Dataset():
             }
         # self.subs = all_dataset['subs']
         return True
+
+    def _load_elements_into_dict(self, el_dict, el_list):
+        """Insert elements from a list into dict
+
+        :param dict el_dict: A dict to be inserted elements
+        :param list el_list: A list where elements are
+        """
+        for i in range(0, len(el_list)):
+            el_dict[el_list[i]] = i
 
     def train_split(self, ratio=0.8):
         """Split subs into three lists: train, valid and test
