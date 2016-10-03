@@ -147,8 +147,8 @@ class Dataset():
     def add_triple(self, object, subject, pred):
         """Add the triple (object, subject, pred) to dataset
 
-        This method will add three elements and append the tuple of the
-        relation to the dataset
+        This method will add the three elements and append the tuple of the
+        relation into the dataset
 
         :param string object: Object of the triple
         :param string subject: Subject of the triple
@@ -181,6 +181,8 @@ class Dataset():
                                 'wdt-statement': False, 'wdt-prop': True,
                                 'literal': False, 'bnode': False}):
         """Given an entity, returns the valid representation, ready to be saved
+
+        Going to be deprecated -> Must be implemented in child class
 
         The filter argument allows to avoid adding elements into lists that
         will not be used. It is a dictionary with the shape: {'filter': bool}.
@@ -417,6 +419,25 @@ class Dataset():
                 print("Guardado!")
                 self.show()
 
+    def process_entity(self, entity, append_queue=lambda x: None,
+                       callback=lambda: None, verbose=0):
+        """Will call external method and add triplets if they are valid.
+
+        Should receive a list of all triplets to be processed
+
+        Only will be added to queue if check_entity for each entity and
+        check_relation for each relation is valid for the triplet
+        """  # TODO
+        pass
+
+    def check_entity():
+        """Will substitute extract_entity method"""  # TODO
+        pass
+
+    def check_relation():
+        """Will substitute extract_entity method"""  # TODO
+        pass
+
     def all_entity_triplet(self, element,
                            append_queue=lambda x: None, verbose=0,
                            callback=lambda: None):
@@ -430,9 +451,11 @@ class Dataset():
                                       a triplet as an argument
         :param integer verbose: The level of verbosity. 0 is low, and 2 is high
         :param function callback: The callback function. Default is return
-        :return: Nothing
+        :return: If operation was successful
+        :rtype: boolean
         """
 
+        # TODO: This entire block should be implemented into child class
         # Extract correctly the id of the wikidata element.
         try:
             # If either fails to convert the last Q number into int
@@ -461,11 +484,19 @@ class Dataset():
             callback()
             return False
 
+        # ENDTODO: This should get only el_json list,
+        # which contains all triplets
+
         # Add element to entities queue
+
         id_obj = self.add_element(element, self.entities, self.entities_dict)
         # print("Retrieved %d triplets" % len(el_json))
         # For related elements, get all relations and objects
         for relation in el_json:
+            # TODO: For each triplet, should be asserted they are valid
+            # and if they do, add the triple to dataset AND append to
+            # the queue.
+
             try:
                 pred = self.extract_entity(relation['predicate'])
                 obj = self.extract_entity(relation['object'])
@@ -505,6 +536,8 @@ class Dataset():
         :rtype: bool
         """
 
+        # TODO:The seed vector should be Initialized from child class
+
         # Count all Wikidata elements with a BNE entry
         count_query = """
             PREFIX wikibase: <http://wikiba.se/ontology>
@@ -539,12 +572,15 @@ class Dataset():
         if verbose > 2:
             print(sts, len(first_json))
 
+        # ENDTODO -> first_json should be the exit point
+        # first_json = self.seed_entities()
+
         # Create a queue for wikidata elements to be scanned
         new_queue = [entity['wikidata']['value'] for entity in first_json]
         el_queue = []
 
         if verbose > 1:
-            status_thread = None
+            # TODO: Status thread must can be killed from outside
 
             # Initialize status variables
             self.status['started'] = datetime.now()
@@ -563,6 +599,7 @@ class Dataset():
             # Interchange lists
             el_queue = new_queue
             new_queue = []
+
             # Apply limitation
             if limit_ent is not None:
                 el_queue = el_queue[:limit_ent]
@@ -584,18 +621,21 @@ class Dataset():
                 # Generate n threads, start them and save into pool
 
                 def func_callback():
+                    # TODO: This callback could be used to append to queue,
+                    # instead of passing two different functions
                     self.status['it_analyzed'] += 1
                     self.th_semaphore.release()
 
                 self.th_semaphore.acquire()
                 t = threading.Thread(
-                    target=self.all_entity_triplet,
+                    target=self.all_entity_triplet,  # TODO*
                     args=(element, ),
                     kwargs={'verbose': verbose,
                             'append_queue': lambda e: new_queue.append(e),
                             'callback': func_callback})
                 threads.append(t)
                 t.start()
+            # *TODO: Must process only one element, and add to queue.
 
             if verbose > 0:
                 print("Waiting all threads to end")
@@ -604,6 +644,8 @@ class Dataset():
                 th.join()
 
         if verbose > 1:
+            # To help kill the status thread may
+            # be useful to imput a 'q' character on stdin
             self.status['active'] = False
 
         return True
