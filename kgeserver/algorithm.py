@@ -24,11 +24,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy as np
-import dataset
-import skge
-import experiment
-import itertools
 import threading
+import itertools
+import skge
+import kgeserver.dataset as dataset
+import kgeserver.experiment as experiment
 
 
 class TransEEval(experiment.FilteredRankingEval):

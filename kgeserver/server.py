@@ -19,8 +19,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import sys
 import os
-import dataset
-import algorithm
+import kgeserver.dataset as dataset
+import kgeserver.algorithm as algorithm
 import skge
 from annoy import AnnoyIndex
 
