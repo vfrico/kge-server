@@ -19,6 +19,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import kgeserver
+import re
 
 
 class WikidataDataset(kgeserver.dataset.Dataset):
@@ -26,6 +27,8 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         """Creates WikidataDataset class"""
         super(WikidataDataset, self).__init__(new_endpoint=sparql_endpoint,
                                               thread_limiter=thread_max)
+        # Compile regex to better performance
+        self.chk_digit = re.compile('\d')
 
     def check_entity(self, entity):
         """Check the entity given and return a valid representation
@@ -36,19 +39,31 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         """
         # This expects as input an entity URI
         # http://www.wikidata.org/entity/Q180
+        # http://www.wikidata.org/entity/Q42
+
         try:
             # If either fails to convert the last Q number into int
             # or the URI hasn't 'entity' keyword, returns without doing nothing
-            wikidata_id = entity.split("/")[-1]
+            entity_uri = entity.split("/")
+            wikidata_id = entity_uri[-1]
             # print(entity, wikidata_id)
-            if wikidata_prop[0] is "P" and prp_uri[-3] == 'prop' and\
-               (prp_uri[-2] == "direct" or prp_uri[-2] == "statement") and\
-               type(int(wikidata_prop[1:])) is int:
-                return wikidata_prop
+            if wikidata_id[0] is "Q" and entity_uri[-2] == 'entity' and\
+               self.chk_digit.search(wikidata_id[1:]):
+                # print(True, wikidata_id)
+                return wikidata_id
             else:
+                # print("elsetry")
                 return None
         except Exception:
-            return None
+            # The entity seems not to be an URI
+            if entity[0] is "Q" and\
+               self.chk_digit.search(entity[1:]):
+                # print(True, entity)
+                return entity
+            else:
+                # print("elseexcept")
+                return None
+        # print("ret")
         return None
 
     def check_relation(self, relation):
@@ -60,21 +75,29 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         """
         # http://www.wikidata.org/prop/direct/P2853 VALID
         # http://www.wikidata.org/prop/statement/P159 VALID
+        # http://www.wikidata.org/prop/P373 VALID
         # http://www.wikidata.org/prop/qualifier/P18 NOT VALID
+
         try:
             # If either fails to convert the last Q number into int
             # or the URI hasn't 'entity' keyword, returns without doing nothing
             prp_uri = relation.split("/")
             wikidata_prop = prp_uri[-1]
 
-            if wikidata_prop[0] is "P" and prp_uri[-3] == 'prop' and\
-               (prp_uri[-2] == "direct" or prp_uri[-2] == "statement")\
-               and type(int(wikidata_prop[1:])) is int:
+            if wikidata_prop[0] is "P" and prp_uri[3] == 'prop' and\
+               (prp_uri[4] == "direct" or prp_uri[4] == "statement" or
+                prp_uri[-1] == prp_uri[4])\
+               and self.chk_digit.search(wikidata_prop[1:]):
                 return wikidata_prop
             else:
                 return None
         except Exception:
-            return None
+            # The relation seems not to be an URI
+            if relation[0] is "P" and\
+               self.chk_digit.search(relation[1:]):
+                return relation
+            else:
+                return None
         return None
 
     def extract_entity(self, entity,
@@ -231,6 +254,7 @@ class WikidataDataset(kgeserver.dataset.Dataset):
 
                 added = self.add_triple(entity, relation['subject']['value'],
                                         relation['predicate']['value'])
+                # print("It was added {}".format(added))
 
             except KeyError:
                 print("Error on relation: {}".format(relation))
@@ -239,10 +263,13 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         return to_queue
 
     def is_statement(self, uri):
+        """Check if an URI is a wikidata statement
+
+        :param string uri: The uri to test
+        :return: If it is an uri or not
+        :rtype: boolean
         """
-        Check if uri is statement
-        """
-        print("The uri {} is a statement".format(uri))
+        # print("The uri {} is a statement".format(uri))
         try:
             l_uri = uri.split("/")
             return l_uri[-2] is 'statement' and l_uri[-3] is 'entity'

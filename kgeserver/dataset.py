@@ -166,7 +166,7 @@ class Dataset():
         pred = self.check_relation(pred)
         subject = self.check_entity(subject)
         obj = self.check_entity(obj)
-
+        # print(obj, subject, pred)
         if pred and obj and subject:
             # Add relation
             id_pred = self.add_relation(pred)
@@ -176,8 +176,7 @@ class Dataset():
                 self.subs.append((id_obj, id_subj, id_pred))
                 self.splited_subs['updated'] = False
                 return True
-            else:
-                return False
+        return False
 
     def load_dataset_from_csv(self, file_readable, separator_char=","):
         """Given a csv file, loads into the dataset
