@@ -201,6 +201,17 @@ class WikidataDataset(kgeserver.dataset.Dataset):
 
         return [entity['wikidata']['value'] for entity in first_json]
 
+    # def _process_entity(self, entity, verbose=0):
+
+        # twolevel_query = """
+        # SELECT (wd:Q180 as ?object) ?predicate ?subject ?pred ?subj
+        # WHERE {
+        #   ?predicate a owl:ObjectProperty .
+        #   wd:Q180 ?predicate ?subject .
+        #   FILTER NOT EXISTS { ?subject a wikibase:BestRank }
+        # }
+        # """
+
     def _process_entity(self, entity, verbose=0):
         """
         :return: A list with new entities to be scanned
@@ -216,11 +227,12 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         except Exception:
             return False
 
-        el_query = """PREFIX wikibase: <http://wikiba.se/ontology>
-            SELECT (wd:Q{0} as ?object) ?predicate ?subject
-            WHERE {{
-                wd:Q{0} ?predicate ?subject .
-            }}
+        el_query = """SELECT (wd:Q{0} as ?object) ?predicate ?subject
+                WHERE {{
+                  ?predicate a owl:ObjectProperty .
+                  wd:Q{0} ?predicate ?subject .
+                  FILTER NOT EXISTS {{ ?subject a wikibase:BestRank }}
+                }}
             """.format(wikidata_id)
         if verbose > 2:
             print("The element query is: \n", el_query)
@@ -242,10 +254,12 @@ class WikidataDataset(kgeserver.dataset.Dataset):
 
             try:
                 subject_uri = relation['subject']['value']
-                if relation['subject']['type'] == "uri" and self.is_statement(subject_uri):
-                    # Do queries to extract relations on statements
-                    new_triples = extract_from_statement(entity, subject_uri)
-                    to_queue.append(new_triples)
+                # if relation['subject']['type'] == "uri" and self.is_statement(subject_uri):
+                #     # Do queries to extract relations on statements
+                #     new_triples = self.extract_from_statement(entity, subject_uri)
+                #     # if new_triples:
+                #     #     print(new_triples)
+                #     to_queue.append(new_triples)
 
                 subj = self.check_entity(subject_uri)
 
@@ -269,23 +283,23 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         :return: If it is an uri or not
         :rtype: boolean
         """
-        # print("The uri {} is a statement".format(uri))
+        # print("The uri {} can be a statement".format(uri))
         try:
             l_uri = uri.split("/")
-            return l_uri[-2] is 'statement' and l_uri[-3] is 'entity'
+            return l_uri[-2] == 'statement' and l_uri[-3] == 'entity'
         except Exception:
             return False
 
     def extract_from_statement(self, entity, uri):
-        print("The uri {} is a statement".format(uri))
+        # print("The uri {} is a statement".format(uri))
         st_query = """PREFIX wikibase: <http://wikiba.se/ontology>
           SELECT ?pred ?subj
           WHERE {{
-          {0} ?pred ?subj .
+          <{0}> ?pred ?subj .
           }}""".format(uri)
 
         sts, el_json = self.execute_query(st_query)
-
+        # print(sts, el_json)
         # Check errors
         if sts is not 200:
             return None
@@ -301,6 +315,7 @@ class WikidataDataset(kgeserver.dataset.Dataset):
             if subj and not self.exist_element(subj, self.entities_dict):
                 el_queue.append(subj_uri)
 
-            self.add_triple(entity, subj_uri, pred_uri)
+            added = self.add_triple(entity, subj_uri, pred_uri)
+            # print("Relation from statement added {}".format(added))
 
         return el_queue
