@@ -29,6 +29,7 @@ class WikidataDataset(kgeserver.dataset.Dataset):
                                               thread_limiter=thread_max)
         # Compile regex to better performance
         self.chk_digit = re.compile('\d')
+        self.entities_explored = {}
 
     def check_entity(self, entity):
         """Check the entity given and return a valid representation
@@ -216,6 +217,10 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         """
         :return: A list with new entities to be scanned
         """
+        # Check first if entity has been already explored
+        if self.exist_element(self.check_entity(entity),
+                              self.entities_explored):
+            return False
 
         # Extract correctly the id of the wikidata element.
         try:
@@ -245,6 +250,9 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         if sts is not 200:
             return False
 
+        # Mark entity as already explored
+        self.entities_explored[self.check_entity(entity)] = True
+
         # Add element to entities queue
         # id_obj = self.add_element(entity, self.entities, self.entities_dict)
         to_queue = []
@@ -263,7 +271,9 @@ class WikidataDataset(kgeserver.dataset.Dataset):
 
                 subj = self.check_entity(subject_uri)
 
-                if subj and not self.exist_element(subj, self.entities_dict):
+                # if subj and not self.exist_element(subj, self.entities_dict):
+                #     to_queue.append(subject_uri)
+                if subj:
                     to_queue.append(subject_uri)
 
                 added = self.add_triple(entity, relation['subject']['value'],

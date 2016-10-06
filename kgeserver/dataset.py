@@ -31,7 +31,7 @@ class Dataset():
     """
     Class used to create, modify, export and import Datasets from Wikidata
     """
-    WIKIDATA_ENDPOINT = \
+    SPARQL_ENDPOINT = \
         """https://query.wikidata.org/bigdata/namespace/wdq/sparql?query="""
     entities = []
     entities_dict = {}
@@ -56,7 +56,7 @@ class Dataset():
         :param integer thread_limiter: The number of concurrent HTTP queries
         """
         if new_endpoint is not None:
-            self.WIKIDATA_ENDPOINT = new_endpoint
+            self.SPARQL_ENDPOINT = new_endpoint
 
         self.th_semaphore = threading.Semaphore(thread_limiter)
         # self.query_sem = threading.Semaphore(thread_limiter)
@@ -367,7 +367,7 @@ class Dataset():
                 self.show()
 
     def process_entity(self, entity, append_queue=lambda x: None,
-                       callback=lambda: None, verbose=0):
+                       callback=lambda: None, verbose=0, times=0):
         """Will call external method and add triplets if they are valid.
 
         Should receive a list of all triplets to be processed
@@ -388,16 +388,29 @@ class Dataset():
         :return: If operation was successful
         :rtype: boolean
         """
-        # Get elements to add on the queue.
-        el_queue = self._process_entity(entity, verbose=verbose)
-        # print(el_queue)
-        if not el_queue:
-            return callback(False)
-        else:
-            for element in el_queue:
-                append_queue(element)
-            return callback(True)
-
+        try:
+            # Get elements to add on the queue.
+            el_queue = self._process_entity(entity, verbose=verbose)
+            # print(el_queue)
+            if not el_queue:
+                return callback(False)
+            else:
+                for element in el_queue:
+                    append_queue(element)
+                return callback(True)
+        except Exception as exc:
+            # An exception has occurred. Try again
+            times_new = times + 1
+            if times_new < 10:
+                print("[{0}]Error found: '{1}'' "
+                      "Trying again".format(times_new, exc))
+                return self.process_entity(entity, append_queue=append_queue,
+                                           callback=callback, verbose=verbose,
+                                           times=times_new)
+            else:
+                print("[{0}]Error found: '{1}'' Has been tried {2} times. "
+                      "Exiting".format(times_new, exc, times_new))
+                return false
     # def all_entity_triplet(self, element,
     #                        append_queue=lambda x: None, verbose=0,
     #                        callback=lambda: None)
@@ -656,17 +669,27 @@ class Dataset():
         :param string query: The SPARQL query
         :returns: A tuple compound of (http_status, json_or_error)
         """
-        # Thread limiter
-        # self.query_sem.acquire()
-        response = requests.get(self.WIKIDATA_ENDPOINT+query, headers=headers)
-        # self.query_sem.release()
-        # if response.status_code is not 200:
-        #     raise Exception("Error on endpoint. HTTP status code: "+
-        #                      str(response.status_code))
-        if response.status_code is not 200:
-            return response.status_code, response.text
-        else:
-            return response.status_code, response.json()["results"]["bindings"]
+        try:
+            # Thread limiter
+            # self.query_sem.acquire()
+            response = requests.get(self.SPARQL_ENDPOINT+query,
+                                    headers=headers)
+            # self.query_sem.release()
+            # if response.status_code is not 200:
+            #     raise Exception("Error on endpoint. HTTP status code: "+
+            #                      str(response.status_code))
+            if response.status_code is not 200:
+                return (response.status_code, response.text)
+            else:
+                return (response.status_code,
+                        response.json()["results"]["bindings"])
+        except requests.exceptions.ConnectionError:
+            raise ExecuteQueryError("Error on endpoint")
+
+
+class ExecuteQueryError(Exception):
+    def __init__(self, message):
+        super(ExecuteQueryError, self).__init__(message)
 
 
 class Entities():
