@@ -31,7 +31,7 @@ class Dataset():
     """
     Class used to create, modify, export and import Datasets from Wikidata
     """
-    WIKIDATA_ENDPOINT = \
+    SPARQL_ENDPOINT = \
         """https://query.wikidata.org/bigdata/namespace/wdq/sparql?query="""
     entities = []
     entities_dict = {}
@@ -47,7 +47,7 @@ class Dataset():
               'it_total': 0,
               'active': False}
 
-    def __init__(self, new_endpoint=None, thread_limiter=32):
+    def __init__(self, sparql_endpoint=None, thread_limiter=32):
         """Creates the dataset class
 
         The default endpoint is the original from wikidata.
@@ -55,8 +55,8 @@ class Dataset():
         :param string new_endpoint: The URI of the SPARQL endpoint
         :param integer thread_limiter: The number of concurrent HTTP queries
         """
-        if new_endpoint is not None:
-            self.WIKIDATA_ENDPOINT = new_endpoint
+        if sparql_endpoint is not None:
+            self.SPARQL_ENDPOINT = sparql_endpoint
 
         self.th_semaphore = threading.Semaphore(thread_limiter)
         # self.query_sem = threading.Semaphore(thread_limiter)
@@ -86,7 +86,7 @@ class Dataset():
                 print(sub)
 
     def add_element(self, element, complete_list,
-                    complete_list_dict, only_uri=False):
+                    complete_list_dict):
         """Add element to a list of the dataset. Avoids duplicate elements.
 
         :param string element: The element that will be added to list
@@ -97,12 +97,6 @@ class Dataset():
         :rtype: integer
         """
 
-        # An URI is a string type
-        if only_uri is True and not isinstance(element, str):
-            return False
-        elif element is False:
-            return False
-
         if element in complete_list_dict:
             # Item is on the list, return same id
             return complete_list_dict[element]
@@ -112,16 +106,14 @@ class Dataset():
             id_item = len(complete_list)-1
             complete_list_dict[element] = id_item
             return id_item
-        # try:
-        #     # Item is on the list, return same id
-        #     return complete_list_dict[element]
-        #
-        # except (KeyError, ValueError):
-        #     # Item is not on the list, append and return id
-        #     complete_list.append(element)
-        #     id_item = len(complete_list)-1
-        #     complete_list_dict[element] = id_item
-        #     return id_item
+
+    def add_entity(self, entity):
+        return self.add_element(entity, self.entities,
+                                self.entities_dict)
+
+    def add_relation(self, relation):
+        return self.add_element(relation, self.relations,
+                                self.relations_dict)
 
     def exist_element(self, element, complete_list_dict):
         """Check if element exists on a given list
@@ -135,99 +127,96 @@ class Dataset():
             return True
         else:
             return False
-        # try:
-        #     # Item is on the list, return same id
-        #     elem_id = complete_list_dict[element]
-        #     return True
-        #
-        # except (KeyError, ValueError):
-        #     # Item is not on the list
-        #     return False
 
-    def add_triple(self, object, subject, pred):
+    def check_entity(self, entity):
+        """Check the entity given and return a valid representation
+
+        The parent class assumes all entities are valid
+
+        :param string entity: The input entity representation
+        :return: A valid representation or None
+        :rtype: string
+        """
+        return entity
+
+    def check_relation(self, relation):
+        """Check the relation given and return a valid representation
+
+        The parent class assumes all relations are valid
+
+        :param string relation: The input relation representation
+        :return: A valid representation or None
+        :rtype: string
+        """
+        return relation
+
+    def get_entity_id(self, entity):
+        """Gets the id given an entity
+
+        :param string entity: The entity string
+        """
+        try:
+            return self.entities_dict[entity]
+        except (KeyError, ValueError):
+            return -1
+
+    def get_entity(self, id):
+        """Gets the entity given an id
+
+        :param integer id: The id to find
+        """
+        try:
+            return self.entities[id]
+        except ValueError:
+            return None
+
+    def get_relation(self, id):
+        """Gets the relation given an id
+
+        :param int id: The relation identifier to find
+        """
+        try:
+            return self.relations[id]
+        except ValueError:
+            return None
+
+    def get_relation_id(self, relation):
+        """Gets the id given an relation
+
+        :param string entity: The relation string
+        """
+        try:
+            return self.relations_dict[entity]
+        except (KeyError, ValueError):
+            return -1
+
+    def add_triple(self, obj, subject, pred):
         """Add the triple (object, subject, pred) to dataset
 
-        This method will add three elements and append the tuple of the
-        relation to the dataset
+        This method will add the three elements and append the tuple of the
+        relation into the dataset
 
-        :param string object: Object of the triple
+        :param string obj: Object of the triple
         :param string subject: Subject of the triple
         :param string pred: Predicate of the triple
         :return: If the operation was correct
         :rtype: boolean
         """
-        # We assume all are valid strings
-        # pred = self.extract_entity(pred)
-        # obj = self.extract_entity(obj)
-        # subj = self.extract_entity(obj)
 
-        if pred is not False and object is not False and subject is not False:
+        pred = self.check_relation(pred)
+        subject = self.check_entity(subject)
+        obj = self.check_entity(obj)
+        # print(obj, subject, pred)
+        if pred and obj and subject:
             # Add relation
-            id_pred = self.add_element(pred, self.relations,
-                                       self.relations_dict)
-            id_subj = self.add_element(subject, self.entities,
-                                       self.entities_dict)
-            id_obj = self.add_element(object, self.entities,
-                                      self.entities_dict)
+            id_pred = self.add_relation(pred)
+            id_subj = self.add_entity(subject)
+            id_obj = self.add_entity(obj)
             if id_subj is not False or id_pred is not False:
                 self.subs.append((id_obj, id_subj, id_pred))
                 self.splited_subs['updated'] = False
                 return True
-            else:
-                return False
-
-    def extract_entity(self, entity,
-                       filters={'wdt-entity': True, 'wdt-reference': False,
-                                'wdt-statement': False, 'wdt-prop': True,
-                                'literal': False, 'bnode': False}):
-        """Given an entity, returns the valid representation, ready to be saved
-
-        The filter argument allows to avoid adding elements into lists that
-        will not be used. It is a dictionary with the shape: {'filter': bool}.
-        The valid filters (and default) are:
-            * *wdt-entity* - True
-            * *wdt-reference* - False
-            * *wdt-statement* - True
-            * *wdt-prop* - True
-            * *literal* - False
-            * *bnode* - False
-
-        :param dict entity: The entity to be analyzed
-        :param dict filters: A dictionary to allow filter entities
-        :return: The entity itself or False
-        """
-
-        if entity["type"] == "uri":
-            # Not all 'uri' values are valid entities
-            try:
-                uri = entity["value"].split('/')
-                if uri[2] == 'www.wikidata.org' and \
-                        (uri[3] == "reference" and filters['wdt-reference']):
-                    return entity["value"]
-                elif uri[2] == 'www.wikidata.org' and \
-                        (uri[4] == "statement" and filters['wdt-statement']):
-                    return entity["value"]
-                elif uri[2] == 'www.wikidata.org' and \
-                        (uri[3] == "entity" and filters['wdt-entity']) and \
-                        not uri[4] == "statement":
-                    return entity["value"]
-                elif uri[2] == 'www.wikidata.org' and \
-                        (uri[3] == "prop" and filters['wdt-prop']):
-                    return entity["value"]
-                elif uri[2] == 'www.wikidata.org':
-                    return False
-                else:
-                    # Only discards certain Wikidata urls, the rest are valid
-                    return entity["value"]
-            except IndexError:
-                return False
-
-        elif entity["type"] == "literal" and filters['literal']:
-            return entity
-        elif entity["type"] == "bnode" and filters['literal']:
-            return entity
-        else:
-            return False
+        return False
 
     def load_dataset_from_csv(self, file_readable, separator_char=","):
         """Given a csv file, loads into the dataset
@@ -417,79 +406,67 @@ class Dataset():
                 print("Guardado!")
                 self.show()
 
-    def all_entity_triplet(self, element,
-                           append_queue=lambda x: None, verbose=0,
-                           callback=lambda: None):
-        """Add to dataset all the relations from an entity
+    def _process_entity(self, entity, verbose=None):
+        """Add all relations and entities related with the entity to dataset
 
-        This method is runned for one thread. It will check if the Wikidata
-        entity is valid, make a SPARQL query and save all triplets on the
-        dataset.
+        Additionally, this method should return a list of the entities it is
+        connected to scan those entities on next level exploration.
+
+        This method is not implemented by parent class. Should be overrided
+        by child class
+
+        :param string method: The URI of the element to be processed
+        :param int verbose: The level of verbosity. 0 is low, and 2 is high
+        :return: Entities to be scanned in next level
+        :rtype: List
+        """
+        raise NotImplementedError("The method _process_entity should be "
+                                  "implemented through a child object")
+
+    def process_entity(self, entity, append_queue=lambda x: None, max_tries=10,
+                       callback=lambda: None, verbose=0, _times=0):
+        """Wrapper for child method `_process_entity`
+
+        Will call self method `_process_entity` and examine the return
+        value: should return a list of elements to be queried again or None.
+
+        This method will run in a single thread
+
         :param string element: The URI of element to be scanned
         :param function append_queue: A function that receives the subject of
                                       a triplet as an argument
         :param integer verbose: The level of verbosity. 0 is low, and 2 is high
         :param function callback: The callback function. Default is return
-        :return: Nothing
+        :param int max_tries: If an exception is raised, max number of attempts
+        :param int _times: Reserved for recursive calls. Don't use
+        :return: If operation was successful
+        :rtype: boolean
         """
-
-        # Extract correctly the id of the wikidata element.
+        max_tries = 10
         try:
-            # If either fails to convert the last Q number into int
-            # or the URI hasn't 'entity' keyword, returns without doing nothing
-            wikidata_id = int(element.split("/")[-1][1:])
-            assert element.split("/")[-2] == 'entity'
-        except Exception:
-            callback()
-            return False
-
-        el_query = """PREFIX wikibase: <http://wikiba.se/ontology>
-            SELECT ?predicate ?object
-            WHERE {{
-                wd:Q{0} ?predicate ?object .
-            }}
-            """.format(wikidata_id)
-        if verbose > 2:
-            print("The element query is: \n", el_query)
-        # Get all related elements
-        sts, el_json = self.execute_query(el_query)
-        if verbose > 2:
-            print("HTTP", sts, len(el_json))
-
-        # Check future errors
-        if sts is not 200:
-            callback()
-            return False
-
-        # Add element to entities queue
-        id_obj = self.add_element(element, self.entities, self.entities_dict)
-        # print("Retrieved %d triplets" % len(el_json))
-        # For related elements, get all relations and objects
-        for relation in el_json:
-            try:
-                pred = self.extract_entity(relation['predicate'])
-                obj = self.extract_entity(relation['object'])
-            except KeyError:
-                print("Error on relation: {}".format(relation))
-                callback()
-                return False
-
-            if pred is not False and obj is not False:
-                # Add to the queue iff the element hasn't been scanned
-                if not self.exist_element(obj, self.entities_dict):
-                    append_queue(obj)
-
-                # Add relation
-                id_pred = self.add_element(pred, self.relations,
-                                           self.relations_dict)
-                id_subj = self.add_element(obj, self.entities,
-                                           self.entities_dict)
-                if id_subj is not False or id_pred is not False:
-                    self.subs.append((id_obj, id_subj, id_pred))
-                    self.splited_subs['updated'] = False
-
-        callback()
-        return True
+            # Get elements to add on the queue.
+            el_queue = self._process_entity(entity, verbose=verbose)
+            # print(el_queue)
+            if not el_queue:
+                return callback(False)
+            else:
+                for element in el_queue:
+                    append_queue(element)
+                return callback(True)
+        except Exception as exc:
+            # If an exception such ConnectionError or similar appears,
+            # try again. (but only for 10 times)
+            times_new = _times + 1
+            if _times_new < max_tries:
+                print("[{0}]Error found: '{1}'' "
+                      "Trying again".format(times_new, exc))
+                return self.process_entity(entity, append_queue=append_queue,
+                                           callback=callback, verbose=verbose,
+                                           _times=times_new)
+            else:
+                print("[{0}]Error found: '{1}'' Has been tried {0}/{2} times. "
+                      "Exiting".format(times_new, exc, max_tries))
+                return false
 
     def load_dataset_recurrently(self, levels, verbose=1, limit_ent=None):
         """Loads to dataset all entities with BNE ID and their relations
@@ -499,52 +476,20 @@ class Dataset():
         without using SPARQL CONSTRUCT. This method will start concurrently
         some threads to make several SPARQL SELECT queries.
 
+        Needs `self.get_seed_vector()` to be implemented on a child class
+
         :param integer levels: The depth to get triplets
         :param integer verbose: The level of verbosity. 0 is low, and 2 is high
         :return: True if operation was successful
         :rtype: bool
         """
 
-        # Count all Wikidata elements with a BNE entry
-        count_query = """
-            PREFIX wikibase: <http://wikiba.se/ontology>
-            SELECT (count(distinct ?wikidata) as ?count)
-            WHERE {
-                ?wikidata wdt:P950 ?bne .
-            }"""
-
-        if verbose > 2:
-            print("The count query is: \n", count_query)
-        sts, count_json = self.execute_query(count_query)
-        if verbose > 2:
-            print(sts, count_json)
-
-        # The number of elements
-        entities_number = int(count_json[0]['count']['value'])
-
-        if verbose > 0:
-            print("Found {} entities".format(entities_number))
-
-        # fill a list with wikidata entries related to BNE elements
-        first_query = """
-            PREFIX wikibase: <http://wikiba.se/ontology>
-            SELECT ?wikidata
-            WHERE {
-                ?wikidata wdt:P950 ?bne .
-            }
-            """
-        if verbose > 2:
-            print("The first query is: \n", first_query)
-        sts, first_json = self.execute_query(first_query)
-        if verbose > 2:
-            print(sts, len(first_json))
-
-        # Create a queue for wikidata elements to be scanned
-        new_queue = [entity['wikidata']['value'] for entity in first_json]
+        # Call child class to get seed vector
+        new_queue = self.get_seed_vector()
         el_queue = []
 
         if verbose > 1:
-            status_thread = None
+            # TODO: Status thread must can be killed from outside
 
             # Initialize status variables
             self.status['started'] = datetime.now()
@@ -563,9 +508,10 @@ class Dataset():
             # Interchange lists
             el_queue = new_queue
             new_queue = []
+
             # Apply limitation
             if limit_ent is not None:
-                el_queue = el_queue[:limit_ent]
+                el_queue = el_queue[:limit_ent*((level+1)**3)]
 
             if verbose > 0:
                 print("Scanning level {} with {} elements"
@@ -583,19 +529,22 @@ class Dataset():
             for element in el_queue:
                 # Generate n threads, start them and save into pool
 
-                def func_callback():
+                def func_callback(status):
+                    # TODO: This callback could be used to append to queue,
+                    # instead of passing two different functions to thread
                     self.status['it_analyzed'] += 1
                     self.th_semaphore.release()
 
                 self.th_semaphore.acquire()
                 t = threading.Thread(
-                    target=self.all_entity_triplet,
+                    target=self.process_entity,  # TODO*
                     args=(element, ),
                     kwargs={'verbose': verbose,
                             'append_queue': lambda e: new_queue.append(e),
                             'callback': func_callback})
                 threads.append(t)
                 t.start()
+            # *TODO: Must process only one element, and add to queue.
 
             if verbose > 0:
                 print("Waiting all threads to end")
@@ -604,6 +553,8 @@ class Dataset():
                 th.join()
 
         if verbose > 1:
+            # To help kill the status thread may
+            # be useful to imput a 'q' character on stdin
             self.status['active'] = False
 
         return True
@@ -771,74 +722,24 @@ class Dataset():
         :param string query: The SPARQL query
         :returns: A tuple compound of (http_status, json_or_error)
         """
-        # Thread limiter
-        # self.query_sem.acquire()
-        response = requests.get(self.WIKIDATA_ENDPOINT+query, headers=headers)
-        # self.query_sem.release()
-        # if response.status_code is not 200:
-        #     raise Exception("Error on endpoint. HTTP status code: "+
-        #                      str(response.status_code))
-        if response.status_code is not 200:
-            return response.status_code, response.text
-        else:
-            return response.status_code, response.json()["results"]["bindings"]
-
-
-class Entities():
-    """Class to manage Entities from dataset
-    """
-
-    def __init__(self, dataset):
-        """Creates Entities Object from a dataset
-
-        :param Dataset dataset: The dataset where entities are
-        """
-        self.dataset = dataset
-
-    def get_id(self, entity):
-        """Gets the id given an entity
-
-        :param string entity: The entity string
-        """
         try:
-            return self.dataset.entities_dict[entity]
-        except (KeyError, ValueError):
-            return -1
+            # Thread limiter
+            # self.query_sem.acquire()
+            response = requests.get(self.SPARQL_ENDPOINT+query,
+                                    headers=headers)
+            # self.query_sem.release()
+            # if response.status_code is not 200:
+            #     raise Exception("Error on endpoint. HTTP status code: "+
+            #                      str(response.status_code))
+            if response.status_code is not 200:
+                return (response.status_code, response.text)
+            else:
+                return (response.status_code,
+                        response.json()["results"]["bindings"])
+        except requests.exceptions.ConnectionError:
+            raise ExecuteQueryError("Error on endpoint")
 
-    def get_entity(self, id):
-        """Gets the entity given an id
 
-        :param integer id: The id to find
-        """
-        try:
-            return self.dataset.entities[id]
-        except ValueError:
-            return None
-
-
-class Relation():
-    """Class to manage relations from dataset
-    """
-
-    def __init__(self, dataset):
-        self.dataset = dataset
-
-    def get_relation(self, id):
-        """Gets the relation given an id
-
-        :param int id: The relation identifier to find
-        """
-        try:
-            return self.dataset.relations[id]
-        except ValueError:
-            return None
-
-    def get_id(self, relation):
-        """Gets the id given an relation
-
-        :param string entity: The relation string
-        """
-        try:
-            return self.dataset.relations_dict[entity]
-        except (KeyError, ValueError):
-            return -1
+class ExecuteQueryError(Exception):
+    def __init__(self, message):
+        super(ExecuteQueryError, self).__init__(message)
