@@ -47,7 +47,7 @@ class Dataset():
               'it_total': 0,
               'active': False}
 
-    def __init__(self, new_endpoint=None, thread_limiter=32):
+    def __init__(self, sparql_endpoint=None, thread_limiter=32):
         """Creates the dataset class
 
         The default endpoint is the original from wikidata.
@@ -149,6 +149,46 @@ class Dataset():
         :rtype: string
         """
         return relation
+
+    def get_entity_id(self, entity):
+        """Gets the id given an entity
+
+        :param string entity: The entity string
+        """
+        try:
+            return self.entities_dict[entity]
+        except (KeyError, ValueError):
+            return -1
+
+    def get_entity(self, id):
+        """Gets the entity given an id
+
+        :param integer id: The id to find
+        """
+        try:
+            return self.entities[id]
+        except ValueError:
+            return None
+
+    def get_relation(self, id):
+        """Gets the relation given an id
+
+        :param int id: The relation identifier to find
+        """
+        try:
+            return self.relations[id]
+        except ValueError:
+            return None
+
+    def get_relation_id(self, relation):
+        """Gets the id given an relation
+
+        :param string entity: The relation string
+        """
+        try:
+            return self.relations_dict[entity]
+        except (KeyError, ValueError):
+            return -1
 
     def add_triple(self, obj, subject, pred):
         """Add the triple (object, subject, pred) to dataset
@@ -366,28 +406,43 @@ class Dataset():
                 print("Guardado!")
                 self.show()
 
-    def process_entity(self, entity, append_queue=lambda x: None,
-                       callback=lambda: None, verbose=0, times=0):
-        """Will call external method and add triplets if they are valid.
+    def _process_entity(self, entity, verbose=None):
+        """Add all relations and entities related with the entity to dataset
 
-        Should receive a list of all triplets to be processed
+        Additionally, this method should return a list of the entities it is
+        connected to scan those entities on next level exploration.
 
-        Only will be added to queue if check_entity for each entity and
-        check_relation for each relation is valid for the triplet
-        """  # TODO
-        """Add to dataset all the relations from an entity
+        This method is not implemented by parent class. Should be overrided
+        by child class
 
-        This method is runned for one thread. It will check if the Wikidata
-        entity is valid, make a SPARQL query and save all triplets on the
-        dataset.
+        :param string method: The URI of the element to be processed
+        :param int verbose: The level of verbosity. 0 is low, and 2 is high
+        :return: Entities to be scanned in next level
+        :rtype: List
+        """
+        raise NotImplementedError("The method _process_entity should be "
+                                  "implemented through a child object")
+
+    def process_entity(self, entity, append_queue=lambda x: None, max_tries=10
+                       callback=lambda: None, verbose=0, _times=0):
+        """Wrapper for child method `_process_entity`
+
+        Will call self method `_process_entity` and examine the return
+        value: should return a list of elements to be queried again or None.
+
+        This method will run in a single thread
+
         :param string element: The URI of element to be scanned
         :param function append_queue: A function that receives the subject of
                                       a triplet as an argument
         :param integer verbose: The level of verbosity. 0 is low, and 2 is high
         :param function callback: The callback function. Default is return
+        :param int max_tries: If an exception is raised, max number of attempts
+        :param int _times: Reserved for recursive calls. Don't use
         :return: If operation was successful
         :rtype: boolean
         """
+        max_tries = 10
         try:
             # Get elements to add on the queue.
             el_queue = self._process_entity(entity, verbose=verbose)
@@ -399,21 +454,19 @@ class Dataset():
                     append_queue(element)
                 return callback(True)
         except Exception as exc:
-            # An exception has occurred. Try again
-            times_new = times + 1
-            if times_new < 10:
+            # If an exception such ConnectionError or similar appears,
+            # try again. (but only for 10 times)
+            times_new = _times + 1
+            if _times_new < max_tries:
                 print("[{0}]Error found: '{1}'' "
                       "Trying again".format(times_new, exc))
                 return self.process_entity(entity, append_queue=append_queue,
                                            callback=callback, verbose=verbose,
-                                           times=times_new)
+                                           _times=times_new)
             else:
-                print("[{0}]Error found: '{1}'' Has been tried {2} times. "
-                      "Exiting".format(times_new, exc, times_new))
+                print("[{0}]Error found: '{1}'' Has been tried {0}/{2} times. "
+                      "Exiting".format(times_new, exc, max_tries))
                 return false
-    # def all_entity_triplet(self, element,
-    #                        append_queue=lambda x: None, verbose=0,
-    #                        callback=lambda: None)
 
     def load_dataset_recurrently(self, levels, verbose=1, limit_ent=None):
         """Loads to dataset all entities with BNE ID and their relations
@@ -690,63 +743,3 @@ class Dataset():
 class ExecuteQueryError(Exception):
     def __init__(self, message):
         super(ExecuteQueryError, self).__init__(message)
-
-
-class Entities():
-    """Class to manage Entities from dataset
-    """
-
-    def __init__(self, dataset):
-        """Creates Entities Object from a dataset
-
-        :param Dataset dataset: The dataset where entities are
-        """
-        self.dataset = dataset
-
-    def get_id(self, entity):
-        """Gets the id given an entity
-
-        :param string entity: The entity string
-        """
-        try:
-            return self.dataset.entities_dict[entity]
-        except (KeyError, ValueError):
-            return -1
-
-    def get_entity(self, id):
-        """Gets the entity given an id
-
-        :param integer id: The id to find
-        """
-        try:
-            return self.dataset.entities[id]
-        except ValueError:
-            return None
-
-
-class Relation():
-    """Class to manage relations from dataset
-    """
-
-    def __init__(self, dataset):
-        self.dataset = dataset
-
-    def get_relation(self, id):
-        """Gets the relation given an id
-
-        :param int id: The relation identifier to find
-        """
-        try:
-            return self.dataset.relations[id]
-        except ValueError:
-            return None
-
-    def get_id(self, relation):
-        """Gets the id given an relation
-
-        :param string entity: The relation string
-        """
-        try:
-            return self.dataset.relations_dict[entity]
-        except (KeyError, ValueError):
-            return -1

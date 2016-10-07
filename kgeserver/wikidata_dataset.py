@@ -23,10 +23,16 @@ import re
 
 
 class WikidataDataset(kgeserver.dataset.Dataset):
-    def __init__(self, sparql_endpoint=None, thread_max=32):
-        """Creates WikidataDataset class"""
-        super(WikidataDataset, self).__init__(new_endpoint=sparql_endpoint,
-                                              thread_limiter=thread_max)
+    def __init__(self, sparql_endpoint=None, thread_limiter=32):
+        """Creates WikidataDataset class
+
+        The default endpoint is the original from wikidata.
+
+        :param string new_endpoint: The URI of the SPARQL endpoint
+        :param integer thread_limiter: The number of concurrent HTTP queries
+        """
+        super(WikidataDataset, self).__init__(sparql_endpoint=sparql_endpoint,
+                                              thread_limiter=thread_limiter)
         # Compile regex to better performance
         self.chk_digit = re.compile('\d')
         self.entities_explored = {}
@@ -107,8 +113,6 @@ class WikidataDataset(kgeserver.dataset.Dataset):
                                 'literal': False, 'bnode': False}):
         """Given an entity, returns the valid representation, ready to be saved
 
-        Going to be deprecated -> Must be implemented in child class
-
         The filter argument allows to avoid adding elements into lists that
         will not be used. It is a dictionary with the shape: {'filter': bool}.
         The valid filters (and default) are:
@@ -119,6 +123,7 @@ class WikidataDataset(kgeserver.dataset.Dataset):
             * *literal* - False
             * *bnode* - False
 
+        :deprecated: -> Must be implemented in child class
         :param dict entity: The entity to be analyzed
         :param dict filters: A dictionary to allow filter entities
         :return: The entity itself or False
@@ -202,17 +207,6 @@ class WikidataDataset(kgeserver.dataset.Dataset):
 
         return [entity['wikidata']['value'] for entity in first_json]
 
-    # def _process_entity(self, entity, verbose=0):
-
-        # twolevel_query = """
-        # SELECT (wd:Q180 as ?object) ?predicate ?subject ?pred ?subj
-        # WHERE {
-        #   ?predicate a owl:ObjectProperty .
-        #   wd:Q180 ?predicate ?subject .
-        #   FILTER NOT EXISTS { ?subject a wikibase:BestRank }
-        # }
-        # """
-
     def _process_entity(self, entity, verbose=0):
         """
         :return: A list with new entities to be scanned
@@ -253,8 +247,7 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         # Mark entity as already explored
         self.entities_explored[self.check_entity(entity)] = True
 
-        # Add element to entities queue
-        # id_obj = self.add_element(entity, self.entities, self.entities_dict)
+        # Entities to be explored next level
         to_queue = []
 
         # For related elements, get all relations and objects
@@ -262,23 +255,24 @@ class WikidataDataset(kgeserver.dataset.Dataset):
 
             try:
                 subject_uri = relation['subject']['value']
-                # if relation['subject']['type'] == "uri" and self.is_statement(subject_uri):
+                # if relation['subject']['type'] == "uri" and\
+                #    self.is_statement(subject_uri):
                 #     # Do queries to extract relations on statements
-                #     new_triples = self.extract_from_statement(entity, subject_uri)
+                #     new_triples = self.extract_from_statement(entity,
+                #                                               subject_uri)
                 #     # if new_triples:
                 #     #     print(new_triples)
                 #     to_queue.append(new_triples)
 
+                # Add the subject scanned only if is valid
                 subj = self.check_entity(subject_uri)
 
-                # if subj and not self.exist_element(subj, self.entities_dict):
-                #     to_queue.append(subject_uri)
                 if subj:
                     to_queue.append(subject_uri)
 
-                added = self.add_triple(entity, relation['subject']['value'],
-                                        relation['predicate']['value'])
-                # print("It was added {}".format(added))
+                # Add triple will ensure every elements are valid
+                self.add_triple(entity, relation['subject']['value'],
+                                relation['predicate']['value'])
 
             except KeyError:
                 print("Error on relation: {}".format(relation))
@@ -301,6 +295,16 @@ class WikidataDataset(kgeserver.dataset.Dataset):
             return False
 
     def extract_from_statement(self, entity, uri):
+        """Extract triplets from a statement
+
+        Should receive the entity which is the subject of the triple and
+        the uri of the statement
+
+        :param string entity: The entity whic statement is related
+        :param string uri: The uri of the statement
+        :return: The entities statement is related
+        :rtype: list
+        """
         # print("The uri {} is a statement".format(uri))
         st_query = """PREFIX wikibase: <http://wikiba.se/ontology>
           SELECT ?pred ?subj
@@ -317,15 +321,15 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         el_queue = []
 
         for elem in el_json:
+            # If the object on the relation is an entity, save the triple and
+            # return the entity into a list
             pred_uri = (elem['pred']['value'])
             subj_uri = (elem['subj']['value'])
 
             subj = self.check_entity(subj_uri)
 
-            if subj and not self.exist_element(subj, self.entities_dict):
+            if subj:
                 el_queue.append(subj_uri)
-
-            added = self.add_triple(entity, subj_uri, pred_uri)
-            # print("Relation from statement added {}".format(added))
+                self.add_triple(entity, subj_uri, pred_uri)
 
         return el_queue
