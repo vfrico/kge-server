@@ -55,8 +55,8 @@ class Dataset():
         :param string new_endpoint: The URI of the SPARQL endpoint
         :param integer thread_limiter: The number of concurrent HTTP queries
         """
-        if new_endpoint is not None:
-            self.SPARQL_ENDPOINT = new_endpoint
+        if sparql_endpoint is not None:
+            self.SPARQL_ENDPOINT = sparql_endpoint
 
         self.th_semaphore = threading.Semaphore(thread_limiter)
         # self.query_sem = threading.Semaphore(thread_limiter)
@@ -423,7 +423,7 @@ class Dataset():
         raise NotImplementedError("The method _process_entity should be "
                                   "implemented through a child object")
 
-    def process_entity(self, entity, append_queue=lambda x: None, max_tries=10
+    def process_entity(self, entity, append_queue=lambda x: None, max_tries=10,
                        callback=lambda: None, verbose=0, _times=0):
         """Wrapper for child method `_process_entity`
 
