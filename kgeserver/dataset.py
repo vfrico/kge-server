@@ -458,7 +458,7 @@ class Dataset():
 
             # Apply limitation
             if limit_ent is not None:
-                el_queue = el_queue[:limit_ent]
+                el_queue = el_queue[:limit_ent*((level+1)**3)]
 
             if verbose > 0:
                 print("Scanning level {} with {} elements"
