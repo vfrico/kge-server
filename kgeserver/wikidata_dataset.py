@@ -31,11 +31,17 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         :param string new_endpoint: The URI of the SPARQL endpoint
         :param integer thread_limiter: The number of concurrent HTTP queries
         """
+        # TODO: sparql queries: where params passed as arguments
+        # TODO: Use transparently the wikidata uris -> While dataset really
+        #       saves the Q%d or P%d data, the get should return whole uri
+
         super(WikidataDataset, self).__init__(sparql_endpoint=sparql_endpoint,
                                               thread_limiter=thread_limiter)
         # Compile regex to better performance
         self.chk_digit = re.compile('\d')
         self.entities_explored = {}
+        self.entity_base = "http://www.wikidata.org/entity/"
+        self.relation_base = "http://www.wikidata.org/prop/"
 
     def check_entity(self, entity):
         """Check the entity given and return a valid representation
@@ -106,6 +112,48 @@ class WikidataDataset(kgeserver.dataset.Dataset):
             else:
                 return None
         return None
+
+    def get_entity_id(self, entity):
+        """Gets the id given an entity
+
+        :param string entity: The entity string
+        """
+        try:
+            entity = self.check_entity[entity]
+            return self.entities_dict[entity]
+        except (KeyError, ValueError):
+            return -1
+
+    def get_entity(self, id):
+        """Gets the entity URI given an id
+
+        :param integer id: The id to find
+        """
+        try:
+            return self.entity_base + self.entities[id]
+        except ValueError:
+            return None
+
+    def get_relation(self, id):
+        """Gets the relation URI given an id
+
+        :param int id: The relation identifier to find
+        """
+        try:
+            return self.relation_base + self.relations[id]
+        except ValueError:
+            return None
+
+    def get_relation_id(self, relation):
+        """Gets the id given an relation
+
+        :param string entity: The relation string
+        """
+        try:
+            relation = self.check_relation[relation]
+            return self.relations_dict[relation]
+        except (KeyError, ValueError):
+            return -1
 
     def extract_entity(self, entity,
                        filters={'wdt-entity': True, 'wdt-reference': False,

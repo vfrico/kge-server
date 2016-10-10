@@ -186,7 +186,7 @@ class Dataset():
         :param string entity: The relation string
         """
         try:
-            return self.relations_dict[entity]
+            return self.relations_dict[relation]
         except (KeyError, ValueError):
             return -1
 
@@ -468,6 +468,20 @@ class Dataset():
                       "Exiting".format(times_new, exc, max_tries))
                 return false
 
+    def get_seed_vector(self):
+        """Get the root entities where the graph build should start
+
+        This should return a list with elements to start seeking its childs
+        and start building a dataset graph from this root elements.
+
+        **MUST** be implemented through a child object
+
+        :return: An entities list
+        :rtype: list
+        """
+        raise NotImplementedError("The method `get_seed_vector` should be "
+                                  "implemented through a child object")
+
     def load_dataset_recurrently(self, levels, verbose=1, limit_ent=None):
         """Loads to dataset all entities with BNE ID and their relations
 
@@ -565,6 +579,8 @@ class Dataset():
 
         This method should not be called from other method
         distinct than 'load_dataset_recurrently'
+
+        TODO: Should end when parent thread ends...
         """
         self.status['active'] = True
         while self.status['active']:
