@@ -14,6 +14,6 @@ Methods
 
 Here is shown all the different methods to use with dataset class
 
-.. automodule:: experiment
+.. automodule:: kgeserver.experiment
 .. autoclass:: Experiment
    :members:

@@ -14,7 +14,7 @@ Methods
 
 Here is shown all the different methods to use with dataset class
 
-.. automodule:: algorithm
+.. automodule:: kgeserver.algorithm
 .. autoclass:: ModelTrainer
 .. autoclass:: Algorithm
    :members:

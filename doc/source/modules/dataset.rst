@@ -21,6 +21,23 @@ Methods
 
 Here is shown all the different methods to use with dataset class
 
-.. automodule:: dataset
+.. automodule:: kgeserver.dataset
 .. autoclass:: Dataset
    :members:
+   :special-members:
+   :private-members:
+
+   
+.. _dataset.get_seed_vector: #kgeserver.dataset.Dataset.get_seed_vector
+.. _dataset.load_dataset_recurrently: #kgeserver.dataset.Dataset.load_dataset_recurrently
+.. _dataset._process_entity: #kgeserver.dataset.Dataset._process_entity
+
+
+WikidataDataset
+---------------
+
+.. automodule:: kgeserver.wikidata_dataset
+.. autoclass:: WikidataDataset
+  :members:
+  :special-members:
+  :private-members:

@@ -19,18 +19,16 @@
 #
 import os
 import sys
-from unittest.mock import MagicMock
+# from unittest.mock import MagicMock
 sys.path.insert(0, os.path.abspath('../..'))
-sys.setrecursionlimit(1000)
 
-
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-            return Mock()
-
-MOCK_MODULES = ['numpy']
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+# class Mock(MagicMock):
+#     @classmethod
+#     def __getattr__(cls, name):
+#             return Mock()
+#
+# MOCK_MODULES = ['numpy']
+# sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 
 # -- General configuration ------------------------------------------------

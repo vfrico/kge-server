@@ -412,8 +412,8 @@ class Dataset():
         Additionally, this method should return a list of the entities it is
         connected to scan those entities on next level exploration.
 
-        This method is not implemented by parent class. Should be overrided
-        by child class
+        This method is not implemented by parent class. **MUST** be
+        implemented through a child object
 
         :param string method: The URI of the element to be processed
         :param int verbose: The level of verbosity. 0 is low, and 2 is high
@@ -425,9 +425,9 @@ class Dataset():
 
     def process_entity(self, entity, append_queue=lambda x: None, max_tries=10,
                        callback=lambda: None, verbose=0, _times=0):
-        """Wrapper for child method `_process_entity`
+        """Wrapper for child method `dataset._process_entity`_
 
-        Will call self method `_process_entity` and examine the return
+        Will call self method `dataset._process_entity`_ and examine the return
         value: should return a list of elements to be queried again or None.
 
         This method will run in a single thread
@@ -490,7 +490,7 @@ class Dataset():
         without using SPARQL CONSTRUCT. This method will start concurrently
         some threads to make several SPARQL SELECT queries.
 
-        Needs `self.get_seed_vector()` to be implemented on a child class
+        Needs dataset.get_seed_vector_ to be implemented on a child class
 
         :param integer levels: The depth to get triplets
         :param integer verbose: The level of verbosity. 0 is low, and 2 is high
@@ -595,7 +595,8 @@ class Dataset():
         Returns a formated string with current progress
 
         This is a helper method and should not be called from
-        other method distinct than 'load_dataset_recurrently'
+        other method distinct than dataset.load_dataset_recurrently_
+
         :return: Current download progress
         :rtype: string
         """
