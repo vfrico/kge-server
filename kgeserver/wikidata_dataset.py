@@ -20,28 +20,43 @@
 
 import kgeserver
 import re
+import math
 
 
 class WikidataDataset(kgeserver.dataset.Dataset):
-    def __init__(self, sparql_endpoint=None, thread_limiter=32):
+    def __init__(self, sparql_endpoint=None, thread_limiter=32,
+                 graph_pattern=None):
         """Creates WikidataDataset class
 
         The default endpoint is the original from wikidata.
 
         :param string new_endpoint: The URI of the SPARQL endpoint
         :param integer thread_limiter: The number of concurrent HTTP queries
+        :param string graph_pattern: The graph pattern that goes into WHERE
+            statement inside SPARQL queries.
         """
         # TODO: sparql queries: where params passed as arguments
-        # TODO: Use transparently the wikidata uris -> While dataset really
-        #       saves the Q%d or P%d data, the get should return whole uri
 
         super(WikidataDataset, self).__init__(sparql_endpoint=sparql_endpoint,
                                               thread_limiter=thread_limiter)
         # Compile regex to better performance
         self.chk_digit = re.compile('\d')
+
+        # Save all entities already explored by process_entity (saves time)
         self.entities_explored = {}
+
+        # Used as constants to get entity or get prop
         self.entity_base = "http://www.wikidata.org/entity/"
         self.relation_base = "http://www.wikidata.org/prop/"
+
+        if graph_pattern is not None:
+            self.graph_pattern = graph_pattern
+        else:
+            self.graph_pattern = (
+                "{0} ?predicate ?object . "
+                "?predicate a owl:ObjectProperty . "
+                "FILTER NOT EXISTS {{ ?object a wikibase:BestRank }}"
+                )
 
     def check_entity(self, entity):
         """Check the entity given and return a valid representation
@@ -55,26 +70,22 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         # http://www.wikidata.org/entity/Q42
 
         try:
-            # If either fails to convert the last Q number into int
-            # or the URI hasn't 'entity' keyword, returns without doing nothing
             entity_uri = entity.split("/")
             wikidata_id = entity_uri[-1]
-            # print(entity, wikidata_id)
+
+            # The last uri number should start with Q and has entity keyword
+            # Number after Q must be a valid integer
             if wikidata_id[0] is "Q" and entity_uri[-2] == 'entity' and\
                self.chk_digit.search(wikidata_id[1:]):
-                # print(True, wikidata_id)
                 return wikidata_id
             else:
-                # print("elsetry")
                 return None
         except Exception:
-            # The entity seems not to be an URI
+            # The entity is also valid if element is "Q1234"
             if entity[0] is "Q" and\
                self.chk_digit.search(entity[1:]):
-                # print(True, entity)
                 return entity
             else:
-                # print("elseexcept")
                 return None
         # print("ret")
         return None
@@ -92,11 +103,11 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         # http://www.wikidata.org/prop/qualifier/P18 NOT VALID
 
         try:
-            # If either fails to convert the last Q number into int
-            # or the URI hasn't 'entity' keyword, returns without doing nothing
             prp_uri = relation.split("/")
             wikidata_prop = prp_uri[-1]
 
+            # The last uri number should start with P and has prop,
+            # direct or statement keyword. Number after P also should be valid
             if wikidata_prop[0] is "P" and prp_uri[3] == 'prop' and\
                (prp_uri[4] == "direct" or prp_uri[4] == "statement" or
                 prp_uri[-1] == prp_uri[4])\
@@ -105,7 +116,7 @@ class WikidataDataset(kgeserver.dataset.Dataset):
             else:
                 return None
         except Exception:
-            # The relation seems not to be an URI
+            # The Prop is also valid if it starts with P with number. ie: 'P53'
             if relation[0] is "P" and\
                self.chk_digit.search(relation[1:]):
                 return relation
@@ -209,23 +220,24 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         else:
             return False
 
-    def get_seed_vector(self, verbose=0):
+    def get_seed_vector(self, verbose=0, where="?subject wdt:P950 ?bne ."):
         """Auxiliar method that outputs a list of seed elements
 
         This seed vector will be the 'root nodes' of a tree with the
         desired depth on parent class (`load_dataset_recurrently`)
 
         :param verbose: The desired level of verbosity
+        :param string where: SPARQL where to construct query
         :return: A list of entities
         :rtype: list
-        """
+        """  # TODO: Parametrize all queries
         # Count all Wikidata elements with a BNE entry
         count_query = """
             PREFIX wikibase: <http://wikiba.se/ontology>
-            SELECT (count(distinct ?wikidata) as ?count)
-            WHERE {
-                ?wikidata wdt:P950 ?bne .
-            }"""
+            SELECT (count(distinct ?subject) as ?count)
+            WHERE {{
+                {0}
+            }}""".format(where)
 
         if verbose > 2:
             print("The count query is: \n", count_query)
@@ -239,24 +251,35 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         if verbose > 0:
             print("Found {} entities".format(entities_number))
 
+        # TODO: Si hay muchos elementos, que no vengan de golpe
+        limit = 5000
+        seed_vector = []
         # fill a list with wikidata entries related to BNE elements
-        first_query = """
-            PREFIX wikibase: <http://wikiba.se/ontology>
-            SELECT ?wikidata
-            WHERE {
-                ?wikidata wdt:P950 ?bne .
-            }
-            """
-        if verbose > 2:
-            print("The first query is: \n", first_query)
-        sts, first_json = self.execute_query(first_query)
-        if verbose > 2:
-            print(sts, len(first_json))
-
-        return [entity['wikidata']['value'] for entity in first_json]
+        for q in range(0, math.ceil(entities_number / limit)):
+            offset = q * limit
+            first_query = """
+                PREFIX wikibase: <http://wikiba.se/ontology>
+                SELECT ?subject
+                WHERE {{
+                    {2}
+                }} LIMIT {0} OFFSET {1}
+                """.format(limit, offset, where)
+            if verbose > 2:
+                print("The first query is: \n", first_query)
+            sts, first_json = self.execute_query(first_query)
+            if verbose > 2:
+                print(sts, len(first_json))
+            seed_vector += [entity['subject']['value']
+                            for entity in first_json]
+        return seed_vector
 
     def _process_entity(self, entity, verbose=0):
-        """
+        """Take entity and explore all relations and entities related to it
+
+        This will execute the SPARQL query with the params passed to
+        build a dataset with the *object* elements on triples retrieved
+        from the server.
+
         :return: A list with new entities to be scanned
         """
         # Check first if entity has been already explored
@@ -274,13 +297,12 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         except Exception:
             return False
 
-        el_query = """SELECT (wd:Q{0} as ?object) ?predicate ?subject
-                WHERE {{
-                  ?predicate a owl:ObjectProperty .
-                  wd:Q{0} ?predicate ?subject .
-                  FILTER NOT EXISTS {{ ?subject a wikibase:BestRank }}
-                }}
-            """.format(wikidata_id)
+        wdt_entity = "wd:Q{0}".format(wikidata_id)
+        el_query = """SELECT ({1} as ?subject) ?predicate ?object
+            WHERE {{
+              {0}
+            }}""".format(self.graph_pattern.format(wdt_entity),
+                         wdt_entity)
         if verbose > 2:
             print("The element query is: \n", el_query)
         # Get all related elements
@@ -300,26 +322,17 @@ class WikidataDataset(kgeserver.dataset.Dataset):
 
         # For related elements, get all relations and objects
         for relation in el_json:
-
             try:
-                subject_uri = relation['subject']['value']
-                # if relation['subject']['type'] == "uri" and\
-                #    self.is_statement(subject_uri):
-                #     # Do queries to extract relations on statements
-                #     new_triples = self.extract_from_statement(entity,
-                #                                               subject_uri)
-                #     # if new_triples:
-                #     #     print(new_triples)
-                #     to_queue.append(new_triples)
+                object_uri = relation['object']['value']
 
                 # Add the subject scanned only if is valid
-                subj = self.check_entity(subject_uri)
+                obj = self.check_entity(object_uri)
 
-                if subj:
-                    to_queue.append(subject_uri)
+                if obj:
+                    to_queue.append(object_uri)
 
                 # Add triple will ensure every elements are valid
-                self.add_triple(entity, relation['subject']['value'],
+                self.add_triple(entity, relation['object']['value'],
                                 relation['predicate']['value'])
 
             except KeyError:

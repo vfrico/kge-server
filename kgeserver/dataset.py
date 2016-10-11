@@ -190,30 +190,30 @@ class Dataset():
         except (KeyError, ValueError):
             return -1
 
-    def add_triple(self, obj, subject, pred):
-        """Add the triple (object, subject, pred) to dataset
+    def add_triple(self, subject, obj, pred):
+        """Add the triple (subject, object, pred) to dataset
 
         This method will add the three elements and append the tuple of the
         relation into the dataset
 
-        :param string obj: Object of the triple
         :param string subject: Subject of the triple
+        :param string obj: Object of the triple
         :param string pred: Predicate of the triple
         :return: If the operation was correct
         :rtype: boolean
         """
 
-        pred = self.check_relation(pred)
         subject = self.check_entity(subject)
+        pred = self.check_relation(pred)
         obj = self.check_entity(obj)
-        # print(obj, subject, pred)
+
         if pred and obj and subject:
             # Add relation
-            id_pred = self.add_relation(pred)
             id_subj = self.add_entity(subject)
+            id_pred = self.add_relation(pred)
             id_obj = self.add_entity(obj)
             if id_subj is not False or id_pred is not False:
-                self.subs.append((id_obj, id_subj, id_pred))
+                self.subs.append((id_subj, id_obj, id_pred))
                 self.splited_subs['updated'] = False
                 return True
         return False
@@ -457,7 +457,7 @@ class Dataset():
             # If an exception such ConnectionError or similar appears,
             # try again. (but only for 10 times)
             times_new = _times + 1
-            if _times_new < max_tries:
+            if times_new < max_tries:
                 print("[{0}]Error found: '{1}'' "
                       "Trying again".format(times_new, exc))
                 return self.process_entity(entity, append_queue=append_queue,
@@ -482,7 +482,8 @@ class Dataset():
         raise NotImplementedError("The method `get_seed_vector` should be "
                                   "implemented through a child object")
 
-    def load_dataset_recurrently(self, levels, verbose=1, limit_ent=None):
+    def load_dataset_recurrently(self, levels, seed_vector, verbose=1,
+                                 limit_ent=None):
         """Loads to dataset all entities with BNE ID and their relations
 
         Due to Wikidata endpoint cann't execute queries that take long time
@@ -490,16 +491,14 @@ class Dataset():
         without using SPARQL CONSTRUCT. This method will start concurrently
         some threads to make several SPARQL SELECT queries.
 
-        Needs dataset.get_seed_vector_ to be implemented on a child class
-
+        :param list seed_vector: A vector of entities to start with
         :param integer levels: The depth to get triplets
         :param integer verbose: The level of verbosity. 0 is low, and 2 is high
         :return: True if operation was successful
         :rtype: bool
         """
 
-        # Call child class to get seed vector
-        new_queue = self.get_seed_vector()
+        new_queue = seed_vector
         el_queue = []
 
         if verbose > 1:
