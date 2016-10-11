@@ -543,21 +543,18 @@ class Dataset():
                 # Generate n threads, start them and save into pool
 
                 def func_callback(status):
-                    # TODO: This callback could be used to append to queue,
-                    # instead of passing two different functions to thread
                     self.status['it_analyzed'] += 1
                     self.th_semaphore.release()
 
                 self.th_semaphore.acquire()
                 t = threading.Thread(
-                    target=self.process_entity,  # TODO*
+                    target=self.process_entity,
                     args=(element, ),
                     kwargs={'verbose': verbose,
                             'append_queue': lambda e: new_queue.append(e),
                             'callback': func_callback})
                 threads.append(t)
                 t.start()
-            # *TODO: Must process only one element, and add to queue.
 
             if verbose > 0:
                 print("Waiting all threads to end")
@@ -739,14 +736,8 @@ class Dataset():
         :returns: A tuple compound of (http_status, json_or_error)
         """
         try:
-            # Thread limiter
-            # self.query_sem.acquire()
             response = requests.get(self.SPARQL_ENDPOINT+query,
                                     headers=headers)
-            # self.query_sem.release()
-            # if response.status_code is not 200:
-            #     raise Exception("Error on endpoint. HTTP status code: "+
-            #                      str(response.status_code))
             if response.status_code is not 200:
                 return (response.status_code, response.text)
             else:
@@ -757,5 +748,7 @@ class Dataset():
 
 
 class ExecuteQueryError(Exception):
+    """ExecuteQueryError"""
     def __init__(self, message):
+        """Created when any error occurs when executing a query"""
         super(ExecuteQueryError, self).__init__(message)

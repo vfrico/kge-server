@@ -37,7 +37,7 @@ from skge.util import to_tensor
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger('EX-KG')
-np.random.seed(42)
+np.random.seed(137)
 
 
 class Experiment(object):
@@ -104,6 +104,7 @@ class Experiment(object):
         return trainer.model
 
     def save_trained_model(self, filepath, model):
+        """Given a model and a filepath, save it to disk"""
         try:
             bin_file = open(filepath, "wb+")
         except Exception:
@@ -112,10 +113,12 @@ class Experiment(object):
         return pickle.dump(bin_file, model)
 
     def thread_start(self, callback):
+        """Used when threads are created"""
         self.run()
         callback(self)
 
     def ranking_callback(self, trn, with_eval=False):
+        """Print basic info"""
         # print basic info
         elapsed = timeit.default_timer() - trn.epoch_start
         self.exectimes.append(elapsed)
@@ -216,6 +219,7 @@ class Experiment(object):
         return True
 
     def train(self):
+        """Train the model"""
         # Compute training vector size
         N = len(self.dataset.entities)
         M = len(self.dataset.relations)

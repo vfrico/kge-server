@@ -35,8 +35,6 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         :param string graph_pattern: The graph pattern that goes into WHERE
             statement inside SPARQL queries.
         """
-        # TODO: sparql queries: where params passed as arguments
-
         super(WikidataDataset, self).__init__(sparql_endpoint=sparql_endpoint,
                                               thread_limiter=thread_limiter)
         # Compile regex to better performance
@@ -230,7 +228,7 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         :param string where: SPARQL where to construct query
         :return: A list of entities
         :rtype: list
-        """  # TODO: Parametrize all queries
+        """
         # Count all Wikidata elements with a BNE entry
         count_query = """
             PREFIX wikibase: <http://wikiba.se/ontology>
@@ -251,7 +249,6 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         if verbose > 0:
             print("Found {} entities".format(entities_number))
 
-        # TODO: Si hay muchos elementos, que no vengan de golpe
         limit = 5000
         seed_vector = []
         # fill a list with wikidata entries related to BNE elements
