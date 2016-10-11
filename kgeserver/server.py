@@ -64,6 +64,16 @@ class Server():
 
         return matrix
 
+    def similarity_by_embedding(embedding, k):
+        """For a given embedding, return most similar id's
+
+        :param list embedding: An embedding vector
+        :param int k: The similar entities shown for each entity
+        :returns: A list with k id's, which are the most similar entities
+        :rtype: list
+        """
+        return self.index.get_nns_by_vector(embedding, k)
+
 
 class SearchIndex():
     def __init__(self):
