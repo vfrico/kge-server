@@ -222,7 +222,7 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         # Count all Wikidata elements with a BNE entry
         count_query = """
             PREFIX wikibase: <http://wikiba.se/ontology>
-            SELECT (count(distinct ?subject) as ?count)
+            SELECT (count(DISTINCT ?subject) as ?count)
             WHERE {{
                 {0}
             }}""".format(where)
@@ -246,7 +246,7 @@ class WikidataDataset(kgeserver.dataset.Dataset):
             offset = q * limit
             first_query = """
                 PREFIX wikibase: <http://wikiba.se/ontology>
-                SELECT ?subject
+                SELECT DISTINCT ?subject
                 WHERE {{
                     {2}
                 }} LIMIT {0} OFFSET {1}
