@@ -24,8 +24,7 @@ import math
 
 
 class WikidataDataset(kgeserver.dataset.Dataset):
-    def __init__(self, sparql_endpoint=None, thread_limiter=32,
-                 graph_pattern=None):
+    def __init__(self, sparql_endpoint=None, thread_limiter=32):
         """Creates WikidataDataset class
 
         The default endpoint is the original from wikidata.
@@ -46,15 +45,6 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         # Used as constants to get entity or get prop
         self.entity_base = "http://www.wikidata.org/entity/"
         self.relation_base = "http://www.wikidata.org/prop/"
-
-        if graph_pattern is not None:
-            self.graph_pattern = graph_pattern
-        else:
-            self.graph_pattern = (
-                "{0} ?predicate ?object . "
-                "?predicate a owl:ObjectProperty . "
-                "FILTER NOT EXISTS {{ ?object a wikibase:BestRank }}"
-                )
 
     def check_entity(self, entity):
         """Check the entity given and return a valid representation
@@ -270,7 +260,12 @@ class WikidataDataset(kgeserver.dataset.Dataset):
                             for entity in first_json]
         return seed_vector
 
-    def _process_entity(self, entity, verbose=0):
+    def _process_entity(self, entity, verbose=0,
+                        graph_pattern=("{0} ?predicate ?object . "
+                                       "?predicate a owl:ObjectProperty . "
+                                       "FILTER NOT EXISTS {{ "
+                                       "?object a wikibase:BestRank }}")
+                        ):
         """Take entity and explore all relations and entities related to it
 
         This will execute the SPARQL query with the params passed to
@@ -298,7 +293,7 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         el_query = """SELECT ({1} as ?subject) ?predicate ?object
             WHERE {{
               {0}
-            }}""".format(self.graph_pattern.format(wdt_entity),
+            }}""".format(graph_pattern.format(wdt_entity),
                          wdt_entity)
         if verbose > 2:
             print("The element query is: \n", el_query)
