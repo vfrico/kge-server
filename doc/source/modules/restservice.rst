@@ -34,6 +34,17 @@ de ese servicio. Cuanto menor sea, más importancia se le dará.
 Gestión de Datasets
 ```````````````````
 
+Un dataset se compone de los siguientes campos públicos:
+
+{"entities", "relations", "triples", "status", "algorithm"}
+
+El recurso *Algorithm*, que todavía no está disponible, dispondrá de todos
+los parámetros que se han utilizado para entrenar el dataset. Por el momento
+sólo contendrá "embedding_size".
+
+El dataset irá mudando de *status* dependiendo de si sólo contiene datos,
+si ha sido también entrenado, o si ya está listo para predecir tripletas.
+
 .. http:get:: /dataset/(int:dataset_id)/
 
     Obtener toda la información de un dataset
@@ -59,8 +70,6 @@ Gestión de Datasets
     :prioridad: 2
     :param int dataset_id: id único del dataet
     :query int id_algorithm: id del algoritmo utilizado para entrenar el dataset.
-
-.. http:post:: /dataset/(int:dataset_id)/
 
 
 Predicción de tripletas
