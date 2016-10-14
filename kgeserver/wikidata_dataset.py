@@ -42,6 +42,7 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         # Save all entities already explored by process_entity (saves time)
         self.entities_explored = {}
 
+        # TODO: May be useful save these uri's on dataset binary?
         # Used as constants to get entity or get prop
         self.entity_base = "http://www.wikidata.org/entity/"
         self.relation_base = "http://www.wikidata.org/prop/"
