@@ -1,9 +1,16 @@
 import falcon
+import json
+import data_access
 
 
 class DatasetResource(object):
     def on_get(self, req, resp, dataset_id):
-        resp.status = falcon.HTTP_500
+        dataset = data_access.DatasetDAO()
+        resource = dataset.get_dataset_by_id(dataset_id)
+        resp.body = json.dumps(resource)
+        resp.content_type = 'application/json'
+        resp.status = falcon.HTTP_200
+
 
 # falcon.API instances are callable WSGI apps
 app = falcon.API()
