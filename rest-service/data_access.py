@@ -35,6 +35,10 @@ class MainDAO():
                            "(0, 'wikidata_25k.bin', '', "
                            "'wikidata_25k.annoy.bin', 100, 2)")
 
+        self.execute_query("INSERT INTO dataset VALUES "
+                           "(1, 'wikidata_60k.bin', '', "
+                           "'', 100, 0)")
+
     def execute_query(self, query):
         conn = sqlite3.connect(self.database_file)
         results = []
@@ -65,6 +69,10 @@ class DatasetDAO(MainDAO):
     def get_dataset_by_id(self, dataset_id):
         query = "SELECT * FROM dataset WHERE id={0}".format(dataset_id)
         res = self.execute_query(query)
+        # Query has return nothing
+        if res is None:
+            return None, (404, "Dataset {} not found".format(dataset_id))
+        # Query has an object
         self.binary_dataset = res[1]
         self.binary_model = res[2]
         self.binary_index = res[3]
@@ -80,16 +88,17 @@ class DatasetDAO(MainDAO):
         return (self.dataset, dtst)
 
     def get_search_index(self):
+        if self.dataset['status'] < 2:
+            return None, (409, "Dataset {id} has {status} status and is not "
+                               "ready for search".format(**self.dataset))
         search_index = server.SearchIndex()
         search_index.load_from_file(self.bin_path + self.binary_index,
                                     self.embedding_size)
-        return search_index
+        return search_index, None
 
     def get_server(self):
-        return server.Server(self.get_search_index())
-
-
-
-class ServerDAO(MainDAO):
-    def __init__(self, database_file="server.db"):
-        super(ServerDAO, self).__init__(database_file=database_file)
+        search_index, err = self.get_search_index()
+        if search_index is None:
+            return None, err
+        else:
+            return server.Server(search_index), None

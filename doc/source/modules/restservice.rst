@@ -81,24 +81,15 @@ Predicción de tripletas
 
     :prioridad: 0
     :param int dataset_id: id único del dataset
-    :param string entity: Representación de la entidad
-    :query int limit: Límite de entidades similares que se piden
-
-.. http:get:: /predict/similar_entities_by_embedding/(int:dataset_id)/(string:embedding)?limit=(int:limit)
-
-    Obtener n entidades similares dado un vector de *embedding*.
-
-    :prioridad: 0
-    :param int dataset_id: id único del dataset
-    :param list embedding: Vector de *embedding* a obtener entidades similares
+    :param string entity: Representación de la entidad (Elemento o vector)
     :query int limit: Límite de entidades similares que se piden
 
 
-.. http:get:: /predict/embedding_prob/(int:dataset_id)/(string:embedding)
+.. http:get:: /dataset/(int:dataset_id)/embedding_probability/(string:embedding)
 
-    Devuelve la probabilidad de que un vector de embedding sea verdadero
-    dentro de un dataset dado.
+    Devuelve la probabilidad de que un vector de *embedding* sea verdadero
+    dentro de un *dataset_id* dado.
 
     :prioridad: 0
     :param int dataset_id: id único del dataset
-    :param list embedding: Vector de *embedding* a obtener entidades similares
+    :param list embedding: Vector de *embedding* a obtener su probabilidad
