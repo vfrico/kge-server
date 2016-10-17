@@ -119,7 +119,7 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         :param string entity: The entity string
         """
         try:
-            entity = self.check_entity[entity]
+            entity = self.check_entity(entity)
             return self.entities_dict[entity]
         except (KeyError, ValueError):
             return -1
@@ -150,7 +150,7 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         :param string entity: The relation string
         """
         try:
-            relation = self.check_relation[relation]
+            relation = self.check_relation(relation)
             return self.relations_dict[relation]
         except (KeyError, ValueError):
             return -1
