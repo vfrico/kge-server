@@ -625,14 +625,15 @@ class Dataset():
         :return: True if operation was successful
         :rtype: bool
         """
-
+        print(self)
         subs2 = self.train_split()
         all_dataset = {
             'entities': self.entities,
             'relations': self.relations,
             'train_subs': subs2['train_subs'],
             'valid_subs': subs2['valid_subs'],
-            'test_subs': subs2['test_subs']
+            'test_subs': subs2['test_subs'],
+            '__class__': self.__class__
         }
         try:
             f = open(filepath, "wb+")
@@ -660,6 +661,12 @@ class Dataset():
             return False
         all_dataset = pickle.load(f)
         f.close()
+        try:
+            self.__class__ = all_dataset['__class__']
+            self.__init__()
+        except KeyError:
+            # This is an old generated dataset
+            pass
 
         self.entities = all_dataset['entities']
         self.relations = all_dataset['relations']
