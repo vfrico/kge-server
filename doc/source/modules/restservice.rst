@@ -75,10 +75,9 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
 Predicción de tripletas
 ```````````````````````
 
-.. http:get:: /predict/similar_entities_by_entity/(int:dataset_id)/(string:entity)?limit=(int:limit)
+.. http:get:: /dataset/(int:dataset_id)/similar_entities/(string:entity)?limit=(int:limit)
 
-    Obtener n entidades similares a *entity* sabiendo su representation dentro
-    del dataset.
+    Obtener *limit* entidades similares a *entity* dentro del *dataset_id*
 
     :prioridad: 0
     :param int dataset_id: id único del dataset

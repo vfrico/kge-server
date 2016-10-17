@@ -1,6 +1,7 @@
 import os
 import sqlite3
-from kgeserver.dataset import Dataset
+import kgeserver.server as server
+import kgeserver.dataset as dataset
 database_file = "server.db"
 
 
@@ -31,7 +32,8 @@ class MainDAO():
                            "embedding_size INTEGER, status INTEGER)")
 
         self.execute_query("INSERT INTO dataset VALUES "
-                           "(0, 'wikidata_25k.bin', '', '', NULL, 0)")
+                           "(0, 'wikidata_25k.bin', '', "
+                           "'wikidata_25k.annoy.bin', 100, 2)")
 
     def execute_query(self, query):
         conn = sqlite3.connect(self.database_file)
@@ -55,17 +57,39 @@ class DatasetDAO(MainDAO):
             "algorithm": None,
             "id": None
         }
+        self.binary_dataset = None
+        self.binary_model = None
+        self.binary_index = None
+        self.embedding_size = None
 
     def get_dataset_by_id(self, dataset_id):
         query = "SELECT * FROM dataset WHERE id={0}".format(dataset_id)
         res = self.execute_query(query)
-        print(res)
-        dtst = Dataset()
-        dtst.load_from_binary(self.bin_path+res[1])
+        self.binary_dataset = res[1]
+        self.binary_model = res[2]
+        self.binary_index = res[3]
+        self.embedding_size = res[4]
+        dtst = dataset.Dataset()
+        dtst.load_from_binary(self.bin_path+self.binary_dataset)
         self.dataset['status'] = res[5]
         self.dataset['algorithm'] = res[4]
         self.dataset['triples'] = len(dtst.subs)
         self.dataset['entities'] = len(dtst.entities)
         self.dataset['relations'] = len(dtst.relations)
-        self.dataset['id'] = dataset_id
-        return self.dataset
+        self.dataset['id'] = int(dataset_id)
+        return (self.dataset, dtst)
+
+    def get_search_index(self):
+        search_index = server.SearchIndex()
+        search_index.load_from_file(self.bin_path + self.binary_index,
+                                    self.embedding_size)
+        return search_index
+
+    def get_server(self):
+        return server.Server(self.get_search_index())
+
+
+
+class ServerDAO(MainDAO):
+    def __init__(self, database_file="server.db"):
+        super(ServerDAO, self).__init__(database_file=database_file)
