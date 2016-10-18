@@ -54,12 +54,14 @@ class PredictSimilarEntitiesResource(object):
         if limit is None:
             limit = 10  # Default value
 
-        similar_entities = [dataset.get_entity(id) for id in
+        similar_entities = [{"entity": dataset.get_entity(e_id),
+                             "distance": dist}
+                            for e_id, dist in
                             server.similarity_by_id(entity_id, limit)]
         response = {
             "dataset": resource,
             "similar_entities": {
-                "entity": entity,
+                "entity": dataset.get_entity(entity_id),
                 "limit": len(similar_entities),
                 "response": similar_entities
             }
