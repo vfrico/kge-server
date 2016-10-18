@@ -43,12 +43,16 @@ class Server():
     def similarity_by_id(self, id, k):
         """Given an entity id, return the k'th most similar entities
 
+        Returns a list of pairs, where the first item is the entity
+        and the second item is the distance to entity.
+
         :param int id: The entity id
         :param int k: The entities to show
         :returns: A list with k id's, which are the most similar entities
-        :rtype: list
+        :rtype: list of pairs
         """
-        return self.index.get_nns_by_item(id, k)
+        sim = self.index.get_nns_by_item(id, k, include_distances=True)
+        return [(sim[0][i], sim[1][i]) for i in range(0, len(sim[0]))]
 
     def similarity_by_vector(vector, k):
         """For each id in vector, return a list with k similar entities
