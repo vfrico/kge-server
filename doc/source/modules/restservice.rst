@@ -34,12 +34,40 @@ de ese servicio. Cuanto menor sea, más importancia se le dará.
 Gestión de Datasets
 ```````````````````
 
+Un dataset se compone de los siguientes campos públicos:
+
+{"entities", "relations", "triples", "status", "algorithm"}
+
+El recurso *Algorithm*, que todavía no está disponible, dispondrá de todos
+los parámetros que se han utilizado para entrenar el dataset. Por el momento
+sólo contendrá "embedding_size".
+
+El dataset irá mudando de *status* dependiendo de si sólo contiene datos,
+si ha sido también entrenado, o si ya está listo para predecir tripletas.
+
 .. http:get:: /dataset/(int:dataset_id)/
 
-    Obtener toda la información de un dataset
+    Obtener toda la información de un dataset.
+
+    **Respuesta de ejemplo**
+
+    .. sourcecode:: json
+
+        {
+            "dataset": {
+                "entities": 664444,
+                "relations": 647,
+                "id": 1,
+                "status": 2,
+                "triples": 3261785,
+                "algorithm": 100
+            }
+        }
 
     :prioridad: 0
     :param int dataset_id: id único del dataset
+    :statuscode 200: Devuelve el dataset sin errores
+    :statuscode 404: El dataset no ha sido encontrado
 
 .. ver celery para añadir peticiones asíncronas a un "demonio" https://github.com/celery/celery/
 .. http:post:: /dataset/(int:dataset_id)/train?algorithm=(int:id_algorithm)
@@ -60,37 +88,62 @@ Gestión de Datasets
     :param int dataset_id: id único del dataet
     :query int id_algorithm: id del algoritmo utilizado para entrenar el dataset.
 
-.. http:post:: /dataset/(int:dataset_id)/
-
 
 Predicción de tripletas
 ```````````````````````
 
-.. http:get:: /predict/similar_entities_by_entity/(int:dataset_id)/(string:entity)?limit=(int:limit)
+.. http:get:: /dataset/(int:dataset_id)/similar_entities/(string:entity)?limit=(int:limit)
 
-    Obtener n entidades similares a *entity* sabiendo su representation dentro
-    del dataset.
+    Obtener las *limit* entidades más similares a *entity* dentro
+    del *dataset_id*. Dentro del número dado en *limit* se encuentra la propia
+    entidad.
+
+
+    **Ejemplo**
+
+
+    :http:get:`/dataset/1/similar_entities/Q1492?limit=1`
+
+    .. sourcecode:: json
+
+        {    "similar_entities":
+            {    "response":
+                [
+                    {
+                        "distance": 0,
+                        "entity": "http://www.wikidata.org/entity/Q1492"
+                    },
+                    {
+                        "distance": 0.8224636912345886,
+                        "entity": "http://www.wikidata.org/entity/Q15090"
+                    }
+                ],
+                "entity": "http://www.wikidata.org/entity/Q1492",
+                "limit": 2
+            },
+            "dataset":
+            {
+                "entities": 664444,
+                "relations": 647,
+                "id": 1,
+                "status": 2,
+                "triples": 3261785,
+                "algorithm": 100
+            }
+        }
+
 
     :prioridad: 0
     :param int dataset_id: id único del dataset
-    :param string entity: Representación de la entidad
+    :param string entity: Representación de la entidad (Elemento o vector)
     :query int limit: Límite de entidades similares que se piden
 
-.. http:get:: /predict/similar_entities_by_embedding/(int:dataset_id)/(string:embedding)?limit=(int:limit)
 
-    Obtener n entidades similares dado un vector de *embedding*.
+.. http:get:: /dataset/(int:dataset_id)/embedding_probability/(string:embedding)
 
-    :prioridad: 0
-    :param int dataset_id: id único del dataset
-    :param list embedding: Vector de *embedding* a obtener entidades similares
-    :query int limit: Límite de entidades similares que se piden
-
-
-.. http:get:: /predict/embedding_prob/(int:dataset_id)/(string:embedding)
-
-    Devuelve la probabilidad de que un vector de embedding sea verdadero
-    dentro de un dataset dado.
+    Devuelve la probabilidad de que un vector de *embedding* sea verdadero
+    dentro de un *dataset_id* dado.
 
     :prioridad: 0
     :param int dataset_id: id único del dataset
-    :param list embedding: Vector de *embedding* a obtener entidades similares
+    :param list embedding: Vector de *embedding* a obtener su probabilidad
