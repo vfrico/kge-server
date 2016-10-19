@@ -49,7 +49,9 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
 
     Obtener toda la información de un dataset.
 
-    **Respuesta de ejemplo**
+    **Ejemplo**
+
+    :http:get:`/dataset/1/`
 
     .. sourcecode:: json
 
@@ -100,7 +102,6 @@ Predicción de tripletas
 
 
     **Ejemplo**
-
 
     :http:get:`/dataset/1/similar_entities/Q1492?limit=1`
 
