@@ -38,6 +38,9 @@ class MainDAO():
         self.execute_query("INSERT INTO dataset VALUES "
                            "(1, '4levels.bin', 'modelo_guardado.bin', "
                            "'annoy_index_big.bin', 100, 2)")
+        self.execute_query("INSERT INTO dataset VALUES "
+                           "(2, '4levels.bin', 'modelo_guardado.bin', "
+                           "'annoyIndex.500.bin', 100, 2)")
 
     def execute_query(self, query):
         conn = sqlite3.connect(self.database_file)
