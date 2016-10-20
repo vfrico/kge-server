@@ -44,7 +44,6 @@ class MainDAO():
 
     def execute_query(self, query):
         conn = sqlite3.connect(self.database_file)
-        results = []
         c = conn.cursor()
         c.execute(query)
         row = c.fetchone()
@@ -52,8 +51,25 @@ class MainDAO():
         c.close()
         return row
 
+    def execute_insertion(self, query):
+        conn = sqlite3.connect(self.database_file)
+        c = conn.cursor()
+        c.execute(query)
+        conn.commit()
+        return c
+
 
 class DatasetDAO(MainDAO):
+    """Object to interact between the data storage and returns valid objects
+
+    All methods that shows a "return tuple", it returns a pair, where first
+    element is an object if no error found or None if error are found. Details
+    of the error can be queried on the other element of the pair.
+
+    Example without error: (dataset.Dataset, None)
+    Example with error: (None, (404, "Not found on database"))
+    """
+
     def __init__(self, database_file="server.db"):
         super(DatasetDAO, self).__init__(database_file=database_file)
         self.dataset = {
@@ -100,8 +116,27 @@ class DatasetDAO(MainDAO):
         return search_index, None
 
     def get_server(self):
+        """Returns the server with the correct search index loaded.
+
+        :return: The Server object or None
+        :rtype: tuple
+        """
         search_index, err = self.get_search_index()
         if search_index is None:
             return None, err
         else:
             return server.Server(search_index), None
+
+    def insert_empty_dataset(self):
+        """Creates an empty dataset on database.
+
+        :return: The id of dataset created, or None
+        :rtype: tuple
+        """
+        sql_sentence = ("INSERT INTO dataset VALUES "
+                        "(NULL, '', '', '', 0, 0)")
+
+        result = self.execute_insertion(sql_sentence)
+        rowid = result.lastrowid
+        result.close()
+        return rowid, None

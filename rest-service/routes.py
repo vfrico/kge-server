@@ -53,6 +53,10 @@ class PredictSimilarEntitiesResource(object):
         limit = req.get_param('limit')
         if limit is None:
             limit = 10  # Default value
+
+        # Needed because server returns also the identical triple
+        limit = int(limit) + 1
+
         similar_entities = [{"entity": dataset.get_entity(e_id),
                              "distance": dist}
                             for e_id, dist in

@@ -47,13 +47,32 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
 
 .. http:get:: /dataset/(int:dataset_id)/
 
-    Obtener toda la información de un dataset
+    Obtener toda la información de un dataset.
+
+    **Ejemplo**
+
+    :http:get:`/dataset/1/`
+
+    .. sourcecode:: json
+
+        {
+            "dataset": {
+                "entities": 664444,
+                "relations": 647,
+                "id": 1,
+                "status": 2,
+                "triples": 3261785,
+                "algorithm": 100
+            }
+        }
 
     :prioridad: 0
     :param int dataset_id: id único del dataset
+    :statuscode 200: Devuelve el dataset sin errores
+    :statuscode 404: El dataset no ha sido encontrado
 
 .. ver celery para añadir peticiones asíncronas a un "demonio" https://github.com/celery/celery/
-.. http:post:: /dataset/(int:dataset_id)/train?algorithm=(int:id_algorithm)
+.. http:put:: /dataset/(int:dataset_id)/train?algorithm=(int:id_algorithm)
 
     Entrenar un dataset con un algoritmo dado. Se usará un modelo de petición
     asíncrona, dado que puede tardar una cantidad de tiempo considerable.
@@ -68,8 +87,44 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
     Basado en: <http://restcookbook.com/Resources/asynchroneous-operations/>
 
     :prioridad: 2
-    :param int dataset_id: id único del dataet
+    :param int dataset_id: id único del dataset.
     :query int id_algorithm: id del algoritmo utilizado para entrenar el dataset.
+
+
+.. http:get:: /dataset_types
+
+    Obtener todos los tipos de dataset disponibles en el sistema. No pueden
+    ser modificados.
+
+ 
+.. Problema: Un WikidataDataset no tiene las mismas operaciones que un Dataset
+.. normal. Ver cómo puede afectar esto en la gestión de los métodos HTTP
+.. http:post:: /dataset?type=(int:dataset_type)
+
+    Crear un dataset nuevo y vacío. Se deberán utilizar otras consultas para
+    llenar con tripletas el dataset. Se creará el objeto con un determinado
+    *dataset_type*, que determinará qué funciones podrá tener en un futuro.
+
+    :prioridad: 1
+    :query int dataset_type: El tipo de dataset a ser creado.
+    :statuscode 201: Se ha creado un dataset nuevo correctamente. Ver cabecera
+                    Location para saber la URI del recurso.
+    :statuscode 404: El *dataset_type* no existe.
+    :statuscode 500: No se ha podido crear el dataset.
+
+
+.. http:put:: /dataset/(int:dataset_id)/add_triple
+
+    Añadir una tripleta al dataset. Se debe enviar un JSON con un objeto o lista
+    de objetos *triple*, que tienen los parámetros.
+    {"subject", "object", "predicate"}. Sólo se pueden añadir tripletas a un
+    dataset con estado *0*, ya que no puede ser reentrenado.
+
+    :prioridad: 1
+    :param int dataset_id: id único del dataset.
+    :statuscode 200: La petición se ha procesado correctamente.
+    :statuscode 404: El *dataset_id* no existe.
+    :statuscode 409: El estado del *dataset_id* no es correcto.
 
 
 Predicción de tripletas
@@ -77,7 +132,42 @@ Predicción de tripletas
 
 .. http:get:: /dataset/(int:dataset_id)/similar_entities/(string:entity)?limit=(int:limit)
 
-    Obtener *limit* entidades similares a *entity* dentro del *dataset_id*
+    Obtener las *limit* entidades más similares a *entity* dentro
+    del *dataset_id*. El número dado en *limit* excluye la propia entidad.
+
+
+    **Ejemplo**
+
+    :http:get:`/dataset/1/similar_entities/Q1492?limit=1`
+
+    .. sourcecode:: json
+
+        {    "similar_entities":
+            {    "response":
+                [
+                    {
+                        "distance": 0,
+                        "entity": "http://www.wikidata.org/entity/Q1492"
+                    },
+                    {
+                        "distance": 0.8224636912345886,
+                        "entity": "http://www.wikidata.org/entity/Q15090"
+                    }
+                ],
+                "entity": "http://www.wikidata.org/entity/Q1492",
+                "limit": 2
+            },
+            "dataset":
+            {
+                "entities": 664444,
+                "relations": 647,
+                "id": 1,
+                "status": 2,
+                "triples": 3261785,
+                "algorithm": 100
+            }
+        }
+
 
     :prioridad: 0
     :param int dataset_id: id único del dataset
