@@ -1,7 +1,9 @@
 import os
+import time
 import sqlite3
 import kgeserver.server as server
 import kgeserver.dataset as dataset
+import kgeserver.wikidata_dataset as wikidata_dataset
 database_file = "server.db"
 
 
@@ -107,6 +109,9 @@ class DatasetDAO(MainDAO):
         return (self.dataset, dtst)
 
     def get_search_index(self):
+        """Returns an instantiated search index from choosen dataset
+
+        """
         if self.dataset['status'] < 2:
             return None, (409, "Dataset {id} has {status} status and is not "
                                "ready for search".format(**self.dataset))
@@ -127,16 +132,40 @@ class DatasetDAO(MainDAO):
         else:
             return server.Server(search_index), None
 
-    def insert_empty_dataset(self):
+    def insert_empty_dataset(self, datasetClass):
         """Creates an empty dataset on database.
 
+        :param kgeserver.dataset.Dataset datasetClass: The class of the dataset
         :return: The id of dataset created, or None
         :rtype: tuple
         """
+        unique_name = str(int(time.time()))+".bin"
         sql_sentence = ("INSERT INTO dataset VALUES "
-                        "(NULL, '', '', '', 0, 0)")
+                        "(NULL, '"+unique_name+"', '', '', 0, 0)")
+
+        newdataset = datasetClass()
+        newdataset.save_to_binary(self.bin_path+unique_name)
 
         result = self.execute_insertion(sql_sentence)
         rowid = result.lastrowid
         result.close()
         return rowid, None
+
+    def get_dataset_types(self):
+        """Stores the different datasets that can be created
+
+        :returns: A list of objects
+        :rtype: list
+        """
+        return [
+            {
+                "id": 0,
+                "name": "dataset",
+                "class": dataset.Dataset
+            },
+            {
+                "id": 1,
+                "name": "WikidataDataset",
+                "class": wikidata_dataset.WikidataDataset
+            }
+        ]

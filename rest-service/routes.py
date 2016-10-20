@@ -24,6 +24,28 @@ class DatasetResource(object):
         resp.status = falcon.HTTP_200
 
 
+class DatasetCreateResource(object):
+    def on_post(self, req, resp):
+        print("POST Dataset")
+        dao = data_access.DatasetDAO()
+
+        # Get dataset type
+        try:
+            dts_type = int(req.get_param("type"))
+        except Exception:
+            # Fallback to read default type: 1
+            dts_type = 0
+
+        dataset_type = dao.get_dataset_types()[dts_type]
+        id_dts, err = dao.insert_empty_dataset(dataset_type["class"])
+
+        print(id_dts)
+
+        resp.status = falcon.HTTP_201
+        resp.body = "Created"
+        resp.location = "/dataset/"+str(id_dts)
+
+
 class PredictSimilarEntitiesResource(object):
     def on_get(self, req, resp, dataset_id, entity):
         # Params: ?limit=(int: limit)
@@ -79,9 +101,11 @@ app = falcon.API()
 
 # Resources are represented by long-lived class instances
 dataset = DatasetResource()
+datasetcreate = DatasetCreateResource()
 similar_entities = PredictSimilarEntitiesResource()
 
 # All API routes and the object that will handle each one
+app.add_route('/dataset/', datasetcreate)
 app.add_route('/dataset/{dataset_id}', dataset)
 app.add_route('/dataset/{dataset_id}/similar_entities/{entity}',
               similar_entities)
