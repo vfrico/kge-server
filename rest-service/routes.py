@@ -25,6 +25,11 @@ class DatasetResource(object):
 
 
 class DatasetCreateResource(object):
+    def on_get(self, req, resp):
+        """Return all datasets"""
+        resp.status = falcon.HTTP_501
+        resp.body = "Not implemented"
+
     def on_post(self, req, resp):
         print("POST Dataset")
         dao = data_access.DatasetDAO()
@@ -105,7 +110,7 @@ datasetcreate = DatasetCreateResource()
 similar_entities = PredictSimilarEntitiesResource()
 
 # All API routes and the object that will handle each one
-app.add_route('/dataset/', datasetcreate)
-app.add_route('/dataset/{dataset_id}', dataset)
-app.add_route('/dataset/{dataset_id}/similar_entities/{entity}',
+app.add_route('/datasets/', datasetcreate)
+app.add_route('/datasets/{dataset_id}', dataset)
+app.add_route('/datasets/{dataset_id}/similar_entities/{entity}',
               similar_entities)

@@ -442,7 +442,6 @@ class Dataset():
         :return: If operation was successful
         :rtype: boolean
         """
-        max_tries = 10
         try:
             # Get elements to add on the queue.
             el_queue = self._process_entity(entity, verbose=verbose)

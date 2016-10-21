@@ -73,6 +73,8 @@ class DatasetDAO(MainDAO):
     """
 
     def __init__(self, database_file="server.db"):
+        """Instantiates the object and creates *private* variables
+        """
         super(DatasetDAO, self).__init__(database_file=database_file)
         self.dataset = {
             "status": None,
@@ -88,6 +90,11 @@ class DatasetDAO(MainDAO):
         self.embedding_size = None
 
     def get_dataset_by_id(self, dataset_id):
+        """Returns a dataset given its id
+
+        :return: A dataset dictionary or none
+        :rtype: tuple
+        """
         query = "SELECT * FROM dataset WHERE id={0}".format(dataset_id)
         res = self.execute_query(query)
         # Query has return nothing
@@ -150,6 +157,13 @@ class DatasetDAO(MainDAO):
         rowid = result.lastrowid
         result.close()
         return rowid, None
+
+    def get_all_datasets(self):
+        """Queries the DB to retrieve all datasets
+
+        :returns: A list of datasets objects
+        :rtype: list
+        """
 
     def get_dataset_types(self):
         """Stores the different datasets that can be created

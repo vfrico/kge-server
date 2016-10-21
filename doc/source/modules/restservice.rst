@@ -45,13 +45,13 @@ sólo contendrá "embedding_size".
 El dataset irá mudando de *status* dependiendo de si sólo contiene datos,
 si ha sido también entrenado, o si ya está listo para predecir tripletas.
 
-.. http:get:: /dataset/(int:dataset_id)/
+.. http:get:: /datasets/(int:dataset_id)/
 
     Obtener toda la información de un dataset.
 
     **Ejemplo**
 
-    :http:get:`/dataset/1/`
+    :http:get:`/datasets/1/`
 
     .. sourcecode:: json
 
@@ -72,7 +72,7 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
     :statuscode 404: El dataset no ha sido encontrado
 
 .. ver celery para añadir peticiones asíncronas a un "demonio" https://github.com/celery/celery/
-.. http:put:: /dataset/(int:dataset_id)/train?algorithm=(int:id_algorithm)
+.. http:put:: /datasets/(int:dataset_id)/train?algorithm=(int:id_algorithm)
 
     Entrenar un dataset con un algoritmo dado. Se usará un modelo de petición
     asíncrona, dado que puede tardar una cantidad de tiempo considerable.
@@ -82,7 +82,7 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
     Se pondrá la petición en una cola y se devolverá un 202 ACCPEPTED, con
     la cabecera LOCATION: rellena con una tarea (/task/{id}), que mostrará el progreso.
     Al finalizar, la tarea mostrará un 303, ya que se habrá creado un nuevo
-    recurso /dataset/{id}, y la cabecera LOCATION vendrá rellena con esa URI.
+    recurso /datasets/{id}, y la cabecera LOCATION vendrá rellena con esa URI.
 
     Basado en: <http://restcookbook.com/Resources/asynchroneous-operations/>
 
@@ -90,13 +90,20 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
     :param int dataset_id: id único del dataset.
     :query int id_algorithm: id del algoritmo utilizado para entrenar el dataset.
 
+.. http:get:: /datasets/
+
+    Obtener todos los ID de Datasets. No muestra (por defecto) los tamaños
+    de los datasets.
+
+    :prioridad: 0
+
 
 .. http:get:: /dataset_types
 
     Obtener todos los tipos de dataset disponibles en el sistema. No pueden
     ser modificados.
 
- 
+
 .. Problema: Un WikidataDataset no tiene las mismas operaciones que un Dataset
 .. normal. Ver cómo puede afectar esto en la gestión de los métodos HTTP
 .. http:post:: /dataset?type=(int:dataset_type)
@@ -113,7 +120,7 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
     :statuscode 500: No se ha podido crear el dataset.
 
 
-.. http:put:: /dataset/(int:dataset_id)/add_triple
+.. http:put:: /datasets/(int:dataset_id)/add_triple
 
     Añadir una tripleta al dataset. Se debe enviar un JSON con un objeto o lista
     de objetos *triple*, que tienen los parámetros.
@@ -130,7 +137,7 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
 Predicción de tripletas
 ```````````````````````
 
-.. http:get:: /dataset/(int:dataset_id)/similar_entities/(string:entity)?limit=(int:limit)
+.. http:get:: /datasets/(int:dataset_id)/similar_entities/(string:entity)?limit=(int:limit)?search_k=(int:search_k)
 
     Obtener las *limit* entidades más similares a *entity* dentro
     del *dataset_id*. El número dado en *limit* excluye la propia entidad.
@@ -138,7 +145,7 @@ Predicción de tripletas
 
     **Ejemplo**
 
-    :http:get:`/dataset/1/similar_entities/Q1492?limit=1`
+    :http:get:`/datasets/1/similar_entities/Q1492?limit=1`
 
     .. sourcecode:: json
 
@@ -173,9 +180,11 @@ Predicción de tripletas
     :param int dataset_id: id único del dataset
     :param string entity: Representación de la entidad (Elemento o vector)
     :query int limit: Límite de entidades similares que se piden
+    :query int search_k: Número máximo de nodos donde se realiza la búsqueda.
+    Mejora la calidad de las búsquedas, a costa de un rendimiento más bajo
 
 
-.. http:get:: /dataset/(int:dataset_id)/embedding_probability/(string:embedding)
+.. http:get:: /datasets/(int:dataset_id)/embedding_probability/(string:embedding)
 
     Devuelve la probabilidad de que un vector de *embedding* sea verdadero
     dentro de un *dataset_id* dado.
