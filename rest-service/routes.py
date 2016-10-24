@@ -74,6 +74,8 @@ class PredictSimilarEntitiesResource(object):
             resp.body = json.dumps({"status": err[0],
                                     "message": err[1]})
             return
+
+        dataset = dataset_dao.build_dataset_object()
         entity_id = dataset.get_entity_id(entity)
 
         # Obtain the limit param from Query Params

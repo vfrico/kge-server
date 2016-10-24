@@ -158,6 +158,11 @@ class DatasetDAO(MainDAO):
 
         return (self.dataset, None)
 
+    def build_dataset_object(self):
+        dtst = dataset.Dataset()
+        dtst.load_from_binary(self.bin_path+self.binary_dataset)
+        return dtst
+
     def get_search_index(self):
         """Returns an instantiated search index from choosen dataset
 
@@ -167,7 +172,8 @@ class DatasetDAO(MainDAO):
                                "ready for search".format(**self.dataset))
         search_index = server.SearchIndex()
         search_index.load_from_file(self.bin_path + self.binary_index,
-                                    self.embedding_size)
+                                    self.dataset['algorithm']['embedding_size']
+                                    )
         return search_index, None
 
     def get_server(self):
