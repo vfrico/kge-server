@@ -141,6 +141,7 @@ Predicción de tripletas
 
     Obtener las *limit* entidades más similares a *entity* dentro
     del *dataset_id*. El número dado en *limit* excluye la propia entidad.
+    Sólo es válido para ciertas representaciones de entidad.
 
 
     **Ejemplo**
@@ -179,9 +180,75 @@ Predicción de tripletas
     :prioridad: 0
     :param int dataset_id: id único del dataset
     :param string entity: Representación de la entidad (Elemento o vector)
-    :query int limit: Límite de entidades similares que se piden
+    :query int limit: Límite de entidades similares que se piden. Por defecto
+                      tiene el valor 10.
     :query int search_k: Número máximo de nodos donde se realiza la búsqueda.
-    Mejora la calidad de las búsquedas, a costa de un rendimiento más bajo
+                         Mejora la calidad de las búsquedas, a costa de un
+                         rendimiento más bajo. Por defecto tiene el valor -1.
+
+
+.. http:post:: /datasets/(int:dataset_id)/similar_entities?limit=(int:limit)?search_k=(int:search_k)
+
+    Obtener las *limit* entidades más similares a *entity* dentro
+    del *dataset_id*. El número dado en *limit* excluye la propia entidad.
+    La representación de la entidad puede ser una URI completa o cualquier
+    otra de su representación
+
+    Debe de incluirse en el body un documento JSON formateado así:
+
+    **Ejemplo**
+
+    :http:post:`/datasets/0/similar_entities?limit=1`
+
+    .. sourcecode:: json
+
+        {
+            "entity":
+              {
+                "value": "http://www.wikidata.org/entity/Q1492",
+                "type": "uri"
+              }
+        }
+
+    *Respuesta*
+
+    .. sourcecode:: json
+
+        {    "similar_entities":
+            {    "response":
+                [
+                    {
+                        "distance": 0,
+                        "entity": "http://www.wikidata.org/entity/Q1492"
+                    },
+                    {
+                        "distance": 0.8224636912345886,
+                        "entity": "http://www.wikidata.org/entity/Q15090"
+                    }
+                ],
+                "entity": "http://www.wikidata.org/entity/Q1492",
+                "limit": 2
+            },
+            "dataset":
+            {
+                "entities": 664444,
+                "relations": 647,
+                "id": 1,
+                "status": 2,
+                "triples": 3261785,
+                "algorithm": 100
+            }
+        }
+
+
+    :prioridad: 0
+    :param int dataset_id: id único del dataset
+    :param string entity: Representación de la entidad (Elemento o vector)
+    :query int limit: Límite de entidades similares que se piden. Por defecto
+                      tiene el valor 10.
+    :query int search_k: Número máximo de nodos donde se realiza la búsqueda.
+                         Mejora la calidad de las búsquedas, a costa de un
+                         rendimiento más bajo. Por defecto tiene el valor -1.
 
 
 .. http:get:: /datasets/(int:dataset_id)/embedding_probability/(string:embedding)
@@ -190,5 +257,6 @@ Predicción de tripletas
     dentro de un *dataset_id* dado.
 
     :prioridad: 0
+    :todo: 501 Not Implemented
     :param int dataset_id: id único del dataset
     :param list embedding: Vector de *embedding* a obtener su probabilidad

@@ -5,6 +5,8 @@ import data_access
 
 class DatasetResource(object):
     def on_get(self, req, resp, dataset_id):
+        """Return a HTTP response with all information about one dataset
+        """
         dataset = data_access.DatasetDAO()
         resource, err = dataset.get_dataset_by_id(dataset_id)
         if resource is None:
@@ -52,8 +54,23 @@ class DatasetCreateResource(object):
 
 
 class PredictSimilarEntitiesResource(object):
-    def on_get(self, req, resp, dataset_id, entity):
-        # Params: ?limit=(int: limit)
+    def on_get(self, req, resp, dataset_id, entity, embedding=False):
+        """Makes HTTP response for a SimilarEntities search
+
+        It may be used directly with get, but it is discouraged. This method
+        does not return nothing, but makes a http request with Falcon.
+
+        :param int dataset_id: The dataset identifier on database
+        :param string entity: Can be either identifier or embedding vector
+        :param boolean embedding: True if entity param is an embedding
+        :query int limit: Limit of similar entities returned.
+                          By default is set to 10
+        :query int search_k: Maximum number of nodes where the search is made.
+                             The higher this param is, the higher quality is,
+                             but the performance is worse. Defaults to -1
+        :returns: None
+        """
+        # Get dataset
         dataset_dao = data_access.DatasetDAO()
         resource, err = dataset_dao.get_dataset_by_id(dataset_id)
         if resource is None:
