@@ -16,8 +16,9 @@ class MainDAO():
         # Create the file itself
         try:
             os.stat(self.database_file)
-        except OSError:
+        except (OSError, FileNotFoundError) as err:
             # File does not exist. Create
+            print("Create file")
             f = open(self.database_file, "w+")
             f.close()
             self.build_basic_db()
@@ -26,28 +27,56 @@ class MainDAO():
         self.bin_path = "../"
 
     def build_basic_db(self):
+
+        self.execute_query("CREATE TABLE algorithm "
+                           "(id INTEGER UNIQUE PRIMARY KEY, "
+                           "embedding_size INTEGER) ; ")
+
         self.execute_query("CREATE TABLE dataset "
                            "(id INTEGER UNIQUE PRIMARY KEY, "
                            "binary_dataset TEXT, "
                            "binary_model TEXT, "
                            "binary_index TEXT,"
-                           "embedding_size INTEGER, status INTEGER)")
+                           "algorithm INTEGER, "
+                           "entities INTEGER, "
+                           "relations INTEGER, "
+                           "triples INTEGER, "
+                           "status INTEGER, "
+                           "FOREIGN KEY(algorithm) REFERENCES algorithm(id)"
+                           ");")
 
-        self.execute_query("INSERT INTO dataset VALUES "
-                           "(0, 'wikidata_25k.bin', '', "
-                           "'wikidata_25k.annoy.bin', 100, 2)")
+        default_datasets = [
+                        {"id": 0, "binary_dataset": 'wikidata_25k.bin',
+                         "binary_model": "",
+                         "binary_index": 'wikidata_25k.annoy.bin',
+                         "status": 2, 'algorithm': 0},
+                        {"id": 1, "binary_dataset": '4levels.bin',
+                         "binary_model": 'modelo_guardado.bin',
+                         "binary_index": 'annoy_index_big.bin',
+                         "status": 2, 'algorithm': 0},
+                        {"id": 2, "binary_dataset": '4levels.bin',
+                         "binary_model": 'modelo_guardado.bin',
+                         "binary_index": 'annoyIndex.500.bin',
+                         "status": 2, 'algorithm': 0}
+                         ]
+        default_algorithms = [
+                        {"id": 0, "embedding_size": 100}
+        ]
+        for alg in default_algorithms:
+            self.execute_query(
+                "INSERT INTO algorithm {0} VALUES {1} ;"
+                .format(tuple(alg.keys()), tuple(alg.values())))
+        for dtset in default_datasets:
+            self.execute_query(
+                "INSERT INTO dataset {0} VALUES {1} ;"
+                .format(tuple(dtset.keys()), tuple(dtset.values())))
 
-        self.execute_query("INSERT INTO dataset VALUES "
-                           "(1, '4levels.bin', 'modelo_guardado.bin', "
-                           "'annoy_index_big.bin', 100, 2)")
-        self.execute_query("INSERT INTO dataset VALUES "
-                           "(2, '4levels.bin', 'modelo_guardado.bin', "
-                           "'annoyIndex.500.bin', 100, 2)")
-
-    def execute_query(self, query):
+    def execute_query(self, query, *args):
         conn = sqlite3.connect(self.database_file)
+        conn.row_factory = sqlite3.Row
         c = conn.cursor()
-        c.execute(query)
+        c.execute("PRAGMA foreign_keys = ON;")
+        c.execute(query, args)
         row = c.fetchone()
         conn.commit()
         c.close()
@@ -55,7 +84,9 @@ class MainDAO():
 
     def execute_insertion(self, query):
         conn = sqlite3.connect(self.database_file)
+        conn.row_factory = sqlite3.Row
         c = conn.cursor()
+        c.execute("PRAGMA foreign_keys = ON;")
         c.execute(query)
         conn.commit()
         return c
@@ -87,7 +118,6 @@ class DatasetDAO(MainDAO):
         self.binary_dataset = None
         self.binary_model = None
         self.binary_index = None
-        self.embedding_size = None
 
     def get_dataset_by_id(self, dataset_id):
         """Returns a dataset given its id
@@ -95,25 +125,38 @@ class DatasetDAO(MainDAO):
         :return: A dataset dictionary or none
         :rtype: tuple
         """
-        query = "SELECT * FROM dataset WHERE id={0}".format(dataset_id)
+        query = "SELECT * FROM dataset WHERE id={0} ;".format(dataset_id)
         res = self.execute_query(query)
         # Query has return nothing
         if res is None:
             return None, (404, "Dataset {} not found".format(dataset_id))
         # Query has an object
-        self.binary_dataset = res[1]
-        self.binary_model = res[2]
-        self.binary_index = res[3]
-        self.embedding_size = res[4]
-        dtst = dataset.Dataset()
-        dtst.load_from_binary(self.bin_path+self.binary_dataset)
-        self.dataset['status'] = res[5]
-        self.dataset['algorithm'] = res[4]
-        self.dataset['triples'] = len(dtst.subs)
-        self.dataset['entities'] = len(dtst.entities)
-        self.dataset['relations'] = len(dtst.relations)
+        self.binary_dataset = res['binary_dataset']
+        self.binary_model = res['binary_model']
+        self.binary_index = res['binary_index']
+        self.dataset['status'] = res['status']
         self.dataset['id'] = int(dataset_id)
-        return (self.dataset, dtst)
+
+        if res['triples'] and res['relations'] and res['entities']:
+            # These fields are filled and can be readable
+            self.dataset['triples'] = res['triples']
+            self.dataset['entities'] = res['entities']
+            self.dataset['relations'] = res['relations']
+        else:
+            # Fields should be readed from file
+            dtst = dataset.Dataset()
+            dtst.load_from_binary(self.bin_path+self.binary_dataset)
+            self.dataset['triples'] = len(dtst.subs)
+            self.dataset['entities'] = len(dtst.entities)
+            self.dataset['relations'] = len(dtst.relations)
+
+        alg_dao = AlgorithmDAO()
+        algorithm, err = alg_dao.get_algorithm_by_id(res['algorithm'])
+        if algorithm is None:
+            return None, err
+        self.dataset['algorithm'] = algorithm
+
+        return (self.dataset, None)
 
     def get_search_index(self):
         """Returns an instantiated search index from choosen dataset
@@ -183,3 +226,22 @@ class DatasetDAO(MainDAO):
                 "class": wikidata_dataset.WikidataDataset
             }
         ]
+
+
+class AlgorithmDAO(MainDAO):
+    def __init__(self, database_file="server.db"):
+        super(AlgorithmDAO, self).__init__(database_file=database_file)
+        self.algorithm = {
+            "embedding_size": None,
+            "id": None
+        }
+
+    def get_algorithm_by_id(self, algorithm_id):
+        query = "SELECT * FROM algorithm WHERE id=?"
+        res = self.execute_query(query, algorithm_id)
+
+        if res is None:
+            return None, (404, "Algorithm "+str(algorithm_id)+" not found")
+        self.algorithm['embedding_size'] = res['embedding_size']
+        self.algorithm['id'] = res['id']
+        return self.algorithm, None

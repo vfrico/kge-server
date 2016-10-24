@@ -6,14 +6,14 @@ import data_access
 class DatasetResource(object):
     def on_get(self, req, resp, dataset_id):
         dataset = data_access.DatasetDAO()
-        resource, dataset = dataset.get_dataset_by_id(dataset_id)
+        resource, err = dataset.get_dataset_by_id(dataset_id)
         if resource is None:
-            if dataset[0] == 404:
+            if err[0] == 404:
                 resp.status = falcon.HTTP_404
             else:
                 resp.status = falcon.HTTP_500
-            resp.body = json.dumps({"status": dataset[0],
-                                    "message": dataset[1]})
+            resp.body = json.dumps({"status": err[0],
+                                    "message": err[1]})
             return
 
         response = {
@@ -55,14 +55,14 @@ class PredictSimilarEntitiesResource(object):
     def on_get(self, req, resp, dataset_id, entity):
         # Params: ?limit=(int: limit)
         dataset_dao = data_access.DatasetDAO()
-        resource, dataset = dataset_dao.get_dataset_by_id(dataset_id)
+        resource, err = dataset_dao.get_dataset_by_id(dataset_id)
         if resource is None:
-            if dataset[0] == 404:
+            if err[0] == 404:
                 resp.status = falcon.HTTP_404
             else:
                 resp.status = falcon.HTTP_500
-            resp.body = json.dumps({"status": dataset[0],
-                                    "message": dataset[1]})
+            resp.body = json.dumps({"status": err[0],
+                                    "message": err[1]})
             return
 
         server, err = dataset_dao.get_server()
