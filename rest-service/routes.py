@@ -26,27 +26,44 @@ class DatasetResource(object):
         resp.status = falcon.HTTP_200
 
 
-class DatasetCreateResource(object):
+class DatasetFactory(object):
     def on_get(self, req, resp):
         """Return all datasets"""
-        resp.status = falcon.HTTP_501
-        resp.body = "Not implemented"
+        dao = data_access.DatasetDAO()
+
+        listdts, err = dao.get_all_datasets()
+
+        if listdts is None:
+            if err[0] == 404:
+                resp.status = falcon.HTTP_404
+            else:
+                resp.status = falcon.HTTP_500
+            resp.body = json.dumps({"status": err[0],
+                                    "message": err[1]})
+            return
+
+        response = [{"dataset": dtst} for dtst in listdts]
+        resp.body = json.dumps(response)
+        resp.content_type = 'application/json'
+        resp.status = falcon.HTTP_200
 
     def on_post(self, req, resp):
-        print("POST Dataset")
+        """Makes HTTP response to receive POST /datasets requests
+
+        This method will create a new empty dataset, and returns a 201 CREATED
+        with Location header filled with the URI of the dataset.
+        """
         dao = data_access.DatasetDAO()
 
         # Get dataset type
         try:
             dts_type = int(req.get_param("type"))
         except Exception:
-            # Fallback to read default type: 1
+            # Fallback to read default type: 0
             dts_type = 0
 
         dataset_type = dao.get_dataset_types()[dts_type]
         id_dts, err = dao.insert_empty_dataset(dataset_type["class"])
-
-        print(id_dts)
 
         resp.status = falcon.HTTP_201
         resp.body = "Created"
@@ -187,7 +204,7 @@ app = falcon.API()
 
 # Resources are represented by long-lived class instances
 dataset = DatasetResource()
-datasetcreate = DatasetCreateResource()
+datasetcreate = DatasetFactory()
 similar_entities = PredictSimilarEntitiesResource()
 
 # All API routes and the object that will handle each one
