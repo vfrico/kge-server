@@ -52,7 +52,7 @@ class Dataset():
 
         The default endpoint is the original from wikidata.
 
-        :param string new_endpoint: The URI of the SPARQL endpoint
+        :param string sparql_endpoint: The URI of the SPARQL endpoint
         :param integer thread_limiter: The number of concurrent HTTP queries
         """
         if sparql_endpoint is not None:

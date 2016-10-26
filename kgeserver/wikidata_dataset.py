@@ -31,8 +31,6 @@ class WikidataDataset(kgeserver.dataset.Dataset):
 
         :param string new_endpoint: The URI of the SPARQL endpoint
         :param integer thread_limiter: The number of concurrent HTTP queries
-        :param string graph_pattern: The graph pattern that goes into WHERE
-            statement inside SPARQL queries.
         """
         super(WikidataDataset, self).__init__(sparql_endpoint=sparql_endpoint,
                                               thread_limiter=thread_limiter)
