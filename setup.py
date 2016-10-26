@@ -17,6 +17,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from setuptools import setup
+doc_build_requires = ['sphinx', 'sphinx_rtd_theme',
+                      'sphinxcontrib-httpdomain']
+execution_requires = ['scikit-kge', 'annoy']
+service_requires = ['gunicorn', 'falcon']
+
+# You can tweak this to add or delete dependencies
+all_dependencies = doc_build_requires + execution_requires + service_requires
 
 setup(name='kgeserver',
       version='0.1',
@@ -30,8 +37,8 @@ setup(name='kgeserver',
       dependency_links=[
        'https://github.com/vfrico/scikit-kge/tarball/v0.9#egg=scikit-kge-0.9'
       ],
-      install_requires=['scikit-kge', 'annoy'],
+      install_requires=all_dependencies,
       keywords=('Knowledge graph, Embeddings, Machine learning,'
-                'nearest neighbors, approximate nearest neighbors, ann'),
-
+                'nearest neighbors, approximate nearest neighbors, ann'
+                'rest, service'),
       )

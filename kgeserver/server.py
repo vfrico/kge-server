@@ -40,7 +40,7 @@ class Server():
         else:
             self.index = search_index.index
 
-    def similarity_by_id(self, id, k):
+    def similarity_by_id(self, id, k, search_k=-1):
         """Given an entity id, return the k'th most similar entities
 
         Returns a list of pairs, where the first item is the entity
@@ -51,7 +51,8 @@ class Server():
         :returns: A list with k id's, which are the most similar entities
         :rtype: list of pairs
         """
-        sim = self.index.get_nns_by_item(id, k, include_distances=True)
+        sim = self.index.get_nns_by_item(
+                id, k, include_distances=True, search_k=search_k)
         return [(sim[0][i], sim[1][i]) for i in range(0, len(sim[0]))]
 
     def similarity_by_vector(self, vector, k):
@@ -68,7 +69,7 @@ class Server():
 
         return matrix
 
-    def similarity_by_embedding(self, embedd, k):
+    def similarity_by_embedding(self, embedd, k, search_k=-1):
         """For a given embedding, return most similar id's
 
         :param list embedd: An embedding vector
@@ -76,7 +77,8 @@ class Server():
         :returns: A list with k id's, which are the most similar entities
         :rtype: list
         """
-        sim = self.index.get_nns_by_vector(embedd, k, include_distances=True)
+        sim = self.index.get_nns_by_vector(
+                embedd, k, include_distances=True, search_k=search_k)
         return [(sim[0][i], sim[1][i]) for i in range(0, len(sim[0]))]
 
 
