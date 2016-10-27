@@ -239,10 +239,11 @@ class DatasetDAO(MainDAO):
             sch_in = server.SearchIndex()
             sch_in.load_from_file(self.bin_path + self.binary_index,
                                   self.dataset['algorithm']['embedding_size'])
+            return sch_in, None
         except OSError as err:
             msg = "The server has encountered an error: '{}'."
             return None, (500, msg.format(err.args))
-        return sch_index, None
+
 
     def get_server(self):
         """Returns the server with the correct search index loaded.

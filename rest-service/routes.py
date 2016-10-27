@@ -120,9 +120,10 @@ class PredictSimilarEntitiesResource(object):
         limit = int(limit) + 1
 
         # Dig for the search_k param on Query Params
-        search_k = req.get_param('search_k')
-        if search_k is None:
-            search_k = -1  # Default value
+        try:
+            search_k = int(req.get_param('search_k'))
+        except Exception:
+            search_k = -1
 
         # If looking for similar_entities given an embedding vector
         if embedding:
@@ -178,7 +179,6 @@ class PredictSimilarEntitiesResource(object):
         :param int dataset_id: The dataset identifier on database
         """
         body = json.loads(req.stream.read().decode('utf-8'))
-        print(body)
         if 'entity' in body and 'type' in body['entity']:
             if body['entity']['type'].lower() == "uri":
                 self.on_get(req, resp, dataset_id, body['entity']['value'])
@@ -191,12 +191,11 @@ class PredictSimilarEntitiesResource(object):
                 errmsg = ("The type '{}' of the entity {} is not recognized. "
                           "Please, take a look to the documentation.").format(
                           body['entity']['type'], body['entity'])
-                print(errmsg)
         else:
             errmsg = ("Must contain a entity object in json. "
                       "Please, take a look to the documentation.")
             print(errmsg)
-        resp.body = json.dumps({"status": 400, "message": "errmsg"})
+        resp.body = json.dumps({"status": 400, "message": errmsg})
         resp.content_type = 'application/json'
         resp.status = falcon.HTTP_400
 

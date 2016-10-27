@@ -35,7 +35,7 @@ from sklearn.metrics import precision_recall_curve, auc, roc_auc_score
 from skge import sample
 from skge.util import to_tensor
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger('EX-KG')
 np.random.seed(137)
 
