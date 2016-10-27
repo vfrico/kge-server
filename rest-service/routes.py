@@ -94,6 +94,7 @@ class PredictSimilarEntitiesResource(object):
             if err[0] == 404:
                 resp.status = falcon.HTTP_404
             else:
+                print(err)
                 resp.status = falcon.HTTP_500
             resp.body = json.dumps({"status": err[0],
                                     "message": err[1]})
@@ -195,9 +196,68 @@ class PredictSimilarEntitiesResource(object):
             errmsg = ("Must contain a entity object in json. "
                       "Please, take a look to the documentation.")
             print(errmsg)
-        resp.body = json.dumps({"status": 400, "message": errmsg})
+        resp.body = json.dumps({"status": 400, "message": "errmsg"})
         resp.content_type = 'application/json'
         resp.status = falcon.HTTP_400
+
+
+class TriplesResource():
+    """Receives HTTP Request to manage triples on dataset
+
+    This will expect an input on the body similar to This
+    {"triples": [{"subject":"Q1492", "predicate":"P17", "object":"Q29"}]}
+
+    """
+    def on_post(self, req, resp, dataset_id):
+        try:
+            extra = "Couldn't decode the input stream (body)."
+            body = json.loads(req.stream.read().decode('utf-8'))
+
+            if "triples" not in body:
+                extra = "It was expected a JSON object with a 'triples' param"
+                print(extra)
+                raise KeyError
+            if not isinstance(body["triples"], list):
+                extra = "The 'triples' param is expected to contain a list"
+                print(extra)
+                raise ValueError
+
+            for triple in body["triples"]:
+                if "subject" not in triple or "predicate" not in triple\
+                   or "object" not in triple:
+                    extra = ("Error on '{}': All the triples must contain "
+                             "'subject', 'predicate' and 'object'").format(
+                             triple)
+                    raise ValueError
+
+        except (json.decoder.JSONDecodeError, KeyError, ValueError) as err:
+            msg = ("Couldn't read body correctly from HTTP request. "
+                   "Please, read the documentation carefully and try again. "
+                   "Extra info: "+extra)
+            resp.body = json.dumps({"status": 400, "message": msg})
+            resp.content_type = 'application/json'
+            resp.status = falcon.HTTP_400
+            return
+
+        dataset_dao = data_access.DatasetDAO()
+        resource, err = dataset_dao.get_dataset_by_id(dataset_id)
+        if resource is None:
+            if err[0] == 404:
+                resp.status = falcon.HTTP_404
+            else:
+                print(err)
+                resp.status = falcon.HTTP_500
+            resp.body = json.dumps({"status": err[0],
+                                    "message": err[1]})
+            return
+        dataset = dataset_dao.build_dataset_object()
+
+
+
+
+        resp.body = json.dumps({"status": 501, "message": body})
+        resp.content_type = 'application/json'
+        resp.status = falcon.HTTP_501
 
 # falcon.API instances are callable WSGI apps
 app = falcon.API()
@@ -206,11 +266,12 @@ app = falcon.API()
 dataset = DatasetResource()
 datasetcreate = DatasetFactory()
 similar_entities = PredictSimilarEntitiesResource()
+triples = TriplesResource()
 
 # All API routes and the object that will handle each one
 app.add_route('/datasets/', datasetcreate)
 app.add_route('/datasets/{dataset_id}', dataset)
+app.add_route('/datasets/{dataset_id}/triples', triples)
 app.add_route('/datasets/{dataset_id}/similar_entities/{entity}',
               similar_entities)
-app.add_route('/datasets/{dataset_id}/similar_entities',
-              similar_entities)
+app.add_route('/datasets/{dataset_id}/similar_entities', similar_entities)
