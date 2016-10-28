@@ -221,10 +221,12 @@ class DatasetDAO(MainDAO):
         :returns: a Dataset object
         :rtype: kgeserver.dataset.Dataset
         """
-        # TODO? test if datasetDAO is able to deliver a Dataset object
-        dtst = dataset.Dataset()            # ↓↓↓↓↓↓↓
-        dtst.load_from_binary(self.bin_path+self.binary_dataset)
-        return dtst
+        if self.dataset and self.binary_dataset:
+            dtst = dataset.Dataset()
+            dtst.load_from_binary(self.bin_path+self.binary_dataset)
+            return dtst
+        else:
+            return None
 
     def get_search_index(self):
         """Returns an instantiated search index from choosen dataset.
