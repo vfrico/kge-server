@@ -242,32 +242,23 @@ class Dataset():
 
         return rt_check
 
-    def load_dataset_from_json(self, json, only_uri=False):
+    def load_dataset_from_json(self, json):
         """Loads the dataset object with a JSON
 
         The JSON structure required is:
         {'object': {}, 'subject': {}, 'predicate': {}}
 
         :param list json: A list of dictionary parsed from JSON
-        :param bool only_uri: Allow load objects distincts than URI's
+        :return: If operation was successful
+        :rtype: bool
         """
+        result = True
+        for triple in json:
+            added = self.add_triple(triple["subject"], triple["object"],
+                                    triple["predicate"])
+            result = result and added
 
-        for tripl in json:
-            id_obj = self.add_element(self.extract_entity(tripl["object"]),
-                                      self.entities, self.entities_dict,
-                                      only_uri=only_uri)
-            id_subj = self.add_element(self.extract_entity(tripl["subject"]),
-                                       self.entities,
-                                       self.entities_dict, only_uri=only_uri)
-            id_pred = self.add_element(self.extract_entity(tripl["predicate"]),
-                                       self.relations,
-                                       self.relations_dict, only_uri=only_uri)
-
-            if id_obj is False or id_subj is False or id_pred is False:
-                continue
-            else:
-                self.subs.append((id_obj, id_subj, id_pred))
-                self.splited_subs['updated'] = False
+        return result
 
     def load_dataset_from_query(self, query, only_uri=False):
         """Receives a Sparql query and fills dataset object with the response
@@ -625,6 +616,7 @@ class Dataset():
         :rtype: bool
         """
         print(self)
+        self.show()
         subs2 = self.train_split()
         all_dataset = {
             'entities': self.entities,
@@ -635,9 +627,13 @@ class Dataset():
             '__class__': self.__class__
         }
         try:
-            f = open(filepath, "wb+")
+            f = open(filepath, "w+b")
         except FileNotFoundError:
             print("The path you provided is not valid")
+            return False
+        except Exception as err:
+            print("Error found:")
+            print(err)
             return False
         pickle.dump(all_dataset, f)
         f.close()
@@ -714,11 +710,17 @@ class Dataset():
                     "test_subs": self.splited_subs['test_subs']}
 
         # if not, build split set and save as updated
-        data = np.matrix(self.subs)
-        indices = np.arange(data.shape[0])
-        np.random.shuffle(indices)
-        data = data[indices]
-        train_samples = int((1-ratio) * data.shape[0])
+        if len(self.subs) == 0:
+            data = []
+            indices = 0
+            train_samples = 0
+
+        else:
+            data = np.matrix(self.subs)
+            indices = np.arange(data.shape[0])
+            np.random.shuffle(indices)
+            data = data[indices]
+            train_samples = int((1-ratio) * data.shape[0])
 
         x_train = [tuple(x.tolist()[0]) for x in data[:-train_samples]]
         x_val = [tuple(x.tolist()[0]) for x in
