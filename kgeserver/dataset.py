@@ -709,6 +709,9 @@ class Dataset():
                     "valid_subs": self.splited_subs['valid_subs'],
                     "test_subs": self.splited_subs['test_subs']}
 
+        # Subs musn't contain duplicates
+        self.subs = list(set(self.subs))
+
         # if not, build split set and save as updated
         if len(self.subs) == 0:
             data = []
