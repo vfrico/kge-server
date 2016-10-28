@@ -60,7 +60,8 @@ class MainDAO():
                          "status": 2, 'algorithm': 0}
                          ]
         default_algorithms = [
-                        {"id": 0, "embedding_size": 100}
+                        {"id": 0, "embedding_size": 100},
+                        {"id": -1, "embedding_size": -1}
         ]
         for alg in default_algorithms:
             self.execute_query(
@@ -244,7 +245,6 @@ class DatasetDAO(MainDAO):
             msg = "The server has encountered an error: '{}'."
             return None, (500, msg.format(err.args))
 
-
     def get_server(self):
         """Returns the server with the correct search index loaded.
 
@@ -265,8 +265,8 @@ class DatasetDAO(MainDAO):
         :rtype: tuple
         """
         unique_name = str(int(time.time()))+".bin"
-        sql_sentence = ("INSERT INTO dataset VALUES "
-                        "(NULL, '"+unique_name+"', '', '', 0, 0)")
+        sql_sentence = ("INSERT INTO dataset (id, binary_dataset, algorithm) "
+                        "VALUES (NULL, '"+unique_name+"', -1)")
 
         newdataset = datasetClass()
         newdataset.save_to_binary(self.bin_path+unique_name)
@@ -318,6 +318,25 @@ class DatasetDAO(MainDAO):
                 "class": wikidata_dataset.WikidataDataset
             }
         ]
+
+    def insert_triples(self, triples_list):
+        """Insert triples on the Dataset.
+        """
+        dtst = self.build_dataset_object()
+        if dtst is None:
+            return None, (500, "Dataset couldn't be loaded")
+        dtst.show()
+        result = dtst.load_dataset_from_json(triples_list)
+
+        sql = "SELECT binary_dataset FROM dataset WHERE id=?"
+        result = self.execute_query(sql, self.dataset["id"])
+        bin_file = result[0]['binary_dataset']
+
+        dtst.show()
+
+        result = result and dtst.save_to_binary(self.bin_path+bin_file)
+
+        return result, None
 
 
 class AlgorithmDAO(MainDAO):

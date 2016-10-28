@@ -67,7 +67,7 @@ class DatasetFactory(object):
 
         resp.status = falcon.HTTP_201
         resp.body = "Created"
-        resp.location = "/dataset/"+str(id_dts)
+        resp.location = "/datasets/"+str(id_dts)
 
 
 class PredictSimilarEntitiesResource(object):
@@ -249,14 +249,21 @@ class TriplesResource():
             resp.body = json.dumps({"status": err[0],
                                     "message": err[1]})
             return
-        dataset = dataset_dao.build_dataset_object()
+        # dataset = dataset_dao.build_dataset_object()
+        res, err = dataset_dao.insert_triples(body['triples'])
+        if res is None:
+            if err[0] == 404:
+                resp.status = falcon.HTTP_404
+            else:
+                print(err)
+                resp.status = falcon.HTTP_500
+            resp.body = json.dumps({"status": err[0],
+                                    "message": err[1]})
+            return
 
-
-
-
-        resp.body = json.dumps({"status": 501, "message": body})
+        resp.body = str(res)
         resp.content_type = 'application/json'
-        resp.status = falcon.HTTP_501
+        resp.status = falcon.HTTP_200
 
 # falcon.API instances are callable WSGI apps
 app = falcon.API()

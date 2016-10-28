@@ -103,9 +103,13 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
     Obtener todos los tipos de dataset disponibles en el sistema. No pueden
     ser modificados.
 
+    :prioridad: 1
+    :statuscode 200: Se muestran adecuadamente los tipos
+
 
 .. Problema: Un WikidataDataset no tiene las mismas operaciones que un Dataset
-.. normal. Ver cómo puede afectar esto en la gestión de los métodos HTTP
+.. normal. Ver cómo puede afectar esto en la gestión de los métodos HTTP:
+.. **Solución**: Utilizar sólo los métodos *públicos* de Dataset
 .. http:post:: /dataset?type=(int:dataset_type)
 
     Crear un dataset nuevo y vacío. Se deberán utilizar otras consultas para
@@ -120,12 +124,15 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
     :statuscode 500: No se ha podido crear el dataset.
 
 
-.. http:put:: /datasets/(int:dataset_id)/add_triple
+.. http:post:: /datasets/(int:dataset_id)/triples
 
     Añadir una tripleta al dataset. Se debe enviar un JSON con un objeto o lista
     de objetos *triple*, que tienen los parámetros.
-    {"subject", "object", "predicate"}. Sólo se pueden añadir tripletas a un
+    {"subject", "predicate", "object"}¹. Sólo se pueden añadir tripletas a un
     dataset con estado *0*, ya que no puede ser reentrenado.
+
+    ¹:*También se suelen representar las tripletas con la notación de head,*
+    *label y tail, refiriéndose respectivamente a subject, predicate y object*
 
     :prioridad: 1
     :param int dataset_id: id único del dataset.
@@ -133,6 +140,16 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
     :statuscode 404: El *dataset_id* no existe.
     :statuscode 409: El estado del *dataset_id* no es correcto.
 
+
+.. http:put:: /datasets/(int:dataset_id)/load_from_levels
+
+    Añade tripletas al dataset seleccionado utilizando consultas SPARQL en
+    distintos niveles.
+
+    .. Debería implementarse como petición asíncrona
+
+    :prioridad: 1
+    :param int dataset_id: id único del dataset.
 
 Predicción de tripletas
 ```````````````````````
