@@ -690,6 +690,13 @@ class Dataset():
         for i in range(0, len(el_list)):
             el_dict[el_list[i]] = i
 
+    def improved_split(self, ratio=0.8):
+        """Split made with scikit library
+        """
+        # The idea is to split the self.subs list into 2? train sets.
+        pairs = [(x, y) for x, y, z in self.subs]
+        labels = [(z) for x, y, z in self.subs]
+
     def train_split(self, ratio=0.8):
         """Split subs into three lists: train, valid and test
 

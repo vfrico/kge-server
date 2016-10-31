@@ -1,3 +1,22 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# coding:utf-8
+#
+# routes.py: Falcon file to serve API routes
+# Copyright (C) 2016  Víctor Fernández Rico <vfrico@gmail.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import falcon
 import json
 import data_access
@@ -14,8 +33,8 @@ class DatasetResource(object):
                 resp.status = falcon.HTTP_404
             else:
                 resp.status = falcon.HTTP_500
-            resp.body = json.dumps({"status": err[0],
-                                    "message": err[1]})
+            textbody = {"status": err[0], "message": err[1]}
+            resp.body = json.dumps(textbody)
             return
 
         response = {
@@ -38,8 +57,8 @@ class DatasetFactory(object):
                 resp.status = falcon.HTTP_404
             else:
                 resp.status = falcon.HTTP_500
-            resp.body = json.dumps({"status": err[0],
-                                    "message": err[1]})
+            textbody = {"status": err[0], "message": err[1]}
+            resp.body = json.dumps(textbody)
             return
 
         response = [{"dataset": dtst} for dtst in listdts]
@@ -96,8 +115,8 @@ class PredictSimilarEntitiesResource(object):
             else:
                 print(err)
                 resp.status = falcon.HTTP_500
-            resp.body = json.dumps({"status": err[0],
-                                    "message": err[1]})
+            textbody = {"status": err[0], "message": err[1]}
+            resp.body = json.dumps(textbody)
             return
         dataset = dataset_dao.build_dataset_object()
 
@@ -108,8 +127,8 @@ class PredictSimilarEntitiesResource(object):
                 resp.status = falcon.HTTP_409
             else:
                 resp.status = falcon.HTTP_500
-            resp.body = json.dumps({"status": err[0],
-                                    "message": err[1]})
+            textbody = {"status": err[0], "message": err[1]}
+            resp.body = json.dumps(textbody)
             return
 
         # Dig for the limit param on Query Params
@@ -246,8 +265,8 @@ class TriplesResource():
             else:
                 print(err)
                 resp.status = falcon.HTTP_500
-            resp.body = json.dumps({"status": err[0],
-                                    "message": err[1]})
+            textbody = {"status": err[0], "message": err[1]}
+            resp.body = json.dumps(textbody)
             return
         # dataset = dataset_dao.build_dataset_object()
         res, err = dataset_dao.insert_triples(body['triples'])
@@ -257,13 +276,14 @@ class TriplesResource():
             else:
                 print(err)
                 resp.status = falcon.HTTP_500
-            resp.body = json.dumps({"status": err[0],
-                                    "message": err[1]})
+            textbody = {"status": err[0], "message": err[1]}
+            resp.body = json.dumps(textbody)
             return
 
-        resp.body = str(res)
+        textbody = {"status": 202, "message": "Resources created successfuly"}
+        resp.body = json.dumps(textbody)
         resp.content_type = 'application/json'
-        resp.status = falcon.HTTP_200
+        resp.status = falcon.HTTP_202
 
 # falcon.API instances are callable WSGI apps
 app = falcon.API()

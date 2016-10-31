@@ -134,9 +134,22 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
     ¹:*También se suelen representar las tripletas con la notación de head,*
     *label y tail, refiriéndose respectivamente a subject, predicate y object*
 
+    **Ejemplo**
+
+    :http:post:`/datasets/6`
+
+    .. sourcecode:: json
+
+        {"triples": [
+            {"subject":"Q1492", "predicate":"P17", "object":"Q29"},
+            {"subject":"Q2807", "predicate":"P17", "object":"Q29"}
+                    ]
+        }
+
+
     :prioridad: 1
     :param int dataset_id: id único del dataset.
-    :statuscode 200: La petición se ha procesado correctamente.
+    :statuscode 202: La petición se ha procesado correctamente.
     :statuscode 404: El *dataset_id* no existe.
     :statuscode 409: El estado del *dataset_id* no es correcto.
 
@@ -170,20 +183,13 @@ Predicción de tripletas
         {    "similar_entities":
             {    "response":
                 [
-                    {
-                        "distance": 0,
-                        "entity": "http://www.wikidata.org/entity/Q1492"
-                    },
-                    {
-                        "distance": 0.8224636912345886,
-                        "entity": "http://www.wikidata.org/entity/Q15090"
-                    }
+                    {"distance": 0, "entity": "http://www.wikidata.org/entity/Q1492"},
+                    {"distance": 0.8224636912345886, "entity": "http://www.wikidata.org/entity/Q15090"}
                 ],
                 "entity": "http://www.wikidata.org/entity/Q1492",
                 "limit": 2
             },
-            "dataset":
-            {
+            "dataset": {
                 "entities": 664444,
                 "relations": 647,
                 "id": 1,
@@ -219,12 +225,8 @@ Predicción de tripletas
 
     .. sourcecode:: json
 
-        {
-            "entity":
-              {
-                "value": "http://www.wikidata.org/entity/Q1492",
-                "type": "uri"
-              }
+        { "entity":
+              {"value": "http://www.wikidata.org/entity/Q1492", "type": "uri"}
         }
 
     *Respuesta*
@@ -234,20 +236,13 @@ Predicción de tripletas
         {    "similar_entities":
             {    "response":
                 [
-                    {
-                        "distance": 0,
-                        "entity": "http://www.wikidata.org/entity/Q1492"
-                    },
-                    {
-                        "distance": 0.8224636912345886,
-                        "entity": "http://www.wikidata.org/entity/Q15090"
-                    }
+                    {"distance": 0, "entity": "http://www.wikidata.org/entity/Q1492"},
+                    {"distance": 0.8224636912345886, "entity": "http://www.wikidata.org/entity/Q15090"}
                 ],
                 "entity": "http://www.wikidata.org/entity/Q1492",
                 "limit": 2
             },
-            "dataset":
-            {
+            "dataset": {
                 "entities": 664444,
                 "relations": 647,
                 "id": 1,
