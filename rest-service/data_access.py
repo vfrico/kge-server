@@ -57,8 +57,16 @@ class MainDAO():
                         {"id": 2, "binary_dataset": '4levels.bin',
                          "binary_model": 'modelo_guardado.bin',
                          "binary_index": 'annoyIndex.500.bin',
+                         "status": 2, 'algorithm': 0},
+                        {"id": 3, "binary_dataset": '4levels.bin',
+                         "binary_model": 'modelo_guardado.bin',
+                         "binary_index": 'annoyIndex.600.bin',
+                         "status": 2, 'algorithm': 0},
+                        {"id": 4, "binary_dataset": 'newDataset4lvl.bin',
+                         "binary_model": 'Unnuevomodeloentrenado.bin',
+                         "binary_index": 'unuevoAnnoy.600.bin',
                          "status": 2, 'algorithm': 0}
-                         ]
+                        ]
         default_algorithms = [
                         {"id": 0, "embedding_size": 100}
         ]
