@@ -49,7 +49,8 @@ class MainDAO():
 
         self.execute_query("CREATE TABLE algorithm "
                            "(id INTEGER UNIQUE PRIMARY KEY, "
-                           "embedding_size INTEGER) ; ")
+                           "embedding_size INTEGER, "
+                           "margin FLOAT) ; ")
 
         self.execute_query("CREATE TABLE dataset "
                            "(id INTEGER UNIQUE PRIMARY KEY, "
@@ -80,6 +81,8 @@ class MainDAO():
                          ]
         default_algorithms = [
                         {"id": 0, "embedding_size": 100},
+                        {"id": 1, "embedding_size": 100,
+                         "margin": 1.0},
                         {"id": -1, "embedding_size": -1}
         ]
         for alg in default_algorithms:
