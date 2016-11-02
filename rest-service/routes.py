@@ -1,3 +1,22 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# coding:utf-8
+#
+# routes.py: Falcon file to serve API routes
+# Copyright (C) 2016  Víctor Fernández Rico <vfrico@gmail.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import falcon
 import json
 import data_access
@@ -14,8 +33,8 @@ class DatasetResource(object):
                 resp.status = falcon.HTTP_404
             else:
                 resp.status = falcon.HTTP_500
-            resp.body = json.dumps({"status": err[0],
-                                    "message": err[1]})
+            textbody = {"status": err[0], "message": err[1]}
+            resp.body = json.dumps(textbody)
             return
 
         response = {
@@ -38,8 +57,8 @@ class DatasetFactory(object):
                 resp.status = falcon.HTTP_404
             else:
                 resp.status = falcon.HTTP_500
-            resp.body = json.dumps({"status": err[0],
-                                    "message": err[1]})
+            textbody = {"status": err[0], "message": err[1]}
+            resp.body = json.dumps(textbody)
             return
 
         response = [{"dataset": dtst} for dtst in listdts]
@@ -67,7 +86,7 @@ class DatasetFactory(object):
 
         resp.status = falcon.HTTP_201
         resp.body = "Created"
-        resp.location = "/dataset/"+str(id_dts)
+        resp.location = "/datasets/"+str(id_dts)
 
 
 class PredictSimilarEntitiesResource(object):
@@ -94,9 +113,10 @@ class PredictSimilarEntitiesResource(object):
             if err[0] == 404:
                 resp.status = falcon.HTTP_404
             else:
+                print(err)
                 resp.status = falcon.HTTP_500
-            resp.body = json.dumps({"status": err[0],
-                                    "message": err[1]})
+            textbody = {"status": err[0], "message": err[1]}
+            resp.body = json.dumps(textbody)
             return
         dataset = dataset_dao.build_dataset_object()
 
@@ -107,8 +127,8 @@ class PredictSimilarEntitiesResource(object):
                 resp.status = falcon.HTTP_409
             else:
                 resp.status = falcon.HTTP_500
-            resp.body = json.dumps({"status": err[0],
-                                    "message": err[1]})
+            textbody = {"status": err[0], "message": err[1]}
+            resp.body = json.dumps(textbody)
             return
 
         # Dig for the limit param on Query Params
@@ -193,9 +213,77 @@ class PredictSimilarEntitiesResource(object):
         else:
             errmsg = ("Must contain a entity object in json. "
                       "Please, take a look to the documentation.")
+            print(errmsg)
         resp.body = json.dumps({"status": 400, "message": errmsg})
         resp.content_type = 'application/json'
         resp.status = falcon.HTTP_400
+
+
+class TriplesResource():
+    """Receives HTTP Request to manage triples on dataset
+
+    This will expect an input on the body similar to This
+    {"triples": [{"subject":"Q1492", "predicate":"P17", "object":"Q29"}]}
+
+    """
+    def on_post(self, req, resp, dataset_id):
+        try:
+            extra = "Couldn't decode the input stream (body)."
+            body = json.loads(req.stream.read().decode('utf-8'))
+
+            if "triples" not in body:
+                extra = "It was expected a JSON object with a 'triples' param"
+                print(extra)
+                raise KeyError
+            if not isinstance(body["triples"], list):
+                extra = "The 'triples' param is expected to contain a list"
+                print(extra)
+                raise ValueError
+
+            for triple in body["triples"]:
+                if "subject" not in triple or "predicate" not in triple\
+                   or "object" not in triple:
+                    extra = ("Error on '{}': All the triples must contain "
+                             "'subject', 'predicate' and 'object'").format(
+                             triple)
+                    raise ValueError
+
+        except (json.decoder.JSONDecodeError, KeyError, ValueError) as err:
+            msg = ("Couldn't read body correctly from HTTP request. "
+                   "Please, read the documentation carefully and try again. "
+                   "Extra info: "+extra)
+            resp.body = json.dumps({"status": 400, "message": msg})
+            resp.content_type = 'application/json'
+            resp.status = falcon.HTTP_400
+            return
+
+        dataset_dao = data_access.DatasetDAO()
+        resource, err = dataset_dao.get_dataset_by_id(dataset_id)
+        if resource is None:
+            if err[0] == 404:
+                resp.status = falcon.HTTP_404
+            else:
+                print(err)
+                resp.status = falcon.HTTP_500
+            textbody = {"status": err[0], "message": err[1]}
+            resp.body = json.dumps(textbody)
+            return
+        # dataset = dataset_dao.build_dataset_object()
+        res, err = dataset_dao.insert_triples(body['triples'])
+        if res is None:
+            if err[0] == 404:
+                resp.status = falcon.HTTP_404
+            else:
+                print(err)
+                resp.status = falcon.HTTP_500
+            textbody = {"status": err[0], "message": err[1]}
+            resp.body = json.dumps(textbody)
+            return
+
+        textbody = {"status": 202, "message": "Resources created successfuly"}
+        resp.body = json.dumps(textbody)
+        resp.content_type = 'application/json'
+        resp.status = falcon.HTTP_202
 
 # falcon.API instances are callable WSGI apps
 app = falcon.API()
@@ -204,11 +292,12 @@ app = falcon.API()
 dataset = DatasetResource()
 datasetcreate = DatasetFactory()
 similar_entities = PredictSimilarEntitiesResource()
+triples = TriplesResource()
 
 # All API routes and the object that will handle each one
 app.add_route('/datasets/', datasetcreate)
 app.add_route('/datasets/{dataset_id}', dataset)
+app.add_route('/datasets/{dataset_id}/triples', triples)
 app.add_route('/datasets/{dataset_id}/similar_entities/{entity}',
               similar_entities)
-app.add_route('/datasets/{dataset_id}/similar_entities',
-              similar_entities)
+app.add_route('/datasets/{dataset_id}/similar_entities', similar_entities)

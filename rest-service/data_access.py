@@ -1,3 +1,22 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# coding:utf-8
+#
+# data_access.py: Contains several DAO for different objects on the service
+# Copyright (C) 2016  Víctor Fernández Rico <vfrico@gmail.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import time
 import sqlite3
@@ -68,7 +87,8 @@ class MainDAO():
                          "status": 2, 'algorithm': 0}
                         ]
         default_algorithms = [
-                        {"id": 0, "embedding_size": 100}
+                        {"id": 0, "embedding_size": 100},
+                        {"id": -1, "embedding_size": -1}
         ]
         for alg in default_algorithms:
             self.execute_query(
@@ -254,7 +274,6 @@ class DatasetDAO(MainDAO):
             msg = "The server has encountered an error: '{}'."
             return None, (500, msg.format(err.args))
 
-
     def get_server(self):
         """Returns the server with the correct search index loaded.
 
@@ -275,8 +294,8 @@ class DatasetDAO(MainDAO):
         :rtype: tuple
         """
         unique_name = str(int(time.time()))+".bin"
-        sql_sentence = ("INSERT INTO dataset VALUES "
-                        "(NULL, '"+unique_name+"', '', '', 0, 0)")
+        sql_sentence = ("INSERT INTO dataset (id, binary_dataset, algorithm) "
+                        "VALUES (NULL, '"+unique_name+"', -1)")
 
         newdataset = datasetClass()
         newdataset.save_to_binary(self.bin_path+unique_name)
@@ -328,6 +347,25 @@ class DatasetDAO(MainDAO):
                 "class": wikidata_dataset.WikidataDataset
             }
         ]
+
+    def insert_triples(self, triples_list):
+        """Insert triples on the Dataset.
+        """
+        dtst = self.build_dataset_object()
+        if dtst is None:
+            return None, (500, "Dataset couldn't be loaded")
+        dtst.show()
+        result = dtst.load_dataset_from_json(triples_list)
+
+        sql = "SELECT binary_dataset FROM dataset WHERE id=?"
+        result = self.execute_query(sql, self.dataset["id"])
+        bin_file = result[0]['binary_dataset']
+
+        dtst.show()
+
+        result = result and dtst.save_to_binary(self.bin_path+bin_file)
+
+        return result, None
 
 
 class AlgorithmDAO(MainDAO):
