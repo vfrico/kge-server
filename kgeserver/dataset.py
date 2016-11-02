@@ -25,6 +25,7 @@ import numpy as np
 import threading
 from datetime import datetime
 import time
+from collections import defaultdict
 
 
 class Dataset():
@@ -605,7 +606,7 @@ class Dataset():
                           threading.active_count())
         return status_str
 
-    def save_to_binary(self, filepath):
+    def save_to_binary(self, filepath, improved_split=False):
         """Saves the dataset object on the disk
 
         The dataset will be saved with the required format for reading
@@ -617,7 +618,10 @@ class Dataset():
         """
         print(self)
         self.show()
-        subs2 = self.train_split()
+        if improved_split:
+            subs2 = self.improved_split()
+        else:
+            subs2 = self.train_split()
         all_dataset = {
             'entities': self.entities,
             'relations': self.relations,
@@ -691,11 +695,65 @@ class Dataset():
             el_dict[el_list[i]] = i
 
     def improved_split(self, ratio=0.8):
-        """Split made with scikit library
+        """Split made with sklearn library
         """
-        # The idea is to split the self.subs list into 2? train sets.
-        pairs = [(x, y) for x, y, z in self.subs]
-        labels = [(z) for x, y, z in self.subs]
+        triples = np.matrix(self.subs)
+        # labels = [label for _, _2, label in d.subs]
+        # labels = np.array(list(set(labels)))
+        # # subs[label] = [lista de tripletas con mismo label]
+        trip_ddict = defaultdict(list)
+        # print(labels[:2])
+
+        for triple in triples:
+            # Label is the id of the relation
+            label = triple[0, 2]
+
+            # Append to the list of triples
+            trip_ddict[label].append(triple.tolist()[0])
+
+        # Once all triples has been classified on trip_ddict, split by label
+        import math
+        from sklearn.model_selection import StratifiedShuffleSplit
+
+        train_triples = []
+        valid_triples = []
+        test_triples = []
+        for label in trip_ddict:
+            triples = np.array(subs[label])  # Triples with current label
+            sss = StratifiedShuffleSplit(n_splits=1, train_size=ratio)
+            # Generate a list with ones
+            tri_ones = np.ones(len(triples))
+            try:
+                for train_index, test_index in sss.split(triples, tri_ones):
+                    train_test_sum = set(np.append(train_index, test_index))
+                    val_index = [indx for indx in range(0, triples.shape[0])
+                                 if indx not in train_test_sum]
+
+                    x_train = [tuple(x.tolist()) for x in triples[train_index]]
+                    x_test = [tuple(x.tolist()) for x in triples[test_index]]
+                    x_val = [tuple(x.tolist()) for x in triples[val_index]]
+            except ValueError:
+                # With current label exists only 1 triple. Add to train set
+                x_train = [tuple(x) for x in trip_ddict[label]]
+                x_test = []
+                x_val = []
+            finally:
+                # print("Label {} , number[{}] of train {}, test {}, valid {}"
+                #       .format(label, triples.shape[0], len(x_train),
+                #               len(x_test), len(x_val)))
+                train_triples += x_train
+                valid_triples += x_val
+                test_triples += x_test
+
+        # Save the splited subs as separate argument. May be heplful
+        self.splited_subs = {'updated': True,
+                             'train_subs': train_triples,
+                             'valid_subs': valid_triples,
+                             'test_subs': test_triples
+                             }
+        return {"train_subs": train_triples,
+                "valid_subs": valid_triples,
+                "test_subs": test_triples}
 
     def train_split(self, ratio=0.8):
         """Split subs into three lists: train, valid and test
