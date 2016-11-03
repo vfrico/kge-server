@@ -474,7 +474,7 @@ class Dataset():
                                   "implemented through a child object")
 
     def load_dataset_recurrently(self, levels, seed_vector, verbose=1,
-                                 limit_ent=None):
+                                 limit_ent=None, ext_callback=lambda: None):
         """Loads to dataset all entities with BNE ID and their relations
 
         Due to Wikidata endpoint cann't execute queries that take long time
@@ -518,8 +518,8 @@ class Dataset():
                 el_queue = el_queue[:limit_ent*((level+1)**3)]
 
             if verbose > 0:
-                print("Scanning level {} with {} elements"
-                      .format(level+1, len(el_queue)))
+                print("Scanning level {}/{} with {} elements"
+                      .format(level+1, levels, len(el_queue)))
 
             # Initialize some status variables
             self.status['round_curr'] = level
@@ -536,6 +536,7 @@ class Dataset():
                 def func_callback(status):
                     self.status['it_analyzed'] += 1
                     self.th_semaphore.release()
+                    ext_callback(self.status)
 
                 self.th_semaphore.acquire()
                 t = threading.Thread(

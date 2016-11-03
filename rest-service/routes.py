@@ -21,6 +21,7 @@ import falcon
 import json
 import data_access
 import async_server.tasks as async_tasks
+import async_server.celery as celery_server
 
 
 class DatasetResource(object):
@@ -221,7 +222,22 @@ class PredictSimilarEntitiesResource(object):
 
 
 class GenerateTriplesResource():
-    def on_put(self, req, resp, dataset_id):
+    def on_post(self, req, resp, dataset_id):
+        """Generates a task to insert triples on dataset. Async petition.
+
+        Reads from body the parameters such as SPARQL queries
+
+        {"generate_triples":
+            {
+                "seed_vector_query": "<SPARQL Query>",
+                "entity_query": "<SPARQL Query>",
+                "levels": 2 ,
+                "limit_ent": 2500
+            }
+        }
+
+        :param id dataset_id: The dataset to insert triples into
+        """
         try:
             extra = "Couldn't decode the input stream (body)."
             body = json.loads(req.stream.read().decode('utf-8'))
@@ -249,18 +265,56 @@ class GenerateTriplesResource():
 
         # Generate a Task Resource to check the status
         dtset = dataset_dao.build_dataset_path()
-        task = async_tasks.generate_dataset_from_sparql.delay(dtset, 1, None)
+        task = async_tasks.generate_dataset_from_sparql.delay(dtset, 1, None, None)
         print(task, task.id)
 
-        textbody = {"status": 202, "message": "Task created successfuly"}
+        task_dao = data_access.TaskDAO()
+        task_id, err = task_dao.add_task_by_uuid(task.id)
+        if task_id is None:
+            if err[0] == 404:
+                resp.status = falcon.HTTP_404
+            else:
+                print(err)
+                resp.status = falcon.HTTP_500
+            textbody = {"status": err[0], "message": err[1]}
+            resp.body = json.dumps(textbody)
+            return
+
+        msg = "Task {} created successfuly".format(task_id)
+        textbody = {"status": 202, "message": msg}
+        resp.location = "/tasks/"+str(task_id)
         resp.body = json.dumps(textbody)
         resp.content_type = 'application/json'
         resp.status = falcon.HTTP_202
 
 
 class TasksResource():
-    def on_post(self, req, resp):
-        pass
+    def on_get(self, req, resp, task_id):
+        """Return one task"""
+        tdao = data_access.TaskDAO()
+
+        task, err = tdao.get_task_by_id(task_id)
+
+        if task is None:
+            if err[0] == 404:
+                resp.status = falcon.HTTP_404
+            else:
+                resp.status = falcon.HTTP_500
+            textbody = {"status": err[0], "message": err[1]}
+            resp.body = json.dumps(textbody)
+            return
+
+        t_uuid = celery_server.app.AsyncResult(task['celery_uuid'])
+        print(t_uuid.state)
+        print(t_uuid.ready())
+
+        task["state"] = t_uuid.state
+        task["is_ready"] = t_uuid.ready()
+
+        response = {"task": task}
+        resp.body = json.dumps(response)
+        resp.content_type = 'application/json'
+        resp.status = falcon.HTTP_200
 
 
 class TriplesResource():
@@ -339,6 +393,8 @@ similar_entities = PredictSimilarEntitiesResource()
 triples = TriplesResource()
 gentriples = GenerateTriplesResource()
 
+task_resource = TasksResource()
+
 # All API routes and the object that will handle each one
 app.add_route('/datasets/', datasetcreate)
 app.add_route('/datasets/{dataset_id}', dataset)
@@ -347,3 +403,5 @@ app.add_route('/datasets/{dataset_id}/generate_triples', gentriples)
 app.add_route('/datasets/{dataset_id}/similar_entities/{entity}',
               similar_entities)
 app.add_route('/datasets/{dataset_id}/similar_entities', similar_entities)
+
+app.add_route('/tasks/{task_id}', task_resource)

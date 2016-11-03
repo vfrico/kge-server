@@ -67,7 +67,8 @@ class MainDAO():
 
         self.execute_query("CREATE TABLE tasks "
                            "(id INTEGER UNIQUE PRIMARY KEY, "
-                           "celery_uuid TEXT "
+                           "celery_uuid TEXT, "
+                           "progress_file TEXT "
                            ") ; ")
 
         default_datasets = [
@@ -90,7 +91,7 @@ class MainDAO():
                         {"id": 4, "binary_dataset": 'newDataset4lvl.bin',
                          "binary_model": 'Unnuevomodeloentrenado.bin',
                          "binary_index": 'unuevoAnnoy.600.bin',
-                         "status": 2, 'algorithm': 1}
+                         "status": 2, 'algorithm': 1},
                         {"id": 5, "binary_dataset": 'newDataset4lvl.bin',
                          "binary_model": 'modelo_newDataset4lvl_m2.bin',
                          "binary_index": 'Annoy.nuevo.600.m2.bin',
@@ -143,7 +144,7 @@ class MainDAO():
 
         return row
 
-    def execute_insertion(self, query):
+    def execute_insertion(self, query, *args):
         """Executes a query and returns the entire cursor
 
         This is intended to return the cursor, which needs to be closed after
@@ -164,7 +165,7 @@ class MainDAO():
         # the foreign_keys restrictions
         # cursor.execute("PRAGMA foreign_keys = ON;")
         # Execute the *real* query
-        cursor.execute(query)
+        cursor.execute(query, *args)
 
         connection.commit()
         return cursor  # Must be closed outside function
@@ -388,10 +389,7 @@ class DatasetDAO(MainDAO):
 class AlgorithmDAO(MainDAO):
     def __init__(self, database_file="server.db"):
         super(AlgorithmDAO, self).__init__(database_file=database_file)
-        self.algorithm = {
-            "embedding_size": None,
-            "id": None
-        }
+        self.algorithm = {}
 
     def get_algorithm_by_id(self, algorithm_id):
         query = "SELECT * FROM algorithm WHERE id=?"
@@ -408,17 +406,26 @@ class AlgorithmDAO(MainDAO):
 
 class TaskDAO(MainDAO):
     def __init__(self, database_file="server.db"):
-        super(AlgorithmDAO, self).__init__(database_file=database_file)
+        super(TaskDAO, self).__init__(database_file=database_file)
         self.task = {}
+        # Generate Pickle file to store information (Progress)
 
-    def get_task_by_id(self, id):
+    def get_task_by_id(self, task_id):
         query = "SELECT * FROM tasks WHERE id=?"
-        res = self.execute_query(query, algorithm_id)
+        res = self.execute_query(query, task_id)
 
         if res is None or len(res) < 1:
-            return None, (404, "Algorithm "+str(algorithm_id)+" not found")
+            return None, (404, "Task "+str(task_id)+" not found")
 
-        self.algorithm['embedding_size'] = res[0]['embedding_size']
-        self.algorithm['id'] = res[0]['id']
-        return self.algorithm, None
-        return self.task
+        for key in res[0].keys():
+            self.task[key] = res[0][key]
+
+        return self.task, None
+
+    def add_task_by_uuid(self, task_uuid):
+        query = "INSERT INTO tasks(celery_uuid) VALUES (?)"
+        res = self.execute_insertion(query, [str(task_uuid)])
+
+        taskid = res.lastrowid
+        res.close()
+        return taskid, None

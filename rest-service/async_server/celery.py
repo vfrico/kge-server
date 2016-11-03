@@ -8,7 +8,8 @@ app = Celery('async_server',
 
 # Optional configuration, see the application user guide.
 app.conf.update(
-    result_expires=3600,  # TODO: May be this time is too low
+    result_expires=None,        # Celery will keep values forever
+    task_track_started=True,    # Tasks will show started status
 )
 
 if __name__ == '__main__':
