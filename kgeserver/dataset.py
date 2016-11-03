@@ -695,14 +695,18 @@ class Dataset():
             el_dict[el_list[i]] = i
 
     def improved_split(self, ratio=0.8):
-        """Split made with sklearn library
+        """Split made with sklearn library, with different split for each label
+
+        This split function makes different splits for each label which is
+        present on the dataset. This helps to distribute better all the
+        splits.
+
+        :param float ratio: The ratio of all triplets required for *train_subs*
+        :return: A dictionary with splited subs
+        :rtype: dict
         """
         triples = np.matrix(self.subs)
-        # labels = [label for _, _2, label in d.subs]
-        # labels = np.array(list(set(labels)))
-        # # subs[label] = [lista de tripletas con mismo label]
         trip_ddict = defaultdict(list)
-        # print(labels[:2])
 
         for triple in triples:
             # Label is the id of the relation
@@ -719,13 +723,16 @@ class Dataset():
         valid_triples = []
         test_triples = []
         for label in trip_ddict:
-            triples = np.array(subs[label])  # Triples with current label
+            # Triples with current label
+            triples = np.array(subs[label])
             sss = StratifiedShuffleSplit(n_splits=1, train_size=ratio)
             # Generate a list with ones
             tri_ones = np.ones(len(triples))
             try:
                 for train_index, test_index in sss.split(triples, tri_ones):
                     train_test_sum = set(np.append(train_index, test_index))
+                    # Generates the val_index with the index numbers that
+                    #  does not appear on train or test list.
                     val_index = [indx for indx in range(0, triples.shape[0])
                                  if indx not in train_test_sum]
 
@@ -738,9 +745,7 @@ class Dataset():
                 x_test = []
                 x_val = []
             finally:
-                # print("Label {} , number[{}] of train {}, test {}, valid {}"
-                #       .format(label, triples.shape[0], len(x_train),
-                #               len(x_test), len(x_val)))
+                # Append generated triples to each set
                 train_triples += x_train
                 valid_triples += x_val
                 test_triples += x_test
