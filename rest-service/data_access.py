@@ -90,12 +90,18 @@ class MainDAO():
                         {"id": 4, "binary_dataset": 'newDataset4lvl.bin',
                          "binary_model": 'Unnuevomodeloentrenado.bin',
                          "binary_index": 'unuevoAnnoy.600.bin',
-                         "status": 2, 'algorithm': 0}
+                         "status": 2, 'algorithm': 1}
+                        {"id": 5, "binary_dataset": 'newDataset4lvl.bin',
+                         "binary_model": 'modelo_newDataset4lvl_m2.bin',
+                         "binary_index": 'Annoy.nuevo.600.m2.bin',
+                         "status": 2, 'algorithm': 2}
                         ]
         default_algorithms = [
                         {"id": 0, "embedding_size": 100},
                         {"id": 1, "embedding_size": 100,
                          "margin": 1.0},
+                        {"id": 2, "embedding_size": 100,
+                         "margin": 2.0},
                         {"id": -1, "embedding_size": -1}
         ]
         for alg in default_algorithms:
@@ -394,8 +400,9 @@ class AlgorithmDAO(MainDAO):
         if res is None or len(res) < 1:
             return None, (404, "Algorithm "+str(algorithm_id)+" not found")
 
-        self.algorithm['embedding_size'] = res[0]['embedding_size']
-        self.algorithm['id'] = res[0]['id']
+        for key in res[0].keys():
+            self.algorithm[key] = res[0][key]
+
         return self.algorithm, None
 
 
