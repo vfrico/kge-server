@@ -719,7 +719,7 @@ class Dataset():
         valid_triples = []
         test_triples = []
         for label in trip_ddict:
-            triples = np.array(subs[label])  # Triples with current label
+            triples = np.array(trip_ddict[label])  # Triples with current label
             sss = StratifiedShuffleSplit(n_splits=1, train_size=ratio)
             # Generate a list with ones
             tri_ones = np.ones(len(triples))

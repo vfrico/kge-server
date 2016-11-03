@@ -86,11 +86,17 @@ class MainDAO():
                          "binary_model": 'Unnuevomodeloentrenado.bin',
                          "binary_index": 'unuevoAnnoy.600.bin',
                          "status": 2, 'algorithm': 0}
+                        {"id": 5, "binary_dataset": 'newDataset4lvl.bin',
+                         "binary_model": 'modelo_newDataset4lvl_m2.bin',
+                         "binary_index": 'unuevoAnnoy.600.bin',
+                         "status": 2, 'algorithm': 0}
                         ]
         default_algorithms = [
                         {"id": 0, "embedding_size": 100},
                         {"id": 1, "embedding_size": 100,
                          "margin": 1.0},
+                        {"id": 2, "embedding_size": 100,
+                         "margin": 2.0},
                         {"id": -1, "embedding_size": -1}
         ]
         for alg in default_algorithms:

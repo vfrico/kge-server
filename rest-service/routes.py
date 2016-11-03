@@ -298,6 +298,7 @@ triples = TriplesResource()
 app.add_route('/datasets/', datasetcreate)
 app.add_route('/datasets/{dataset_id}', dataset)
 app.add_route('/datasets/{dataset_id}/triples', triples)
+app.add_route('/datasets/{dataset_id}/generate_triples', triples)
 app.add_route('/datasets/{dataset_id}/similar_entities/{entity}',
               similar_entities)
 app.add_route('/datasets/{dataset_id}/similar_entities', similar_entities)
