@@ -110,7 +110,7 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
 .. Problema: Un WikidataDataset no tiene las mismas operaciones que un Dataset
 .. normal. Ver cómo puede afectar esto en la gestión de los métodos HTTP:
 .. **Solución**: Utilizar sólo los métodos *públicos* de Dataset
-.. http:post:: /dataset?type=(int:type)
+.. http:post:: /dataset?type=(int:dataset_type)
 
     Crear un dataset nuevo y vacío. Se deberán utilizar otras consultas para
     llenar con tripletas el dataset. Se creará el objeto con un determinado
@@ -119,7 +119,7 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
     :prioridad: 1
     :query int dataset_type: El tipo de dataset a ser creado.
     :statuscode 201: Se ha creado un dataset nuevo correctamente. Ver cabecera
-                    Location para saber la URI del recurso.
+                     Location para saber la URI del recurso.
     :statuscode 404: El *dataset_type* no existe.
     :statuscode 500: No se ha podido crear el dataset.
 
@@ -154,7 +154,7 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
     :statuscode 409: El estado del *dataset_id* no es correcto.
 
 
-.. http:put:: /datasets/(int:dataset_id)/generate_triples
+.. http:post:: /datasets/(int:dataset_id)/generate_triples
 
     Añade tripletas al dataset seleccionado utilizando consultas SPARQL en
     distintos niveles.
@@ -163,6 +163,28 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
 
     :prioridad: 1
     :param int dataset_id: id único del dataset.
+    :statuscode 404: El *dataset_id* no existe.
+    :statuscode 202: Se ha creado una tarea. Ver /tareas para más información
+
+
+Tareas
+``````
+
+Esta factoría almacena toda la información que generen las peticiones asíncronas
+
+.. http:post:: /tasks/(int:task_id)
+
+    Añade tripletas al dataset seleccionado utilizando consultas SPARQL en
+    distintos niveles.
+
+    .. Debería implementarse como petición asíncrona
+
+    :prioridad: 1
+    :param int task_id: id único del dataset.
+    :statuscode 404: La *task_id* no existe.
+    :statuscode 200: Muestra el estado de la tarea
+
+
 
 Predicción de tripletas
 ```````````````````````
