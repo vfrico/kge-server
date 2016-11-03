@@ -65,6 +65,11 @@ class MainDAO():
                            "FOREIGN KEY(algorithm) REFERENCES algorithm(id)"
                            ");")
 
+        self.execute_query("CREATE TABLE tasks "
+                           "(id INTEGER UNIQUE PRIMARY KEY, "
+                           "celery_uuid TEXT "
+                           ") ; ")
+
         default_datasets = [
                         {"id": 0, "binary_dataset": 'wikidata_25k.bin',
                          "binary_model": "",
@@ -258,6 +263,9 @@ class DatasetDAO(MainDAO):
         else:
             return None
 
+    def build_dataset_path(self):
+        return self.bin_path + self.binary_dataset
+
     def get_search_index(self):
         """Returns an instantiated search index from choosen dataset.
 
@@ -389,3 +397,21 @@ class AlgorithmDAO(MainDAO):
         self.algorithm['embedding_size'] = res[0]['embedding_size']
         self.algorithm['id'] = res[0]['id']
         return self.algorithm, None
+
+
+class TaskDAO(MainDAO):
+    def __init__(self, database_file="server.db"):
+        super(AlgorithmDAO, self).__init__(database_file=database_file)
+        self.task = {}
+
+    def get_task_by_id(self, id):
+        query = "SELECT * FROM tasks WHERE id=?"
+        res = self.execute_query(query, algorithm_id)
+
+        if res is None or len(res) < 1:
+            return None, (404, "Algorithm "+str(algorithm_id)+" not found")
+
+        self.algorithm['embedding_size'] = res[0]['embedding_size']
+        self.algorithm['id'] = res[0]['id']
+        return self.algorithm, None
+        return self.task

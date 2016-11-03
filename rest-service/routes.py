@@ -20,6 +20,7 @@
 import falcon
 import json
 import data_access
+import async_server.tasks as async_tasks
 
 
 class DatasetResource(object):
@@ -76,7 +77,7 @@ class DatasetFactory(object):
 
         # Get dataset type
         try:
-            dts_type = int(req.get_param("type"))
+            dts_type = int(req.get_param("dataset_type"))
         except Exception:
             # Fallback to read default type: 0
             dts_type = 0
@@ -219,6 +220,49 @@ class PredictSimilarEntitiesResource(object):
         resp.status = falcon.HTTP_400
 
 
+class GenerateTriplesResource():
+    def on_put(self, req, resp, dataset_id):
+        try:
+            extra = "Couldn't decode the input stream (body)."
+            body = json.loads(req.stream.read().decode('utf-8'))
+
+        except (json.decoder.JSONDecodeError, KeyError, ValueError) as err:
+            msg = ("Couldn't read body correctly from HTTP request. "
+                   "Please, read the documentation carefully and try again. "
+                   "Extra info: "+extra)
+            resp.body = json.dumps({"status": 400, "message": msg})
+            resp.content_type = 'application/json'
+            resp.status = falcon.HTTP_400
+            return
+
+        dataset_dao = data_access.DatasetDAO()
+        dataset, err = dataset_dao.get_dataset_by_id(dataset_id)
+        if dataset is None:
+            if err[0] == 404:
+                resp.status = falcon.HTTP_404
+            else:
+                print(err)
+                resp.status = falcon.HTTP_500
+            textbody = {"status": err[0], "message": err[1]}
+            resp.body = json.dumps(textbody)
+            return
+
+        # Generate a Task Resource to check the status
+        dtset = dataset_dao.build_dataset_path()
+        task = async_tasks.generate_dataset_from_sparql.delay(dtset, 1, None)
+        print(task, task.id)
+
+        textbody = {"status": 202, "message": "Task created successfuly"}
+        resp.body = json.dumps(textbody)
+        resp.content_type = 'application/json'
+        resp.status = falcon.HTTP_202
+
+
+class TasksResource():
+    def on_post(self, req, resp):
+        pass
+
+
 class TriplesResource():
     """Receives HTTP Request to manage triples on dataset
 
@@ -293,11 +337,13 @@ dataset = DatasetResource()
 datasetcreate = DatasetFactory()
 similar_entities = PredictSimilarEntitiesResource()
 triples = TriplesResource()
+gentriples = GenerateTriplesResource()
 
 # All API routes and the object that will handle each one
 app.add_route('/datasets/', datasetcreate)
 app.add_route('/datasets/{dataset_id}', dataset)
 app.add_route('/datasets/{dataset_id}/triples', triples)
+app.add_route('/datasets/{dataset_id}/generate_triples', gentriples)
 app.add_route('/datasets/{dataset_id}/similar_entities/{entity}',
               similar_entities)
 app.add_route('/datasets/{dataset_id}/similar_entities', similar_entities)

@@ -110,7 +110,7 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
 .. Problema: Un WikidataDataset no tiene las mismas operaciones que un Dataset
 .. normal. Ver cómo puede afectar esto en la gestión de los métodos HTTP:
 .. **Solución**: Utilizar sólo los métodos *públicos* de Dataset
-.. http:post:: /dataset?type=(int:dataset_type)
+.. http:post:: /dataset?type=(int:type)
 
     Crear un dataset nuevo y vacío. Se deberán utilizar otras consultas para
     llenar con tripletas el dataset. Se creará el objeto con un determinado
@@ -154,7 +154,7 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
     :statuscode 409: El estado del *dataset_id* no es correcto.
 
 
-.. http:put:: /datasets/(int:dataset_id)/load_from_levels
+.. http:put:: /datasets/(int:dataset_id)/generate_triples
 
     Añade tripletas al dataset seleccionado utilizando consultas SPARQL en
     distintos niveles.
