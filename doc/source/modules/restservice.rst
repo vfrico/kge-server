@@ -66,7 +66,6 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
             }
         }
 
-    :prioridad: 0
     :param int dataset_id: id único del dataset
     :statuscode 200: Devuelve el dataset sin errores
     :statuscode 404: El dataset no ha sido encontrado
@@ -95,7 +94,7 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
     Obtener todos los ID de Datasets. No muestra (por defecto) los tamaños
     de los datasets.
 
-    :prioridad: 0
+    :statuscode 200: All the datasets are shown correctly
 
 
 .. http:get:: /dataset_types
@@ -136,7 +135,7 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
 
     **Ejemplo**
 
-    :http:post:`/datasets/6`
+    :http:post:`/datasets/6/triples`
 
     .. sourcecode:: json
 
@@ -146,8 +145,6 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
                     ]
         }
 
-
-    :prioridad: 1
     :param int dataset_id: id único del dataset.
     :statuscode 202: La petición se ha procesado correctamente.
     :statuscode 404: El *dataset_id* no existe.
@@ -156,35 +153,54 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
 
 .. http:post:: /datasets/(int:dataset_id)/generate_triples
 
-    Añade tripletas al dataset seleccionado utilizando consultas SPARQL en
-    distintos niveles.
+    Adds triples to dataset doing a sequence of SPARQL queries by levels,
+    starting with a seed vector. This operation is supported only by
+    certain types of datasets.
 
-    .. Debería implementarse como petición asíncrona
+    The request will use asyncronous operations. This means that the request
+    will not be satisfied on the same HTTP connection. Instead, the service
+    will return a `task` resource that will be queried with the progress
+    of the task.
 
-    :prioridad: 1
     :param int dataset_id: id único del dataset.
     :statuscode 404: El *dataset_id* no existe.
+    :statuscode 409: The *dataset_id* does not allow this operation
     :statuscode 202: Se ha creado una tarea. Ver /tareas para más información
 
 
 Tareas
 ``````
 
-Esta factoría almacena toda la información que generen las peticiones asíncronas
+Esta factoría almacena toda la información que generen todas las peticiones
+asíncronas en el servidor
 
-.. http:post:: /tasks/(int:task_id)
+.. http:get:: /tasks/(int:task_id)
 
-    Añade tripletas al dataset seleccionado utilizando consultas SPARQL en
-    distintos niveles.
+    Muestra la progresión de la tarea con id *task_id*. Las tareas que hayan
+    acabado pueden ser eliminadas sin previo aviso.
 
-    .. Debería implementarse como petición asíncrona
+    Some tasks can inform to the user about its progress. It is done through
+    the progress param, which has *do* and *total* arguments. The *do* shows
+    the tasks done at the moment of the request, and the *total* shows all the
+    tasks planned to do.
+
+    :param int task_id: id único de la tarea a consultar
+    :statuscode 200: Muestra el estado de la tarea
+    :statuscode 303: La tarea se ha completado. See Location para ver
+                     el recurso al que afecta.
+    :statuscode 404: La *task_id* no existe.
+
+
+.. http:delete:: /tasks/(int:task_id)
+
+    Elimina una tarea de la base de datos. Sólo se eliminarán aquellas tareas
+    que no se estén ejecutando. No será posible consultar el progreso en el
+    futuro, pero se mantendrá el resultado que haya producido dicha tarea.
 
     :prioridad: 1
-    :param int task_id: id único del dataset.
-    :statuscode 404: La *task_id* no existe.
-    :statuscode 200: Muestra el estado de la tarea
-
-
+    :statuscode 204: The task has been deleted
+    :statuscode 404: The task does not exists and cannot be deleted
+    :statuscode 409: The current state of the task does not allow to delete it
 
 Predicción de tripletas
 ```````````````````````
@@ -222,7 +238,6 @@ Predicción de tripletas
         }
 
 
-    :prioridad: 0
     :param int dataset_id: id único del dataset
     :param string entity: Representación de la entidad (Elemento o vector)
     :query int limit: Límite de entidades similares que se piden. Por defecto
@@ -275,7 +290,6 @@ Predicción de tripletas
         }
 
 
-    :prioridad: 0
     :param int dataset_id: id único del dataset
     :param string entity: Representación de la entidad (Elemento o vector)
     :query int limit: Límite de entidades similares que se piden. Por defecto
