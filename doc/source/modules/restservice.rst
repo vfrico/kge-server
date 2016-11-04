@@ -162,6 +162,18 @@ si ha sido también entrenado, o si ya está listo para predecir tripletas.
     will return a `task` resource that will be queried with the progress
     of the task.
 
+    .. sourcecode:: json
+
+        {
+        "generate_triples":
+            {
+                "levels": 2,
+                "sparql_seed_query": "",
+                "sparql_graph_pattern": "",
+                "limit_ent": 200,
+            }
+        }
+
     :param int dataset_id: id único del dataset.
     :statuscode 404: El *dataset_id* no existe.
     :statuscode 409: The *dataset_id* does not allow this operation

@@ -25,6 +25,7 @@ import numpy as np
 import threading
 from datetime import datetime
 import time
+import copy
 from collections import defaultdict
 
 
@@ -416,7 +417,7 @@ class Dataset():
                                   "implemented through a child object")
 
     def process_entity(self, entity, append_queue=lambda x: None, max_tries=10,
-                       callback=lambda: None, verbose=0, _times=0):
+                       callback=lambda: None, verbose=0, _times=0, **kwargs):
         """Wrapper for child method `dataset._process_entity`_
 
         Will call self method `dataset._process_entity`_ and examine the return
@@ -436,7 +437,7 @@ class Dataset():
         """
         try:
             # Get elements to add on the queue.
-            el_queue = self._process_entity(entity, verbose=verbose)
+            el_queue = self._process_entity(entity, verbose=verbose, **kwargs)
             # print(el_queue)
             if not el_queue:
                 return callback(False)
@@ -474,7 +475,8 @@ class Dataset():
                                   "implemented through a child object")
 
     def load_dataset_recurrently(self, levels, seed_vector, verbose=1,
-                                 limit_ent=None, ext_callback=lambda: None):
+                                 limit_ent=None, ext_callback=lambda: None,
+                                 **keyword_args):
         """Loads to dataset all entities with BNE ID and their relations
 
         Due to Wikidata endpoint cann't execute queries that take long time
@@ -539,12 +541,14 @@ class Dataset():
                     ext_callback(self.status)
 
                 self.th_semaphore.acquire()
+                call_kwargs = copy.copy(keyword_args)
+                call_kwargs['verbose'] = verbose
+                call_kwargs['append_queue'] = lambda e: new_queue.append(e)
+                call_kwargs['callback'] = func_callback
                 t = threading.Thread(
                     target=self.process_entity,
                     args=(element, ),
-                    kwargs={'verbose': verbose,
-                            'append_queue': lambda e: new_queue.append(e),
-                            'callback': func_callback})
+                    kwargs=call_kwargs)
                 threads.append(t)
                 t.start()
 

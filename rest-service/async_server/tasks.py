@@ -64,13 +64,10 @@ def generate_dataset_from_sparql(self, dataset_path, levels, seed_vector_query,
         return
 
     # Build the optional args dict
-    new_kwargs = {}
-    new_kwargs["ext_callback"] = status_callback
-    if "limit_ent" in keyw_args:
-        new_kwargs["limit_ent"] = keyw_args["limit_ent"]
+    keyw_args["ext_callback"] = status_callback
 
     # Call to the *heavy* method
-    dtset.load_dataset_recurrently(levels, seed_vector, **new_kwargs)
+    dtset.load_dataset_recurrently(levels, seed_vector, **keyw_args)
 
     # Save new binary
     dtset.save_to_binary(dataset_path)

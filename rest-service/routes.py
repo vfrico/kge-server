@@ -265,7 +265,8 @@ class GenerateTriplesResource():
 
         # Generate a Task Resource to check the status
         dtset = dataset_dao.build_dataset_path()
-        task = async_tasks.generate_dataset_from_sparql.delay(dtset, 1, None, None, limit_ent=1000)
+        # TODO: Read arguments from body
+        task = async_tasks.generate_dataset_from_sparql.delay(dtset, 1, None, None, limit_ent=1000, **args)
         print(task, task.id)
 
         task_dao = data_access.TaskDAO()
