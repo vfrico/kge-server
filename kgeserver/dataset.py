@@ -457,7 +457,7 @@ class Dataset():
             else:
                 print("[{0}]Error found: '{1}'' Has been tried {0}/{2} times. "
                       "Exiting".format(times_new, exc, max_tries))
-                return false
+                return False
 
     def get_seed_vector(self):
         """Get the root entities where the graph build should start
