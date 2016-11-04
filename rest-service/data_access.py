@@ -20,6 +20,8 @@
 import os
 import time
 import sqlite3
+import redis
+import json
 import kgeserver.server as server
 import kgeserver.dataset as dataset
 import kgeserver.wikidata_dataset as wikidata_dataset
@@ -44,6 +46,8 @@ class MainDAO():
 
         # Path where all binary files have its relative path
         self.bin_path = "../"
+
+        self.connection = sqlite3.connect(self.database_file)
 
     def build_basic_db(self):
 
@@ -125,7 +129,7 @@ class MainDAO():
         :returns: A list of rows from a query.
         :rtype: list
         """
-        connection = sqlite3.connect(self.database_file)
+        connection = self.connection
 
         # The row factory returns a richer object to user, similar to dict
         connection.row_factory = sqlite3.Row
@@ -155,7 +159,7 @@ class MainDAO():
         :return: A cursor that must be closed
         :rtype: sqlite3.Cursor
         """
-        connection = sqlite3.connect(self.database_file)
+        connection = self.connection
 
         # The row factory returns a richer object to user, similar to dict
         connection.row_factory = sqlite3.Row
@@ -429,3 +433,23 @@ class TaskDAO(MainDAO):
         taskid = res.lastrowid
         res.close()
         return taskid, None
+
+
+class RedisBackend:
+    def __init__(self):
+        # Reads REDIS conf from environment variables
+        port = os.environ['REDIS_PORT_6379_TCP_PORT']
+        host = os.environ['REDIS_PORT_6379_TCP_ADDR']
+
+        self.connection = redis.StrictRedis(host=host, port=port, db=0)
+
+    def get(self, key):
+        task_str = self.connection.get(key)
+        if task_str is None:
+            return None
+        else:
+            return json.loads(task_str.decode("utf-8"))
+
+    def set(self, key, value):
+        task_str = json.dumps(value)
+        return self.connection.set(key, task_str.encode("utf-8"))

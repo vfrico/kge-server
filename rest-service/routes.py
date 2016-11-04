@@ -265,7 +265,7 @@ class GenerateTriplesResource():
 
         # Generate a Task Resource to check the status
         dtset = dataset_dao.build_dataset_path()
-        task = async_tasks.generate_dataset_from_sparql.delay(dtset, 1, None, None)
+        task = async_tasks.generate_dataset_from_sparql.delay(dtset, 1, None, None, limit_ent=1000)
         print(task, task.id)
 
         task_dao = data_access.TaskDAO()
@@ -310,6 +310,19 @@ class TasksResource():
 
         task["state"] = t_uuid.state
         task["is_ready"] = t_uuid.ready()
+
+        # Get task progress
+        celery_uuid = "celery-task-progress-"+task['celery_uuid']
+
+        redis = data_access.RedisBackend()
+        redis_task = redis.get(celery_uuid)
+        print(redis_task)
+
+        try:
+            if "progress" in redis_task:
+                task["progress"] = redis_task["progress"]
+        except TypeError:
+            pass
 
         response = {"task": task}
         resp.body = json.dumps(response)
