@@ -230,7 +230,7 @@ class GenerateTriplesResource():
         {"generate_triples":
             {
                 "sparql_seed_query": "<SPARQL Query>",
-                "sparql_graph_pattern": "<SPARQL Query>",
+                "graph_pattern": "<SPARQL Query>",
                 "levels": 2 ,
                 "limit_ent": 2500
             }
@@ -275,12 +275,16 @@ class GenerateTriplesResource():
 
         # Generate a Task Resource to check the status
         dtset = dataset_dao.build_dataset_path()
-        # TODO: Read arguments from body
-        levels = json_rpc["levels"]
 
-        args = {"limit_ent": json_rpc.get("limit_ent", None),
-                "graph_pattern": json_rpc.get("sparql_graph_pattern", None),
-                "sparql_seed_query": json_rpc.get("sparql_seed_query", None)}
+        # Read arguments from body
+        levels = json_rpc.pop("levels")
+
+        # Dict of arguments
+        args = {}
+        for arg in json_rpc:
+            if arg is not None:
+                args[arg] = json_rpc[arg]
+
         task = async_tasks.generate_dataset_from_sparql.delay(
                 dtset, levels, **args)
 

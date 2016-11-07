@@ -5,22 +5,6 @@ import json
 import kgeserver.dataset as dataset
 
 
-@app.task
-def add(x, y):
-    time.sleep(10)
-    return x + y
-
-
-@app.task
-def mul(x, y):
-    return x * y
-
-
-@app.task
-def xsum(numbers):
-    return sum(numbers)
-
-
 @app.task(bind=True)
 def generate_dataset_from_sparql(self, dataset_path, levels, **keyw_args):
     """Ejecuta la operación de generar un dataset de forma recurrente
@@ -51,8 +35,8 @@ def generate_dataset_from_sparql(self, dataset_path, levels, **keyw_args):
     else:
         seed_vector = dtset.get_seed_vector()
 
-    # WIP: Worker should save the status anywhere to inform the REST USER API
     def status_callback(status):
+        """Saves the progress of the task on redis db"""
         # Create progress object
         progress = {"current": status['it_analyzed'],
                     "total": status['it_total'],
