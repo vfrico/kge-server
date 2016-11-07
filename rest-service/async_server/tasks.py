@@ -22,11 +22,15 @@ def xsum(numbers):
 
 
 @app.task(bind=True)
-def generate_dataset_from_sparql(self, dataset_path, levels, seed_vector_query,
-                                 entity_query, **keyw_args):
+def generate_dataset_from_sparql(self, dataset_path, levels, **keyw_args):
     """Ejecuta la operación de generar un dataset de forma recurrente
 
     Ejecuta también la operación de obtener el vector de inicio
+    :param levels: The number of levels to scan
+    :param dataset_path: The path to dataset file
+    :param sparql_seed_query: A sparql chunk to start quering
+    :param graph_pattern: A sparql chunk to perform the entity lookup
+    :param limit_ent: Use only for testing purposes
     """
     from celery import current_task  # in task definition
     # Load current dataset
@@ -41,8 +45,9 @@ def generate_dataset_from_sparql(self, dataset_path, levels, seed_vector_query,
     redis.set(celery_uuid, "{}".encode("utf-8"))
 
     # If user provides arguments for seed_vector_query, use them
-    if seed_vector_query:
-        seed_vector = dtset.get_seed_vector(where=seed_vector_query)
+    if "sparql_seed_query" in keyw_args:
+        whereseed = keyw_args.pop("sparql_seed_query")
+        seed_vector = dtset.get_seed_vector(where=whereseed)
     else:
         seed_vector = dtset.get_seed_vector()
 

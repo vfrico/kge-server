@@ -229,8 +229,8 @@ class GenerateTriplesResource():
 
         {"generate_triples":
             {
-                "seed_vector_query": "<SPARQL Query>",
-                "entity_query": "<SPARQL Query>",
+                "sparql_seed_query": "<SPARQL Query>",
+                "sparql_graph_pattern": "<SPARQL Query>",
                 "levels": 2 ,
                 "limit_ent": 2500
             }
@@ -241,8 +241,18 @@ class GenerateTriplesResource():
         try:
             extra = "Couldn't decode the input stream (body)."
             body = json.loads(req.stream.read().decode('utf-8'))
-
-        except (json.decoder.JSONDecodeError, KeyError, ValueError) as err:
+            args = ["levels"]
+            if "generate_triples" not in body:
+                extra = ("It was expected a JSON object with a "
+                         "'generate_triples' param")
+                raise KeyError
+            json_rpc = body['generate_triples']
+            if "levels" not in json_rpc:
+                extra = ("The 'generate_triples' JSON object must contain"
+                         "level attribute")
+                raise KeyError
+        except (json.decoder.JSONDecodeError, KeyError,
+                ValueError, TypeError) as err:
             msg = ("Couldn't read body correctly from HTTP request. "
                    "Please, read the documentation carefully and try again. "
                    "Extra info: "+extra)
@@ -266,10 +276,13 @@ class GenerateTriplesResource():
         # Generate a Task Resource to check the status
         dtset = dataset_dao.build_dataset_path()
         # TODO: Read arguments from body
-        args = {}
+        levels = json_rpc["levels"]
+
+        args = {"limit_ent": json_rpc.get("limit_ent", None),
+                "graph_pattern": json_rpc.get("sparql_graph_pattern", None),
+                "sparql_seed_query": json_rpc.get("sparql_seed_query", None)}
         task = async_tasks.generate_dataset_from_sparql.delay(
-                dtset, 1, None, None, limit_ent=1000, **args)
-        print(task, task.id)
+                dtset, levels, **args)
 
         task_dao = data_access.TaskDAO()
         task_id, err = task_dao.add_task_by_uuid(task.id)
@@ -344,11 +357,9 @@ class TriplesResource():
 
             if "triples" not in body:
                 extra = "It was expected a JSON object with a 'triples' param"
-                print(extra)
                 raise KeyError
             if not isinstance(body["triples"], list):
                 extra = "The 'triples' param is expected to contain a list"
-                print(extra)
                 raise ValueError
 
             for triple in body["triples"]:
@@ -359,7 +370,8 @@ class TriplesResource():
                              triple)
                     raise ValueError
 
-        except (json.decoder.JSONDecodeError, KeyError, ValueError) as err:
+        except (json.decoder.JSONDecodeError, KeyError,
+                ValueError, TypeError) as err:
             msg = ("Couldn't read body correctly from HTTP request. "
                    "Please, read the documentation carefully and try again. "
                    "Extra info: "+extra)
