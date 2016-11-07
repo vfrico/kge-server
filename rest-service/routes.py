@@ -289,8 +289,8 @@ class GenerateTriplesResource():
                 dtset, levels, **args)
 
         task_dao = data_access.TaskDAO()
-        task_id, err = task_dao.add_task_by_uuid(task.id)
-        if task_id is None:
+        task_obj, err = task_dao.add_task_by_uuid(task.id)
+        if task_obj is None:
             if err[0] == 404:
                 resp.status = falcon.HTTP_404
             else:
@@ -300,9 +300,9 @@ class GenerateTriplesResource():
             resp.body = json.dumps(textbody)
             return
 
-        msg = "Task {} created successfuly".format(task_id)
+        msg = "Task {} created successfuly".format(task_obj['id'])
         textbody = {"status": 202, "message": msg}
-        resp.location = "/tasks/"+str(task_id)
+        resp.location = "/tasks/"+str(task_obj['id'])
         resp.body = json.dumps(textbody)
         resp.content_type = 'application/json'
         resp.status = falcon.HTTP_202

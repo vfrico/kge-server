@@ -409,34 +409,14 @@ class AlgorithmDAO(MainDAO):
         return self.algorithm, None
 
 
-class TaskDAO(MainDAO):
-    def __init__(self, database_file="server.db"):
-        super(TaskDAO, self).__init__(database_file=database_file)
-        self.task = {}
-        # Generate Pickle file to store information (Progress)
-
-    def get_task_by_id(self, task_id):
-        query = "SELECT * FROM tasks WHERE id=?"
-        res = self.execute_query(query, task_id)
-
-        if res is None or len(res) < 1:
-            return None, (404, "Task "+str(task_id)+" not found")
-
-        for key in res[0].keys():
-            self.task[key] = res[0][key]
-
-        return self.task, None
-
-    def add_task_by_uuid(self, task_uuid):
-        query = "INSERT INTO tasks(celery_uuid) VALUES (?)"
-        res = self.execute_insertion(query, [str(task_uuid)])
-
-        taskid = res.lastrowid
-        res.close()
-        return taskid, None
-
-
 class RedisBackend:
+    """Creates a wrapper for redis to manage dicts inside Redis
+
+    Reads Redis configuration from environment variables. These variables
+    are intended to be created with docker.
+        * REDIS_PORT_6379_TCP_ADDR
+        * REDIS_PORT_6379_TCP_PORT
+    """
     def __init__(self):
         # Reads REDIS conf from environment variables
         port = os.environ['REDIS_PORT_6379_TCP_PORT']
@@ -454,3 +434,31 @@ class RedisBackend:
     def set(self, key, value):
         task_str = json.dumps(value)
         return self.connection.set(key, task_str.encode("utf-8"))
+
+    def incr(self, key):
+        return self.connection.incr(key)
+
+
+class TaskDAO():
+    """Manages the Task resource from Redis KeyStore database.
+
+    To keep the number of tasks that exists on redis, a key named tasks will
+    be created. It will only contain an integer to be incremented with every
+    task created.
+    """
+    def __init__(self, backend=RedisBackend()):
+        self.task = {"celery_uuid": None,
+                     "id": None}
+
+        self.taskid = "task:{}".format(self.task['id'])
+        self.redis = backend
+
+    def get_task_by_id(self, task_id):
+        self.taskid = self.taskid.format(task_id)
+        return self.redis.get(self.taskid), None
+
+    def add_task_by_uuid(self, task_uuid):
+        self.task["id"] = self.redis.incr("tasks")
+        self.task["celery_uuid"] = task_uuid
+        self.redis.set(self.taskid, self.task)
+        return self.task, None
