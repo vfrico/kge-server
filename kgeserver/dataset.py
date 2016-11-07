@@ -450,7 +450,7 @@ class Dataset():
             # try again. (but only for 10 times)
             times_new = _times + 1
             if times_new < max_tries:
-                print("[{0}]Error found: '{1}'' "
+                print("[{0}]Error found: '{1}' "
                       "Trying again".format(times_new, exc))
                 return self.process_entity(entity, append_queue=append_queue,
                                            callback=callback, verbose=verbose,
