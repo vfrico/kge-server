@@ -42,6 +42,7 @@ class MainDAO():
             print("Create file")
             f = open(self.database_file, "w+")
             f.close()
+            self.connection = sqlite3.connect(self.database_file)
             self.build_basic_db()
 
         # Path where all binary files have its relative path

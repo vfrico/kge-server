@@ -192,9 +192,12 @@ asíncronas en el servidor
     acabado pueden ser eliminadas sin previo aviso.
 
     Some tasks can inform to the user about its progress. It is done through
-    the progress param, which has *do* and *total* arguments. The *do* shows
-    the tasks done at the moment of the request, and the *total* shows all the
-    tasks planned to do.
+    the progress param, which has *current* and *total* relative arguments, and
+    *current_steps* and *total_steps* absolute arguments. When a task involves
+    some steps and the number of small tasks to be done in next step cannot
+    be discovered, the current and total will only indicate progress in current
+    step, and will not include previous step, expected to be already done, or next
+    step which is expected to be empty.
 
     :param int task_id: id único de la tarea a consultar
     :statuscode 200: Muestra el estado de la tarea
@@ -205,9 +208,14 @@ asíncronas en el servidor
 
 .. http:delete:: /tasks/(int:task_id)
 
-    Elimina una tarea de la base de datos. Sólo se eliminarán aquellas tareas
-    que no se estén ejecutando. No será posible consultar el progreso en el
-    futuro, pero se mantendrá el resultado que haya producido dicha tarea.
+    Deletes a task from database. If it is possible to stop a task which is
+    started but not finished, it will be stopped and deleted. If this is not
+    possible, the task resource will be kept as is, and a 409 status code will
+    be sent along a reason why the task cannot be stopped.
+
+    If the task is deleted, the status will not be queried in a future, but any
+    result produced by the task (such as adding triples to a dataset), will
+    be kept on its own resource.
 
     :prioridad: 1
     :statuscode 204: The task has been deleted

@@ -33,12 +33,12 @@ def generate_dataset_from_sparql(self, dataset_path, levels, seed_vector_query,
     dtset = dataset.Dataset()
     dtset.load_from_binary(dataset_path)
 
+    # Obtains the Redis connection from celery.
     redis = self.app.backend
+    # The id of the object
     celery_uuid = "celery-task-progress-"+self.request.id
+    # Saves the empty id to be retrieved first time without error
     redis.set(celery_uuid, "{}".encode("utf-8"))
-
-    # print(res)
-    # task_id = self.request.id
 
     # If user provides arguments for seed_vector_query, use them
     if seed_vector_query:
@@ -49,7 +49,11 @@ def generate_dataset_from_sparql(self, dataset_path, levels, seed_vector_query,
     # WIP: Worker should save the status anywhere to inform the REST USER API
     def status_callback(status):
         # Create progress object
-        progress = {"do": status['it_analyzed'], "total": status['it_total']}
+        progress = {"current": status['it_analyzed'],
+                    "total": status['it_total'],
+                    "current_steps": status['round_curr']+1,
+                    "total_steps": status['round_total']
+                    }
 
         # Retrieve task from redis
         task = redis.get(celery_uuid).decode("utf-8")

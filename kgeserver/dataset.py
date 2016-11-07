@@ -494,14 +494,13 @@ class Dataset():
         new_queue = seed_vector
         el_queue = []
 
+        self.status['started'] = datetime.now()
+        self.status['it_analyzed'] = 0
+        self.status['active'] = True
+        self.status['round_total'] = levels
         if verbose > 1:
             # TODO: Status thread must can be killed from outside
-
             # Initialize status variables
-            self.status['started'] = datetime.now()
-            self.status['it_analyzed'] = 0
-            self.status['active'] = True
-            self.status['round_total'] = levels
             status_thread = threading.Thread(
                 target=self.control_thread,
                 args=(),)
