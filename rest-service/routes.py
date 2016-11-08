@@ -31,13 +31,7 @@ class DatasetResource(object):
         dataset = data_access.DatasetDAO()
         resource, err = dataset.get_dataset_by_id(dataset_id)
         if resource is None:
-            if err[0] == 404:
-                resp.status = falcon.HTTP_404
-            else:
-                resp.status = falcon.HTTP_500
-            textbody = {"status": err[0], "message": err[1]}
-            resp.body = json.dumps(textbody)
-            return
+            raise falcon.HTTPNotFound(description=str(err))
 
         response = {
             "dataset": resource,
@@ -55,13 +49,7 @@ class DatasetFactory(object):
         listdts, err = dao.get_all_datasets()
 
         if listdts is None:
-            if err[0] == 404:
-                resp.status = falcon.HTTP_404
-            else:
-                resp.status = falcon.HTTP_500
-            textbody = {"status": err[0], "message": err[1]}
-            resp.body = json.dumps(textbody)
-            return
+            raise falcon.HTTPNotFound(description=str(err))
 
         response = [{"dataset": dtst} for dtst in listdts]
         resp.body = json.dumps(response)
@@ -112,26 +100,15 @@ class PredictSimilarEntitiesResource(object):
         dataset_dao = data_access.DatasetDAO()
         resource, err = dataset_dao.get_dataset_by_id(dataset_id)
         if resource is None:
-            if err[0] == 404:
-                resp.status = falcon.HTTP_404
-            else:
-                print(err)
-                resp.status = falcon.HTTP_500
-            textbody = {"status": err[0], "message": err[1]}
-            resp.body = json.dumps(textbody)
-            return
+            raise falcon.HTTPNotFound(description=str(err))
+
         dataset = dataset_dao.build_dataset_object()
 
         # Get server to do 'queries'
         server, err = dataset_dao.get_server()
         if server is None:
-            if err[0] == 409:
-                resp.status = falcon.HTTP_409
-            else:
-                resp.status = falcon.HTTP_500
-            textbody = {"status": err[0], "message": err[1]}
-            resp.body = json.dumps(textbody)
-            return
+            msg_title = "Dataset not ready perform search operation"
+            raise falcon.HTTPConflict(title=msg_title, description=str(err))
 
         # Dig for the limit param on Query Params
         limit = req.get_param('limit')
@@ -230,15 +207,13 @@ class DistanceTriples():
             body = json.loads(req.stream.read().decode('utf-8'))
 
             if "distance" not in body:
-                extra = ("It was expected a JSON object with a "
-                         "'distance' param")
-                raise KeyError
+                raise falcon.HTTPMissingParam("distance")
 
             if not isinstance(body["distance"], list) and\
                len(body["distance"]) != 2:
-                extra = ("The 'distance' JSON object must contain"
-                         "a list with two elements")
-                raise KeyError
+                msg = ("The param 'distance' must contain a list of two"
+                       "entities.")
+                raise falcon.HTTPInvalidParam(msg, "distance")
 
             # Redefine variables
             entity_x = body["distance"][0]
@@ -246,38 +221,26 @@ class DistanceTriples():
 
         except (json.decoder.JSONDecodeError, KeyError,
                 ValueError, TypeError) as err:
-            msg = ("Couldn't read body correctly from HTTP request. "
+            print(err)
+            err_title = "HTTP Body request not loaded correctly"
+            msg = ("The body couldn't be correctly loaded from HTTP request. "
                    "Please, read the documentation carefully and try again. "
                    "Extra info: "+extra)
-            resp.body = json.dumps({"status": 400, "message": msg})
-            resp.content_type = 'application/json'
-            resp.status = falcon.HTTP_400
-            return
+            raise falcon.HTTPBadRequest(title=err_title, description=msg)
 
         # Get dataset
         dataset_dao = data_access.DatasetDAO()
         resource, err = dataset_dao.get_dataset_by_id(dataset_id)
         if resource is None:
-            if err[0] == 404:
-                resp.status = falcon.HTTP_404
-            else:
-                print(err)
-                resp.status = falcon.HTTP_500
-            textbody = {"status": err[0], "message": err[1]}
-            resp.body = json.dumps(textbody)
-            return
+            raise falcon.HTTPNotFound(description=str(err))
+
         dataset = dataset_dao.build_dataset_object()
 
         # Get server to do 'queries'
         server, err = dataset_dao.get_server()
         if server is None:
-            if err[0] == 409:
-                resp.status = falcon.HTTP_409
-            else:
-                resp.status = falcon.HTTP_500
-            textbody = {"status": err[0], "message": err[1]}
-            resp.body = json.dumps(textbody)
-            return
+            msg_title = "Dataset not ready perform search operation"
+            raise falcon.HTTPConflict(title=msg_title, description=str(err))
 
         id_x = dataset.get_entity_id(entity_x)
         id_y = dataset.get_entity_id(entity_y)
@@ -332,14 +295,7 @@ class GenerateTriplesResource():
         dataset_dao = data_access.DatasetDAO()
         dataset, err = dataset_dao.get_dataset_by_id(dataset_id)
         if dataset is None:
-            if err[0] == 404:
-                resp.status = falcon.HTTP_404
-            else:
-                print(err)
-                resp.status = falcon.HTTP_500
-            textbody = {"status": err[0], "message": err[1]}
-            resp.body = json.dumps(textbody)
-            return
+            raise falcon.HTTPNotFound(description=str(err))
 
         # Generate a Task Resource to check the status
         dtset = dataset_dao.build_dataset_path()
@@ -359,14 +315,7 @@ class GenerateTriplesResource():
         task_dao = data_access.TaskDAO()
         task_obj, err = task_dao.add_task_by_uuid(task.id)
         if task_obj is None:
-            if err[0] == 404:
-                resp.status = falcon.HTTP_404
-            else:
-                print(err)
-                resp.status = falcon.HTTP_500
-            textbody = {"status": err[0], "message": err[1]}
-            resp.body = json.dumps(textbody)
-            return
+            raise falcon.HTTPNotFound(description=str(err))
 
         msg = "Task {} created successfuly".format(task_obj['id'])
         textbody = {"status": 202, "message": msg}
@@ -384,13 +333,7 @@ class TasksResource():
         task, err = tdao.get_task_by_id(task_id)
 
         if task is None:
-            if err[0] == 404:
-                resp.status = falcon.HTTP_404
-            else:
-                resp.status = falcon.HTTP_500
-            textbody = {"status": err[0], "message": err[1]}
-            resp.body = json.dumps(textbody)
-            return
+            raise falcon.HTTPNotFound(description=str(err))
 
         t_uuid = celery_server.app.AsyncResult(task['celery_uuid'])
 
@@ -455,25 +398,12 @@ class TriplesResource():
         dataset_dao = data_access.DatasetDAO()
         resource, err = dataset_dao.get_dataset_by_id(dataset_id)
         if resource is None:
-            if err[0] == 404:
-                resp.status = falcon.HTTP_404
-            else:
-                print(err)
-                resp.status = falcon.HTTP_500
-            textbody = {"status": err[0], "message": err[1]}
-            resp.body = json.dumps(textbody)
-            return
+            raise falcon.HTTPNotFound(description=str(err))
+
         # dataset = dataset_dao.build_dataset_object()
         res, err = dataset_dao.insert_triples(body['triples'])
         if res is None:
-            if err[0] == 404:
-                resp.status = falcon.HTTP_404
-            else:
-                print(err)
-                resp.status = falcon.HTTP_500
-            textbody = {"status": err[0], "message": err[1]}
-            resp.body = json.dumps(textbody)
-            return
+            raise falcon.HTTPNotFound(description=str(err))
 
         textbody = {"status": 202, "message": "Resources created successfuly"}
         resp.body = json.dumps(textbody)

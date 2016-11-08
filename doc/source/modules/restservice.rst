@@ -342,7 +342,7 @@ Predicción de tripletas
     .. sourcecode:: json
 
         {
-            "distance": 0.5
+            "distance": 1.460597038269043
         }
 
     :prioridad: 0
