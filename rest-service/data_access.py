@@ -46,7 +46,7 @@ class MainDAO():
             self.build_basic_db()
 
         # Path where all binary files have its relative path
-        self.bin_path = "../datasets"
+        self.bin_path = "../datasets/"
 
         self.connection = sqlite3.connect(self.database_file)
 
@@ -80,24 +80,20 @@ class MainDAO():
                         {"id": 0, "binary_dataset": 'wikidata_25k.bin',
                          "binary_model": "",
                          "binary_index": 'wikidata_25k.annoy.bin',
-                         "status": 2, 'algorithm': 0},
+                         "status": 0, 'algorithm': 0},
                         {"id": 1, "binary_dataset": '4levels.bin',
-                         "binary_model": 'modelo_guardado.bin',
-                         "binary_index": 'annoy_index_big.bin',
-                         "status": 2, 'algorithm': 0},
-                        {"id": 2, "binary_dataset": '4levels.bin',
                          "binary_model": 'modelo_guardado.bin',
                          "binary_index": 'annoyIndex.500.bin',
                          "status": 2, 'algorithm': 0},
-                        {"id": 3, "binary_dataset": '4levels.bin',
+                        {"id": 2, "binary_dataset": '4levels.bin',
                          "binary_model": 'modelo_guardado.bin',
                          "binary_index": 'annoyIndex.600.bin',
                          "status": 2, 'algorithm': 0},
-                        {"id": 4, "binary_dataset": 'newDataset4lvl.bin',
+                        {"id": 3, "binary_dataset": 'newDataset4lvl.bin',
                          "binary_model": 'Unnuevomodeloentrenado.bin',
                          "binary_index": 'unuevoAnnoy.600.bin',
                          "status": 2, 'algorithm': 1},
-                        {"id": 5, "binary_dataset": 'newDataset4lvl.bin',
+                        {"id": 4, "binary_dataset": 'newDataset4lvl.bin',
                          "binary_model": 'modelo_newDataset4lvl_m2.bin',
                          "binary_index": 'Annoy.nuevo.600.m2.bin',
                          "status": 2, 'algorithm': 2}
@@ -170,7 +166,7 @@ class MainDAO():
         # the foreign_keys restrictions
         # cursor.execute("PRAGMA foreign_keys = ON;")
         # Execute the *real* query
-        cursor.execute(query, *args)
+        cursor.execute(query, args)
 
         connection.commit()
         return cursor  # Must be closed outside function
@@ -390,6 +386,22 @@ class DatasetDAO(MainDAO):
 
         return result, None
 
+    def is_untrained(self):
+        """Check if dataset is in untrained state
+
+        Should return True if status is 0 or 1
+
+        :return: True if dataset is in untrained state
+        :rtype: tuple
+        """
+        dataset_status = self.dataset['status']
+        if dataset_status is None:
+            return None, (500, "Dataset not fully loaded")
+        elif dataset_status < 2 and dataset_status >= 0:
+            return True, None
+        else:
+            return False, None
+
 
 class AlgorithmDAO(MainDAO):
     def __init__(self, database_file="server.db"):
@@ -407,6 +419,55 @@ class AlgorithmDAO(MainDAO):
             self.algorithm[key] = res[0][key]
 
         return self.algorithm, None
+
+    def get_all_algorithms(self):
+        query = "SELECT * FROM algorithm"
+
+        res = self.execute_query(query)
+
+        algorithm_list = []
+
+        for row in res:
+            algorithm = {}
+            for key in row.keys():
+                algorithm[key] = row[key]
+            algorithm_list.append(algorithm)
+
+        return algorithm_list, None
+
+    def insert_algorithm(self, algorithm_dict):
+        """Inserts a new Algorithm in the service
+
+        To avoid UNIQUE constraint fails, this method will delete the id on
+        the dict if provided.
+
+        :param dict algorithm_dict: The algorithm in form of dict
+        :returns: The id of algorithm created
+        :rtype: Tuple
+        """
+        query = "INSERT INTO algorithm {0} VALUES ({1})"
+
+        # Build a query that prevents SQL injection
+        values_tuple = []
+        values_protect = ""
+        param_tuple = []
+        for param in algorithm_dict:
+            if param == "id":
+                continue
+            param_tuple.append(param)
+            values_tuple.append(algorithm_dict[param])
+            values_protect += "?,"
+        values_protect = values_protect[:-1]  # Remove last comma
+
+        query = query.format(tuple(param_tuple), values_protect)
+        try:
+            result = self.execute_insertion(query, *values_tuple)
+        except sqlite3.OperationalError as err:
+            return None, (400, "One of the parameters is not valid. "+str(err))
+        rowid = result.lastrowid
+        result.close()
+
+        return rowid, None
 
 
 class RedisBackend:
