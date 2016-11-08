@@ -18,3 +18,21 @@ Here is shown all the different methods to use with dataset class
 .. autoclass:: ModelTrainer
 .. autoclass:: Algorithm
    :members:
+
+
+Experiment class
+----------------
+
+This class is a modified version of the file which can be found on
+https://github.com/mnick/holographic-embeddings/tree/master/kg/base.py,
+and was created by Maximilian Nickel mnick@mit.edu.
+
+
+Methods
+```````
+
+Here is shown all the different methods to use with experiment class
+
+.. automodule:: kgeserver.experiment
+.. autoclass:: Experiment
+   :members:

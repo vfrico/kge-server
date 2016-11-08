@@ -1,8 +1,8 @@
 .. _dataset:
 
 
-Dataset class
-=============
+Dataset module
+==============
 
 The dataset class is used to create a valid object with the main idea
 to be used within the Experiment class. This approach allow us to
@@ -27,7 +27,7 @@ Here is shown all the different methods to use with dataset class
    :special-members:
    :private-members:
 
-   
+
 .. _dataset.get_seed_vector: #kgeserver.dataset.Dataset.get_seed_vector
 .. _dataset.load_dataset_recurrently: #kgeserver.dataset.Dataset.load_dataset_recurrently
 .. _dataset._process_entity: #kgeserver.dataset.Dataset._process_entity
