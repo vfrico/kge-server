@@ -81,6 +81,17 @@ class Server():
                 embedd, k, include_distances=True, search_k=search_k)
         return [(sim[0][i], sim[1][i]) for i in range(0, len(sim[0]))]
 
+    def distance_between_entities(self, entity_x, entity_y):
+        """Gives the distance between two different elements
+
+        :param integer entity_x: One entity to be compared
+        :param integer entity_y: Other entity to be compared
+        :returns: The distance between two elements
+        :rtype: float
+        """
+        dist = self.index.get_distance(entity_x, entity_y)
+        return dist
+
 
 class SearchIndex():
     def __init__(self):

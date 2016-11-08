@@ -319,6 +319,38 @@ Predicción de tripletas
                          rendimiento más bajo. Por defecto tiene el valor -1.
 
 
+.. http:get:: /datasets/(int:dataset_id)/distance/
+
+    Returns the distance between two elements. The lower this is, most probable
+    to be both the same triple.
+
+    **Request Example**
+
+    :http:post:`/datasets/0/similar_entities?limit=1`
+
+    .. sourcecode:: json
+
+        {
+            "distance": [
+                 "http://www.wikidata.org/entity/Q1492",
+                 "http://www.wikidata.org/entity/Q5682"
+            ]
+        }
+
+    *HTTP Response*
+
+    .. sourcecode:: json
+
+        {
+            "distance": 0.5
+        }
+
+    :prioridad: 0
+    :todo: 501 Not Implemented
+    :param int dataset_id: id único del dataset
+    :param list embedding: Vector de *embedding* a obtener su probabilidad
+
+
 .. http:get:: /datasets/(int:dataset_id)/embedding_probability/(string:embedding)
 
     Devuelve la probabilidad de que un vector de *embedding* sea verdadero

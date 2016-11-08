@@ -221,6 +221,74 @@ class PredictSimilarEntitiesResource(object):
         resp.status = falcon.HTTP_400
 
 
+class DistanceTriples():
+    def on_post(self, req, resp, dataset_id):
+        """
+        """
+        try:
+            extra = "Couldn't decode the input stream (body)."
+            body = json.loads(req.stream.read().decode('utf-8'))
+
+            if "distance" not in body:
+                extra = ("It was expected a JSON object with a "
+                         "'distance' param")
+                raise KeyError
+
+            if not isinstance(body["distance"], list) and\
+               len(body["distance"]) != 2:
+                extra = ("The 'distance' JSON object must contain"
+                         "a list with two elements")
+                raise KeyError
+
+            # Redefine variables
+            entity_x = body["distance"][0]
+            entity_y = body["distance"][1]
+
+        except (json.decoder.JSONDecodeError, KeyError,
+                ValueError, TypeError) as err:
+            msg = ("Couldn't read body correctly from HTTP request. "
+                   "Please, read the documentation carefully and try again. "
+                   "Extra info: "+extra)
+            resp.body = json.dumps({"status": 400, "message": msg})
+            resp.content_type = 'application/json'
+            resp.status = falcon.HTTP_400
+            return
+
+        # Get dataset
+        dataset_dao = data_access.DatasetDAO()
+        resource, err = dataset_dao.get_dataset_by_id(dataset_id)
+        if resource is None:
+            if err[0] == 404:
+                resp.status = falcon.HTTP_404
+            else:
+                print(err)
+                resp.status = falcon.HTTP_500
+            textbody = {"status": err[0], "message": err[1]}
+            resp.body = json.dumps(textbody)
+            return
+        dataset = dataset_dao.build_dataset_object()
+
+        # Get server to do 'queries'
+        server, err = dataset_dao.get_server()
+        if server is None:
+            if err[0] == 409:
+                resp.status = falcon.HTTP_409
+            else:
+                resp.status = falcon.HTTP_500
+            textbody = {"status": err[0], "message": err[1]}
+            resp.body = json.dumps(textbody)
+            return
+
+        id_x = dataset.get_entity_id(entity_x)
+        id_y = dataset.get_entity_id(entity_y)
+
+        dist = server.distance_between_entities(id_x, id_y)
+
+        resp.body = json.dumps({"distance": dist})
+        resp.content_type = 'application/json'
+        resp.status = falcon.HTTP_200
+
+
 class GenerateTriplesResource():
     def on_post(self, req, resp, dataset_id):
         """Generates a task to insert triples on dataset. Async petition.
@@ -421,6 +489,7 @@ datasetcreate = DatasetFactory()
 similar_entities = PredictSimilarEntitiesResource()
 triples = TriplesResource()
 gentriples = GenerateTriplesResource()
+triples_distance = DistanceTriples()
 
 task_resource = TasksResource()
 
@@ -429,6 +498,7 @@ app.add_route('/datasets/', datasetcreate)
 app.add_route('/datasets/{dataset_id}', dataset)
 app.add_route('/datasets/{dataset_id}/triples', triples)
 app.add_route('/datasets/{dataset_id}/generate_triples', gentriples)
+app.add_route('/datasets/{dataset_id}/distance', triples_distance)
 app.add_route('/datasets/{dataset_id}/similar_entities/{entity}',
               similar_entities)
 app.add_route('/datasets/{dataset_id}/similar_entities', similar_entities)
