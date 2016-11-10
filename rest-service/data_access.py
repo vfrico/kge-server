@@ -313,8 +313,8 @@ class DatasetDAO(MainDAO):
         :rtype: tuple
         """
         unique_name = str(int(time.time()))+".bin"
-        sql_sentence = ("INSERT INTO dataset (id, binary_dataset, algorithm) "
-                        "VALUES (NULL, '"+unique_name+"', -1)")
+        sql_sentence = ("INSERT INTO dataset (id, binary_dataset, algorithm, "
+                        "status) VALUES (NULL, '"+unique_name+"', -1, 0)")
 
         newdataset = datasetClass()
         newdataset.save_to_binary(self.bin_path+unique_name)
@@ -322,6 +322,9 @@ class DatasetDAO(MainDAO):
         result = self.execute_insertion(sql_sentence)
         rowid = result.lastrowid
         result.close()
+
+        # Add default status
+        self.set_untrained()
         return rowid, None
 
     def get_all_datasets(self):
@@ -401,6 +404,63 @@ class DatasetDAO(MainDAO):
             return True, None
         else:
             return False, None
+
+    def set_untrained(self):
+        """Set current dataset in untrained state
+        """
+        if not self.dataset["id"]:
+            return None, (500, "Dataset not fully loaded")
+
+        curr_status = self.dataset['status']
+        if curr_status is None or curr_status > 0:
+            return None, (409, "Dataset can not be updated to untrained state")
+        else:
+            ret, err = self.set_status(self.dataset["id"], 0)
+            return ret, err
+
+    def set_status(self, id_dataset, status):
+        """Set the dataset in untrained status
+
+        The status must be between [-2, 2].
+
+        :param int id_dataset: The id of the dataset to be changed
+        :param int status: The new status of the dataset
+        :return: True if operation was successful
+        :rtype: tuple
+        """
+        try:
+            if status >= 3:
+                return False, (409, "The status must be an integer [-2, 2]")
+        except TypeError:
+            return False, (409, "The status must be an integer or valid type")
+
+        query = "UPDATE dataset SET status=? WHERE id=? ;"
+
+        res = self.execute_insertion(query, status, id_dataset)
+        if res.rowcount == 1:
+            res.close()
+            return True, None
+        else:
+            res.close()
+            return False, (404, "Some of your variables are not correct")
+
+    def set_algorithm(self, id_dataset, id_algorithm):
+        """Changes the algorithm used on the dataset
+
+        :param int id_dataset: The id of dataset to Change
+        :param int id_algorithm: The id of the new algorithm
+        :return: If the operation was successful
+        :rtype: tuple
+        """
+        query = "UPDATE dataset SET algorithm=? WHERE id=? ;"
+
+        res = self.execute_insertion(query, id_algorithm, id_dataset)
+        if res.rowcount == 1:
+            res.close()
+            return True, None
+        else:
+            res.close()
+            return False, (404, "Some of your variables are not correct")
 
 
 class AlgorithmDAO(MainDAO):

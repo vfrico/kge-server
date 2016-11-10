@@ -349,10 +349,11 @@ class DatasetTrain():
 
         # Check if dataset can be trained
         if not dataset_dao.is_untrained()[0]:
+            dataset_status = dataset['status']
             err_title = "The dataset is not in correct state"
             msg = "The dataset has {} status and is not ready to be trained"
             raise falcon.HTTPConflict(title=err_title,
-                                      description=msg.format(dataset.status))
+                                      description=msg.format(dataset_status))
 
         # Dig for the limit param on Query Params
         algorithm_id = req.get_param('algorithm_id')
@@ -364,6 +365,10 @@ class DatasetTrain():
         algorithm, err = algorithm_dao.get_algorithm_by_id(algorithm_id)
         if algorithm is None:
             raise falcon.HTTPNotFound(message=str(err))
+
+        # If it all goes ok, add id of algorithm to db
+        dataset_dao.set_algorithm(dataset_id, algorithm_id)
+        dataset_dao.set_status(dataset_id, -1)
 
         # Launch async task
         task = async_tasks.train_dataset_from_algorithm.delay(
@@ -531,7 +536,11 @@ class AlgorithmFactory():
             raise falcon.HTTPBadRequest(title="Missing algorithm param",
                                         description=str(err))
 
+        msg = "Algorithm {} created successfuly".format(algorithm_id)
+        textbody = {"status": 202, "message": msg}
+        resp.body = json.dumps(textbody)
         resource_path = "/algorithm/{}".format(algorithm_id)
+        resp.location = resource_path
         resp.status = falcon.HTTP_201
 
 
