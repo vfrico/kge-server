@@ -14,6 +14,7 @@ Contents:
 
    modules/modules.rst
    modules/restservice.rst
+   architecture.rst
 
 
 Indices and tables
