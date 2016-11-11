@@ -101,6 +101,8 @@ class DatasetFactory(object):
             task_obj, err = task_dao.add_task_by_uuid(task.id)
             if task_obj is None:
                 raise falcon.HTTPNotFound(description=str(err))
+            task_obj["next"] = "/datasets/"+str(id_dts)
+            task_dao.update_task(task_obj)
 
             msg = "Task {} created successfuly".format(task_obj['id'])
             textbody = {"status": 202, "message": msg}
@@ -424,32 +426,49 @@ class TasksResource():
         """Return one task"""
         tdao = data_access.TaskDAO()
 
-        task, err = tdao.get_task_by_id(task_id)
-
-        if task is None:
+        task_obj, err = tdao.get_task_by_id(task_id)
+        if task_obj is None:
             raise falcon.HTTPNotFound(description=str(err))
 
-        t_uuid = celery_server.app.AsyncResult(task['celery_uuid'])
+        t_uuid = celery_server.app.AsyncResult(task_obj['celery_uuid'])
 
+        task = {}
         task["state"] = t_uuid.state
-        task["is_ready"] = t_uuid.ready()
+        # task["is_ready"] = t_uuid.ready()
+        task["id"] = task_obj["id"]
 
-        # Get task progress
-        celery_uuid = "celery-task-progress-"+task['celery_uuid']
+        if t_uuid.state == "SUCCESS":
+            # Look if exists some next
+            if "next" in task_obj:
+                print("This task has next {}".format(task_obj["next"]))
+                resp.status = falcon.HTTP_303
+                resp.location = task_obj["next"]
+            else:
+                # print("nothing else")
+                pass
 
-        redis = data_access.RedisBackend()
-        task_progress = redis.get(celery_uuid)
+        elif t_uuid.state == "STARTED":
+            # Get task progress and show to the user
+            celery_uuid = "celery-task-progress-"+task_obj['celery_uuid']
 
-        try:
-            if "progress" in task_progress:
-                task["progress"] = task_progress["progress"]
-        except TypeError:
-            pass
+            redis = data_access.RedisBackend()
+            task_progress = redis.get(celery_uuid)
+
+            try:
+                if "progress" in task_progress:
+                    task["progress"] = task_progress["progress"]
+            except TypeError:
+                pass
+
+            resp.status = falcon.HTTP_200
+
+        elif t_uuid.state == "FAILURE":
+            task["error"] = {"exception": str(t_uuid.result),
+                             "traceback": t_uuid.traceback}
 
         response = {"task": task}
         resp.body = json.dumps(response)
         resp.content_type = 'application/json'
-        resp.status = falcon.HTTP_200
 
 
 class TriplesResource():

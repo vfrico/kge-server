@@ -570,17 +570,25 @@ class TaskDAO():
     """
     def __init__(self, backend=RedisBackend()):
         self.task = {"celery_uuid": None,
-                     "id": None}
+                     "id": None,
+                     "next": None}
 
-        self.taskid = "task:{}".format(self.task['id'])
         self.redis = backend
 
+    def redis_id(self):
+        return self.redis_id_build(self.task["id"])
+
+    def redis_id_build(self, id):
+        return "task:{}".format(id)
+
     def get_task_by_id(self, task_id):
-        self.taskid = self.taskid.format(task_id)
-        return self.redis.get(self.taskid), None
+        return self.redis.get(self.redis_id_build(task_id)), None
 
     def add_task_by_uuid(self, task_uuid):
         self.task["id"] = self.redis.incr("tasks")
         self.task["celery_uuid"] = task_uuid
-        self.redis.set(self.taskid.format(self.task["id"]), self.task)
+        self.redis.set(self.redis_id(), self.task)
         return self.task, None
+
+    def update_task(self, task):
+        self.redis.set(self.redis_id_build(task["id"]), task)
