@@ -18,7 +18,7 @@
 
 from setuptools import setup
 doc_build_requires = ['sphinx', 'sphinx_rtd_theme',
-                      'sphinxcontrib-httpdomain2']
+                      'sphinxcontrib-httpdomain']
 execution_requires = ['scikit-kge', 'annoy', 'nose']
 service_requires = ['gunicorn', 'falcon', 'celery>=4.0.0', 'redis']
 
