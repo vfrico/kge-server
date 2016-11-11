@@ -18,9 +18,9 @@
 
 from setuptools import setup
 doc_build_requires = ['sphinx', 'sphinx_rtd_theme',
-                      'sphinxcontrib-httpdomain']
-execution_requires = ['scikit-kge', 'annoy']
-service_requires = ['gunicorn', 'falcon', 'celery', 'redis']
+                      'sphinxcontrib-httpdomain2']
+execution_requires = ['scikit-kge', 'annoy', 'nose']
+service_requires = ['gunicorn', 'falcon', 'celery>=4.0.0', 'redis']
 
 # You can tweak this to add or delete dependencies
 all_dependencies = doc_build_requires + execution_requires + service_requires

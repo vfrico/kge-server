@@ -101,4 +101,22 @@ def train_dataset_from_algorithm(self, dataset_path, algorithm_dict):
     modeloentrenado = model.run()
     modeloentrenado.save(dataset_path+".model.bin")
 
+    # Update values on DB when model training has finished TODO
+
+    return False
+
+
+@app.task(bind=True)
+def insert_triples_from_graph_pattern(self, dataset_path, graph_pattern):
+    # Loads the current dataset
+    dtset = dataset.Dataset()
+    dtset.load_from_binary(dataset_path)
+
+    # Heavy task
+    dtset.load_from_graph_pattern(verbose=2, where=graph_pattern)
+    # dt.show()
+    dtset.save_to_binary(dataset_path)
+
+    # TODO Update values on dataset db
+
     return False

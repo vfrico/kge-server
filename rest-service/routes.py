@@ -61,9 +61,19 @@ class DatasetFactory(object):
 
         This method will create a new empty dataset, and returns a 201 CREATED
         with Location header filled with the URI of the dataset.
-        """
-        dao = data_access.DatasetDAO()
 
+        If dataset must be created with a certain graph pattern, a task
+        will be created instead
+        """
+        graph_pattern = None
+        try:
+            body = json.loads(req.stream.read().decode('utf-8'))
+            if "graph_pattern" in body:
+                graph_pattern = body["graph_pattern"]
+        except json.decoder.JSONDecodeError as err:
+            print(err)
+
+        dao = data_access.DatasetDAO()
         # Get dataset type
         try:
             dts_type = int(req.get_param("dataset_type"))
@@ -71,12 +81,33 @@ class DatasetFactory(object):
             # Fallback to read default type: 0
             dts_type = 0
 
-        dataset_type = dao.get_dataset_types()[dts_type]
-        id_dts, err = dao.insert_empty_dataset(dataset_type["class"])
+        dataset_type = dao.get_dataset_types()[dts_type]["class"]
+        id_dts, err = dao.insert_empty_dataset(dataset_type)
 
-        resp.status = falcon.HTTP_201
-        resp.body = "Created"
-        resp.location = "/datasets/"+str(id_dts)
+        if not graph_pattern:
+            # Dataset created, evrything is done
+            resp.status = falcon.HTTP_201
+            resp.body = "Created"
+            resp.location = "/datasets/"+str(id_dts)
+        else:
+            dtset = dao.build_dataset_path()
+
+            # Generate the dataset with initial graph pattern
+            task = async_tasks.insert_triples_from_graph_pattern.delay(
+                    dtset, graph_pattern)
+
+            # Create a new task
+            task_dao = data_access.TaskDAO()
+            task_obj, err = task_dao.add_task_by_uuid(task.id)
+            if task_obj is None:
+                raise falcon.HTTPNotFound(description=str(err))
+
+            msg = "Task {} created successfuly".format(task_obj['id'])
+            textbody = {"status": 202, "message": msg}
+            resp.location = "/tasks/"+str(task_obj['id'])
+            resp.body = json.dumps(textbody)
+            resp.content_type = 'application/json'
+            resp.status = falcon.HTTP_202
 
 
 class PredictSimilarEntitiesResource(object):

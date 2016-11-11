@@ -317,6 +317,7 @@ class DatasetDAO(MainDAO):
                         "status) VALUES (NULL, '"+unique_name+"', -1, 0)")
 
         newdataset = datasetClass()
+        self.binary_dataset = unique_name
         newdataset.save_to_binary(self.bin_path+unique_name)
 
         result = self.execute_insertion(sql_sentence)
@@ -581,5 +582,5 @@ class TaskDAO():
     def add_task_by_uuid(self, task_uuid):
         self.task["id"] = self.redis.incr("tasks")
         self.task["celery_uuid"] = task_uuid
-        self.redis.set(self.taskid, self.task)
+        self.redis.set(self.taskid.format(self.task["id"]), self.task)
         return self.task, None
