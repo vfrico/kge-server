@@ -256,13 +256,14 @@ class Dataset():
         """
         result = True
         for triple in json:
-            added = self.add_triple(triple["subject"], triple["object"],
-                                    triple["predicate"])
+            added = self.add_triple(triple["subject"]['value'],
+                                    triple["object"]['value'],
+                                    triple["predicate"]['value'])
             result = result and added
 
         return result
 
-    def load_dataset_from_query(self, query, only_uri=False):
+    def load_dataset_from_query(self, query):
         """Receives a Sparql query and fills dataset object with the response
 
         The method will execute the query itself and will call to other method
@@ -279,10 +280,9 @@ class Dataset():
         else:
             jsonlist = result_query[1]
         # print(json.dumps(jsonlist, indent=4, sort_keys=True))
-        self.load_dataset_from_json(jsonlist, only_uri=only_uri)
+        self.load_dataset_from_json(jsonlist)
 
-    def load_dataset_from_nlevels(self, nlevels,
-                                  extra_params="", only_uri=False):
+    def load_dataset_from_nlevels(self, nlevels, extra_params=""):
         """Builds a nlevels query, executes, and loads data on object
 
         :deprecated:

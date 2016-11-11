@@ -46,7 +46,7 @@ class MainDAO():
             self.build_basic_db()
 
         # Path where all binary files have its relative path
-        self.bin_path = "../datasets"
+        self.bin_path = "../datasets/"
 
         self.connection = sqlite3.connect(self.database_file)
 

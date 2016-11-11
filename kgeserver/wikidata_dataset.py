@@ -19,6 +19,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import kgeserver
+import kgeserver.dataset
 import re
 import math
 
@@ -55,7 +56,6 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         # This expects as input an entity URI
         # http://www.wikidata.org/entity/Q180
         # http://www.wikidata.org/entity/Q42
-
         try:
             entity_uri = entity.split("/")
             wikidata_id = entity_uri[-1]
@@ -258,6 +258,59 @@ class WikidataDataset(kgeserver.dataset.Dataset):
             seed_vector += [entity['subject']['value']
                             for entity in first_json]
         return seed_vector
+
+    def load_from_graph_pattern(self, verbose=0, where=""):
+        """Auxiliar method that outputs a list of seed elements
+
+        This seed vector will be the 'root nodes' of a tree with the
+        desired depth on parent class (`load_dataset_recurrently`)
+
+        :param verbose: The desired level of verbosity
+        :param string where: SPARQL where to construct query
+        :return: A list of entities
+        :rtype: list
+        """
+        # Count all Wikidata elements
+        count_query = """
+            PREFIX wikibase: <http://wikiba.se/ontology>
+            SELECT (count(*) as ?count)
+            WHERE {{
+                {0}
+            }}""".format(where)
+
+        if verbose > 2:
+            print("The count query is: \n", count_query)
+        sts, count_json = self.execute_query(count_query)
+        if verbose > 2:
+            print(sts, count_json)
+
+        # The number of elements
+        entities_number = int(count_json[0]['count']['value'])
+
+        if verbose > 0:
+            print("Found {} entities".format(entities_number))
+
+        limit = 100000
+        seed_vector = []
+        for q in range(0, math.ceil(entities_number / limit)):
+            offset = q * limit
+            first_query = """
+                PREFIX wikibase: <http://wikiba.se/ontology>
+                SELECT ?subject ?object ?predicate
+                WHERE {{
+                    {2}
+                }} LIMIT {0} OFFSET {1}
+                """.format(limit, offset, where)
+            if verbose > 2:
+                print("The first query is: \n", first_query)
+            self.load_dataset_from_query(first_query)
+            self.show()
+            # sts, first_json = self.execute_query(first_query)
+            # if verbose > 2:
+            #     print(sts, len(first_json))
+            # seed_vector += [entity['subject']['value']
+            #                 for entity in first_json]
+        return self.entities
 
     def _process_entity(self, entity, verbose=0,
                         graph_pattern=("{0} ?predicate ?object . "
