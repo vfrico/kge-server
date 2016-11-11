@@ -637,7 +637,7 @@ class Dataset():
         try:
             f = open(filepath, "w+b")
         except FileNotFoundError:
-            print("The path you provided is not valid")
+            print("The path {0} is not valid".format(filepath))
             return False
         except Exception as err:
             print("Error found:")
@@ -660,7 +660,7 @@ class Dataset():
         try:
             f = open(filepath, "rb")
         except FileNotFoundError:
-            print("The path you provided is not valid")
+            print("The path {0} is not valid".format(filepath))
             return False
         all_dataset = pickle.load(f)
         f.close()

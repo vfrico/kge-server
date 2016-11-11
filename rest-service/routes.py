@@ -31,13 +31,7 @@ class DatasetResource(object):
         dataset = data_access.DatasetDAO()
         resource, err = dataset.get_dataset_by_id(dataset_id)
         if resource is None:
-            if err[0] == 404:
-                resp.status = falcon.HTTP_404
-            else:
-                resp.status = falcon.HTTP_500
-            textbody = {"status": err[0], "message": err[1]}
-            resp.body = json.dumps(textbody)
-            return
+            raise falcon.HTTPNotFound(description=str(err))
 
         response = {
             "dataset": resource,
@@ -55,13 +49,7 @@ class DatasetFactory(object):
         listdts, err = dao.get_all_datasets()
 
         if listdts is None:
-            if err[0] == 404:
-                resp.status = falcon.HTTP_404
-            else:
-                resp.status = falcon.HTTP_500
-            textbody = {"status": err[0], "message": err[1]}
-            resp.body = json.dumps(textbody)
-            return
+            raise falcon.HTTPNotFound(description=str(err))
 
         response = [{"dataset": dtst} for dtst in listdts]
         resp.body = json.dumps(response)
@@ -112,26 +100,15 @@ class PredictSimilarEntitiesResource(object):
         dataset_dao = data_access.DatasetDAO()
         resource, err = dataset_dao.get_dataset_by_id(dataset_id)
         if resource is None:
-            if err[0] == 404:
-                resp.status = falcon.HTTP_404
-            else:
-                print(err)
-                resp.status = falcon.HTTP_500
-            textbody = {"status": err[0], "message": err[1]}
-            resp.body = json.dumps(textbody)
-            return
+            raise falcon.HTTPNotFound(description=str(err))
+
         dataset = dataset_dao.build_dataset_object()
 
         # Get server to do 'queries'
         server, err = dataset_dao.get_server()
         if server is None:
-            if err[0] == 409:
-                resp.status = falcon.HTTP_409
-            else:
-                resp.status = falcon.HTTP_500
-            textbody = {"status": err[0], "message": err[1]}
-            resp.body = json.dumps(textbody)
-            return
+            msg_title = "Dataset not ready perform search operation"
+            raise falcon.HTTPConflict(title=msg_title, description=str(err))
 
         # Dig for the limit param on Query Params
         limit = req.get_param('limit')
@@ -221,6 +198,60 @@ class PredictSimilarEntitiesResource(object):
         resp.status = falcon.HTTP_400
 
 
+class DistanceTriples():
+    def on_post(self, req, resp, dataset_id):
+        """
+        """
+        try:
+            extra = "Couldn't decode the input stream (body)."
+            body = json.loads(req.stream.read().decode('utf-8'))
+
+            if "distance" not in body:
+                raise falcon.HTTPMissingParam("distance")
+
+            if not isinstance(body["distance"], list) and\
+               len(body["distance"]) != 2:
+                msg = ("The param 'distance' must contain a list of two"
+                       "entities.")
+                raise falcon.HTTPInvalidParam(msg, "distance")
+
+            # Redefine variables
+            entity_x = body["distance"][0]
+            entity_y = body["distance"][1]
+
+        except (json.decoder.JSONDecodeError, KeyError,
+                ValueError, TypeError) as err:
+            print(err)
+            err_title = "HTTP Body request not loaded correctly"
+            msg = ("The body couldn't be correctly loaded from HTTP request. "
+                   "Please, read the documentation carefully and try again. "
+                   "Extra info: "+extra)
+            raise falcon.HTTPBadRequest(title=err_title, description=msg)
+
+        # Get dataset
+        dataset_dao = data_access.DatasetDAO()
+        resource, err = dataset_dao.get_dataset_by_id(dataset_id)
+        if resource is None:
+            raise falcon.HTTPNotFound(description=str(err))
+
+        dataset = dataset_dao.build_dataset_object()
+
+        # Get server to do 'queries'
+        server, err = dataset_dao.get_server()
+        if server is None:
+            msg_title = "Dataset not ready perform search operation"
+            raise falcon.HTTPConflict(title=msg_title, description=str(err))
+
+        id_x = dataset.get_entity_id(entity_x)
+        id_y = dataset.get_entity_id(entity_y)
+
+        dist = server.distance_between_entities(id_x, id_y)
+
+        resp.body = json.dumps({"distance": dist})
+        resp.content_type = 'application/json'
+        resp.status = falcon.HTTP_200
+
+
 class GenerateTriplesResource():
     def on_post(self, req, resp, dataset_id):
         """Generates a task to insert triples on dataset. Async petition.
@@ -264,16 +295,9 @@ class GenerateTriplesResource():
         dataset_dao = data_access.DatasetDAO()
         dataset, err = dataset_dao.get_dataset_by_id(dataset_id)
         if dataset is None:
-            if err[0] == 404:
-                resp.status = falcon.HTTP_404
-            else:
-                print(err)
-                resp.status = falcon.HTTP_500
-            textbody = {"status": err[0], "message": err[1]}
-            resp.body = json.dumps(textbody)
-            return
+            raise falcon.HTTPNotFound(description=str(err))
 
-        # Generate a Task Resource to check the status
+        # Generate the filepath to the dataset
         dtset = dataset_dao.build_dataset_path()
 
         # Read arguments from body
@@ -285,20 +309,76 @@ class GenerateTriplesResource():
             if arg is not None:
                 args[arg] = json_rpc[arg]
 
+        # Launch async task
         task = async_tasks.generate_dataset_from_sparql.delay(
                 dtset, levels, **args)
 
+        # Create a new task
         task_dao = data_access.TaskDAO()
         task_obj, err = task_dao.add_task_by_uuid(task.id)
         if task_obj is None:
-            if err[0] == 404:
-                resp.status = falcon.HTTP_404
-            else:
-                print(err)
-                resp.status = falcon.HTTP_500
-            textbody = {"status": err[0], "message": err[1]}
-            resp.body = json.dumps(textbody)
-            return
+            raise falcon.HTTPNotFound(description=str(err))
+
+        msg = "Task {} created successfuly".format(task_obj['id'])
+        textbody = {"status": 202, "message": msg}
+        resp.location = "/tasks/"+str(task_obj['id'])
+        resp.body = json.dumps(textbody)
+        resp.content_type = 'application/json'
+        resp.status = falcon.HTTP_202
+
+
+class DatasetTrain():
+    def on_post(self, req, resp, dataset_id):
+        """Generates a model that fits the dataset and trains it
+
+        It usually takes several hours for big datasets
+
+        This changes the dataset status from 0 to 1 once finished. To indicate
+        dataset cannot be modified, this parameter will be set to a negative
+        value.
+
+        :query int algorithm_id: The algorithm used to train the dataset
+        """
+        dataset_dao = data_access.DatasetDAO()
+        dataset, err = dataset_dao.get_dataset_by_id(dataset_id)
+        if dataset is None:
+            raise falcon.HTTPNotFound(description=str(err))
+
+        # Generate the filepath to the dataset
+        dtset_path = dataset_dao.build_dataset_path()
+
+        # Check if dataset can be trained
+        if not dataset_dao.is_untrained()[0]:
+            dataset_status = dataset['status']
+            err_title = "The dataset is not in correct state"
+            msg = "The dataset has {} status and is not ready to be trained"
+            raise falcon.HTTPConflict(title=err_title,
+                                      description=msg.format(dataset_status))
+
+        # Dig for the limit param on Query Params
+        algorithm_id = req.get_param('algorithm_id')
+        if algorithm_id is None:
+            raise falcon.HTTPMissingParam("algorithm_id")
+
+        # Obtain the algorithm
+        algorithm_dao = data_access.AlgorithmDAO()
+        algorithm, err = algorithm_dao.get_algorithm_by_id(algorithm_id)
+        if algorithm is None:
+            raise falcon.HTTPNotFound(message=str(err))
+
+        # If it all goes ok, add id of algorithm to db
+        dataset_dao.set_algorithm(dataset_id, algorithm_id)
+        dataset_dao.set_status(dataset_id, -1)
+
+        # Launch async task
+        task = async_tasks.train_dataset_from_algorithm.delay(
+                                                        dtset_path, algorithm)
+
+        # Create the new task
+        task_dao = data_access.TaskDAO()
+        task_obj, err = task_dao.add_task_by_uuid(task.id)
+        if task_obj is None:
+            raise falcon.HTTPNotFound(description=str(err))
 
         msg = "Task {} created successfuly".format(task_obj['id'])
         textbody = {"status": 202, "message": msg}
@@ -316,13 +396,7 @@ class TasksResource():
         task, err = tdao.get_task_by_id(task_id)
 
         if task is None:
-            if err[0] == 404:
-                resp.status = falcon.HTTP_404
-            else:
-                resp.status = falcon.HTTP_500
-            textbody = {"status": err[0], "message": err[1]}
-            resp.body = json.dumps(textbody)
-            return
+            raise falcon.HTTPNotFound(description=str(err))
 
         t_uuid = celery_server.app.AsyncResult(task['celery_uuid'])
 
@@ -387,30 +461,88 @@ class TriplesResource():
         dataset_dao = data_access.DatasetDAO()
         resource, err = dataset_dao.get_dataset_by_id(dataset_id)
         if resource is None:
-            if err[0] == 404:
-                resp.status = falcon.HTTP_404
-            else:
-                print(err)
-                resp.status = falcon.HTTP_500
-            textbody = {"status": err[0], "message": err[1]}
-            resp.body = json.dumps(textbody)
-            return
+            raise falcon.HTTPNotFound(description=str(err))
+
         # dataset = dataset_dao.build_dataset_object()
         res, err = dataset_dao.insert_triples(body['triples'])
         if res is None:
-            if err[0] == 404:
-                resp.status = falcon.HTTP_404
-            else:
-                print(err)
-                resp.status = falcon.HTTP_500
-            textbody = {"status": err[0], "message": err[1]}
-            resp.body = json.dumps(textbody)
-            return
+            raise falcon.HTTPNotFound(description=str(err))
 
         textbody = {"status": 202, "message": "Resources created successfuly"}
         resp.body = json.dumps(textbody)
         resp.content_type = 'application/json'
         resp.status = falcon.HTTP_202
+
+
+class AlgorithmResource():
+    def on_get(self, req, resp, algorithm_id):
+        """Shows the representation of the selected algorithm
+
+        :param int algorithm_id: The id of the algorithm
+        """
+        algorithm_dao = data_access.AlgorithmDAO()
+
+        algorithm, err = algorithm_dao.get_algorithm_by_id(algorithm_id)
+        if algorithm is None:
+            raise falcon.HTTPNotFound(message=str(err))
+
+        resp.body = json.dumps(algorithm)
+        resp.content_type = 'application/json'
+        resp.status = falcon.HTTP_200
+
+
+class AlgorithmFactory():
+    def on_get(self, req, resp):
+        """Shows the representation of all algorithms available
+        """
+        algorithm_dao = data_access.AlgorithmDAO()
+
+        algorithms, err = algorithm_dao.get_all_algorithms()
+        if algorithms is None:
+            raise falcon.HTTPNotFound(message=str(err))
+
+        resp.body = json.dumps(algorithms)
+        resp.content_type = 'application/json'
+        resp.status = falcon.HTTP_200
+
+    def on_post(self, req, resp):
+        """Insert algorithm on the service
+
+        :param dict algorithm: The algorithm to be inserted
+        """
+        # Read body
+        try:
+            extra = "Couldn't decode the input stream (body)."
+            body = json.loads(req.stream.read().decode('utf-8'))
+            print(body)
+            if "algorithm" not in body:
+                raise falcon.HTTPMissingParam("algorithm")
+
+            # Redefine variables
+            user_algorithm = body["algorithm"]
+
+        except (json.decoder.JSONDecodeError, KeyError,
+                ValueError, TypeError) as err:
+            print(err)
+            err_title = "HTTP Body request not loaded correctly"
+            msg = ("The body couldn't be correctly loaded from HTTP request. "
+                   "Please, read the documentation carefully and try again. "
+                   "Extra info: "+extra)
+            raise falcon.HTTPBadRequest(title=err_title, description=msg)
+
+        algorithm_dao = data_access.AlgorithmDAO()
+        algorithm_id, err = algorithm_dao.insert_algorithm(user_algorithm)
+        if algorithm_id is None:
+            raise falcon.HTTPBadRequest(title="Missing algorithm param",
+                                        description=str(err))
+
+        msg = "Algorithm {} created successfuly".format(algorithm_id)
+        textbody = {"status": 202, "message": msg}
+        resp.body = json.dumps(textbody)
+        resource_path = "/algorithm/{}".format(algorithm_id)
+        resp.location = resource_path
+        resp.status = falcon.HTTP_201
+
 
 # falcon.API instances are callable WSGI apps
 app = falcon.API()
@@ -421,16 +553,27 @@ datasetcreate = DatasetFactory()
 similar_entities = PredictSimilarEntitiesResource()
 triples = TriplesResource()
 gentriples = GenerateTriplesResource()
+triples_distance = DistanceTriples()
+dataset_train = DatasetTrain()
 
 task_resource = TasksResource()
+
+algorithm_resource = AlgorithmResource()
+algorithm_factory = AlgorithmFactory()
 
 # All API routes and the object that will handle each one
 app.add_route('/datasets/', datasetcreate)
 app.add_route('/datasets/{dataset_id}', dataset)
 app.add_route('/datasets/{dataset_id}/triples', triples)
 app.add_route('/datasets/{dataset_id}/generate_triples', gentriples)
+app.add_route('/datasets/{dataset_id}/distance', triples_distance)
 app.add_route('/datasets/{dataset_id}/similar_entities/{entity}',
               similar_entities)
 app.add_route('/datasets/{dataset_id}/similar_entities', similar_entities)
+app.add_route('/datasets/{dataset_id}/train', dataset_train)
+
 
 app.add_route('/tasks/{task_id}', task_resource)
+
+app.add_route('/algorithms/{algorithm_id}', algorithm_resource)
+app.add_route('/algorithms/', algorithm_factory)

@@ -80,24 +80,20 @@ class MainDAO():
                         {"id": 0, "binary_dataset": 'wikidata_25k.bin',
                          "binary_model": "",
                          "binary_index": 'wikidata_25k.annoy.bin',
-                         "status": 2, 'algorithm': 0},
+                         "status": 0, 'algorithm': 0},
                         {"id": 1, "binary_dataset": '4levels.bin',
-                         "binary_model": 'modelo_guardado.bin',
-                         "binary_index": 'annoy_index_big.bin',
-                         "status": 2, 'algorithm': 0},
-                        {"id": 2, "binary_dataset": '4levels.bin',
                          "binary_model": 'modelo_guardado.bin',
                          "binary_index": 'annoyIndex.500.bin',
                          "status": 2, 'algorithm': 0},
-                        {"id": 3, "binary_dataset": '4levels.bin',
+                        {"id": 2, "binary_dataset": '4levels.bin',
                          "binary_model": 'modelo_guardado.bin',
                          "binary_index": 'annoyIndex.600.bin',
                          "status": 2, 'algorithm': 0},
-                        {"id": 4, "binary_dataset": 'newDataset4lvl.bin',
+                        {"id": 3, "binary_dataset": 'newDataset4lvl.bin',
                          "binary_model": 'Unnuevomodeloentrenado.bin',
                          "binary_index": 'unuevoAnnoy.600.bin',
                          "status": 2, 'algorithm': 1},
-                        {"id": 5, "binary_dataset": 'newDataset4lvl.bin',
+                        {"id": 4, "binary_dataset": 'newDataset4lvl.bin',
                          "binary_model": 'modelo_newDataset4lvl_m2.bin',
                          "binary_index": 'Annoy.nuevo.600.m2.bin',
                          "status": 2, 'algorithm': 2}
@@ -170,7 +166,7 @@ class MainDAO():
         # the foreign_keys restrictions
         # cursor.execute("PRAGMA foreign_keys = ON;")
         # Execute the *real* query
-        cursor.execute(query, *args)
+        cursor.execute(query, args)
 
         connection.commit()
         return cursor  # Must be closed outside function
@@ -317,8 +313,8 @@ class DatasetDAO(MainDAO):
         :rtype: tuple
         """
         unique_name = str(int(time.time()))+".bin"
-        sql_sentence = ("INSERT INTO dataset (id, binary_dataset, algorithm) "
-                        "VALUES (NULL, '"+unique_name+"', -1)")
+        sql_sentence = ("INSERT INTO dataset (id, binary_dataset, algorithm, "
+                        "status) VALUES (NULL, '"+unique_name+"', -1, 0)")
 
         newdataset = datasetClass()
         newdataset.save_to_binary(self.bin_path+unique_name)
@@ -326,6 +322,9 @@ class DatasetDAO(MainDAO):
         result = self.execute_insertion(sql_sentence)
         rowid = result.lastrowid
         result.close()
+
+        # Add default status
+        self.set_untrained()
         return rowid, None
 
     def get_all_datasets(self):
@@ -390,6 +389,79 @@ class DatasetDAO(MainDAO):
 
         return result, None
 
+    def is_untrained(self):
+        """Check if dataset is in untrained state
+
+        Should return True if status is 0 or 1
+
+        :return: True if dataset is in untrained state
+        :rtype: tuple
+        """
+        dataset_status = self.dataset['status']
+        if dataset_status is None:
+            return None, (500, "Dataset not fully loaded")
+        elif dataset_status < 2 and dataset_status >= 0:
+            return True, None
+        else:
+            return False, None
+
+    def set_untrained(self):
+        """Set current dataset in untrained state
+        """
+        if not self.dataset["id"]:
+            return None, (500, "Dataset not fully loaded")
+
+        curr_status = self.dataset['status']
+        if curr_status is None or curr_status > 0:
+            return None, (409, "Dataset can not be updated to untrained state")
+        else:
+            ret, err = self.set_status(self.dataset["id"], 0)
+            return ret, err
+
+    def set_status(self, id_dataset, status):
+        """Set the dataset in untrained status
+
+        The status must be between [-2, 2].
+
+        :param int id_dataset: The id of the dataset to be changed
+        :param int status: The new status of the dataset
+        :return: True if operation was successful
+        :rtype: tuple
+        """
+        try:
+            if status >= 3:
+                return False, (409, "The status must be an integer [-2, 2]")
+        except TypeError:
+            return False, (409, "The status must be an integer or valid type")
+
+        query = "UPDATE dataset SET status=? WHERE id=? ;"
+
+        res = self.execute_insertion(query, status, id_dataset)
+        if res.rowcount == 1:
+            res.close()
+            return True, None
+        else:
+            res.close()
+            return False, (404, "Some of your variables are not correct")
+
+    def set_algorithm(self, id_dataset, id_algorithm):
+        """Changes the algorithm used on the dataset
+
+        :param int id_dataset: The id of dataset to Change
+        :param int id_algorithm: The id of the new algorithm
+        :return: If the operation was successful
+        :rtype: tuple
+        """
+        query = "UPDATE dataset SET algorithm=? WHERE id=? ;"
+
+        res = self.execute_insertion(query, id_algorithm, id_dataset)
+        if res.rowcount == 1:
+            res.close()
+            return True, None
+        else:
+            res.close()
+            return False, (404, "Some of your variables are not correct")
+
 
 class AlgorithmDAO(MainDAO):
     def __init__(self, database_file="server.db"):
@@ -407,6 +479,55 @@ class AlgorithmDAO(MainDAO):
             self.algorithm[key] = res[0][key]
 
         return self.algorithm, None
+
+    def get_all_algorithms(self):
+        query = "SELECT * FROM algorithm"
+
+        res = self.execute_query(query)
+
+        algorithm_list = []
+
+        for row in res:
+            algorithm = {}
+            for key in row.keys():
+                algorithm[key] = row[key]
+            algorithm_list.append(algorithm)
+
+        return algorithm_list, None
+
+    def insert_algorithm(self, algorithm_dict):
+        """Inserts a new Algorithm in the service
+
+        To avoid UNIQUE constraint fails, this method will delete the id on
+        the dict if provided.
+
+        :param dict algorithm_dict: The algorithm in form of dict
+        :returns: The id of algorithm created
+        :rtype: Tuple
+        """
+        query = "INSERT INTO algorithm {0} VALUES ({1})"
+
+        # Build a query that prevents SQL injection
+        values_tuple = []
+        values_protect = ""
+        param_tuple = []
+        for param in algorithm_dict:
+            if param == "id":
+                continue
+            param_tuple.append(param)
+            values_tuple.append(algorithm_dict[param])
+            values_protect += "?,"
+        values_protect = values_protect[:-1]  # Remove last comma
+
+        query = query.format(tuple(param_tuple), values_protect)
+        try:
+            result = self.execute_insertion(query, *values_tuple)
+        except sqlite3.OperationalError as err:
+            return None, (400, "One of the parameters is not valid. "+str(err))
+        rowid = result.lastrowid
+        result.close()
+
+        return rowid, None
 
 
 class RedisBackend:

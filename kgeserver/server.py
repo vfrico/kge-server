@@ -26,6 +26,8 @@ from annoy import AnnoyIndex
 
 
 class Server():
+    """The server can perform prediction operations
+    """
     def __init__(self, search_index):
         """Creates a server, given a indexed search tree
 
@@ -81,8 +83,22 @@ class Server():
                 embedd, k, include_distances=True, search_k=search_k)
         return [(sim[0][i], sim[1][i]) for i in range(0, len(sim[0]))]
 
+    def distance_between_entities(self, entity_x, entity_y):
+        """Gives the distance between two different elements
+
+        :param integer entity_x: One entity to be compared
+        :param integer entity_y: Other entity to be compared
+        :returns: The distance between two elements
+        :rtype: float
+        """
+        return self.index.get_distance(entity_x, entity_y)
+
 
 class SearchIndex():
+    """The search index manages search indexes on disk
+
+    This support creating indexes and operations to save/load to/from disk
+    """
     def __init__(self):
         """Generates a new SearchIndex, used in Server Class
 
@@ -142,8 +158,3 @@ class SearchIndex():
         self.index = AnnoyIndex(emb_size)
         self.index.load(filepath)
         self.ready = True
-
-
-if __name__ == '__main__':
-
-    print("This is server module")

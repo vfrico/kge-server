@@ -42,8 +42,12 @@ El recurso *Algorithm*, que todavía no está disponible, dispondrá de todos
 los parámetros que se han utilizado para entrenar el dataset. Por el momento
 sólo contendrá "embedding_size".
 
-El dataset irá mudando de *status* dependiendo de si sólo contiene datos,
-si ha sido también entrenado, o si ya está listo para predecir tripletas.
+Dataset will be changing its status when actions such training or indexing
+are performed. The *status* can only grow up. When a changing status is taking
+place, the dataset cannot be edited. In this situations, the status will be
+a negative integer.
+
+**status**: untrained -> trained -> indexed
 
 .. http:get:: /datasets/(int:dataset_id)/
 
@@ -317,6 +321,38 @@ Predicción de tripletas
     :query int search_k: Número máximo de nodos donde se realiza la búsqueda.
                          Mejora la calidad de las búsquedas, a costa de un
                          rendimiento más bajo. Por defecto tiene el valor -1.
+
+
+.. http:get:: /datasets/(int:dataset_id)/distance/
+
+    Returns the distance between two elements. The lower this is, most probable
+    to be both the same triple.
+
+    **Request Example**
+
+    :http:post:`/datasets/0/similar_entities?limit=1`
+
+    .. sourcecode:: json
+
+        {
+            "distance": [
+                 "http://www.wikidata.org/entity/Q1492",
+                 "http://www.wikidata.org/entity/Q5682"
+            ]
+        }
+
+    *HTTP Response*
+
+    .. sourcecode:: json
+
+        {
+            "distance": 1.460597038269043
+        }
+
+    :prioridad: 0
+    :todo: 501 Not Implemented
+    :param int dataset_id: id único del dataset
+    :param list embedding: Vector de *embedding* a obtener su probabilidad
 
 
 .. http:get:: /datasets/(int:dataset_id)/embedding_probability/(string:embedding)
