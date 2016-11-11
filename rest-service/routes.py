@@ -293,10 +293,8 @@ class GenerateTriplesResource():
 
         {"generate_triples":
             {
-                "sparql_seed_query": "<SPARQL Query>",
                 "graph_pattern": "<SPARQL Query>",
-                "levels": 2 ,
-                "limit_ent": 2500
+                "levels": 2
             }
         }
 
@@ -305,7 +303,7 @@ class GenerateTriplesResource():
         try:
             extra = "Couldn't decode the input stream (body)."
             body = json.loads(req.stream.read().decode('utf-8'))
-            args = ["levels"]
+
             if "generate_triples" not in body:
                 extra = ("It was expected a JSON object with a "
                          "'generate_triples' param")
@@ -334,23 +332,26 @@ class GenerateTriplesResource():
         dtset = dataset_dao.build_dataset_path()
 
         # Read arguments from body
+        graph_pattern = json_rpc.pop("graph_pattern")
         levels = json_rpc.pop("levels")
 
         # Dict of arguments
-        args = {}
-        for arg in json_rpc:
-            if arg is not None:
-                args[arg] = json_rpc[arg]
+        # args = {}
+        # for arg in json_rpc:
+        #     if arg is not None:
+        #         args[arg] = json_rpc[arg]
 
         # Launch async task
         task = async_tasks.generate_dataset_from_sparql.delay(
-                dtset, levels, **args)
+                dtset, graph_pattern, levels)
 
         # Create a new task
         task_dao = data_access.TaskDAO()
         task_obj, err = task_dao.add_task_by_uuid(task.id)
         if task_obj is None:
             raise falcon.HTTPNotFound(description=str(err))
+        task_obj["next"] = "/dataset/"+dataset_id
+        task_dao.update_task(task_obj)
 
         msg = "Task {} created successfuly".format(task_obj['id'])
         textbody = {"status": 202, "message": msg}

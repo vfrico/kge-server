@@ -335,9 +335,7 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         try:
             # If either fails to convert the last Q number into int
             # or the URI hasn't 'entity' keyword, returns without doing nothing
-            wikidata_id = int(entity.split("/")[-1][1:])
-            if not entity.split("/")[-2] == 'entity':
-                raise Exception
+            wikidata_id = int(self.check_entity(entity)[1:])
         except Exception:
             return False
 

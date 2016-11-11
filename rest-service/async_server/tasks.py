@@ -8,7 +8,8 @@ import kgeserver.algorithm as algorithm
 
 
 @app.task(bind=True)
-def generate_dataset_from_sparql(self, dataset_path, levels, **keyw_args):
+def generate_dataset_from_sparql(self, dataset_path, graph_pattern, levels,
+                                 **keyw_args):
     """Creates a recurrent dataset from a seed vector
 
     This method is intended to be called only with celery *.delay()*, to
@@ -17,9 +18,8 @@ def generate_dataset_from_sparql(self, dataset_path, levels, **keyw_args):
 
     :param levels: The number of levels to scan
     :param dataset_path: The path to dataset file
-    :param sparql_seed_query: A sparql chunk to start quering
-    :param graph_pattern: A sparql chunk to perform the entity lookup
-    :param limit_ent: Use only for testing purposes
+    :param graph_pattern: The main query containing triples
+    :kwparam limit_ent: Use only for testing purposes
     """
     from celery import current_task  # in task definition
     # Load current dataset
@@ -33,13 +33,8 @@ def generate_dataset_from_sparql(self, dataset_path, levels, **keyw_args):
     # Saves the empty id to be retrieved first time without error
     redis.set(celery_uuid, "{}".encode("utf-8"))
 
-    # Get the seed vector
-    if "sparql_seed_query" in keyw_args:
-        # If user provides arguments for seed_vector_query, use them
-        whereseed = keyw_args.pop("sparql_seed_query")
-        seed_vector = dtset.get_seed_vector(where=whereseed)
-    else:
-        seed_vector = dtset.get_seed_vector()
+    # Get the seed vector and load first entities
+    seed_vector = dtset.load_from_graph_pattern(where=graph_pattern)
 
     def status_callback(status):
         """Saves the progress of the task on redis db"""
