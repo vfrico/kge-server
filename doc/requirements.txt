@@ -1,0 +1,5 @@
+
+# dependecies to build docs
+sphinx
+sphinx_rtd_theme
+sphinxcontrib-httpdomain2
