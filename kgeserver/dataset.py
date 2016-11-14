@@ -511,7 +511,7 @@ class Dataset():
             # Loop for every item on the queue
 
             # Interchange lists
-            el_queue = new_queue
+            el_queue = copy.copy(new_queue)
             new_queue = []
 
             # Apply limitation

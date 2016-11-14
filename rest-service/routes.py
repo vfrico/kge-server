@@ -350,7 +350,7 @@ class GenerateTriplesResource():
         task_obj, err = task_dao.add_task_by_uuid(task.id)
         if task_obj is None:
             raise falcon.HTTPNotFound(description=str(err))
-        task_obj["next"] = "/dataset/"+dataset_id
+        task_obj["next"] = "/datasets/"+dataset_id
         task_dao.update_task(task_obj)
 
         msg = "Task {} created successfuly".format(task_obj['id'])
@@ -378,9 +378,6 @@ class DatasetTrain():
         if dataset is None:
             raise falcon.HTTPNotFound(description=str(err))
 
-        # Generate the filepath to the dataset
-        dtset_path = dataset_dao.build_dataset_path()
-
         # Check if dataset can be trained
         if not dataset_dao.is_untrained()[0]:
             dataset_status = dataset['status']
@@ -406,7 +403,7 @@ class DatasetTrain():
 
         # Launch async task
         task = async_tasks.train_dataset_from_algorithm.delay(
-                                                        dtset_path, algorithm)
+                                                        dataset_id, algorithm)
 
         # Create the new task
         task_dao = data_access.TaskDAO()

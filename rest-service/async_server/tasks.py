@@ -6,6 +6,11 @@ import skge
 import kgeserver.dataset as dataset
 import kgeserver.algorithm as algorithm
 
+# Import parent directory (data_access)
+import sys
+sys.path.insert(0, '..')
+import data_access
+
 
 @app.task(bind=True)
 def generate_dataset_from_sparql(self, dataset_path, graph_pattern, levels,
@@ -70,7 +75,7 @@ def generate_dataset_from_sparql(self, dataset_path, graph_pattern, levels,
 
 
 @app.task(bind=True)
-def train_dataset_from_algorithm(self, dataset_path, algorithm_dict):
+def train_dataset_from_algorithm(self, dataset_id, algorithm_dict):
     """Trains a dataset given an algorithm
 
     It is able to save the progress of training.
@@ -78,9 +83,13 @@ def train_dataset_from_algorithm(self, dataset_path, algorithm_dict):
     :param dict algorithm: An algorithm to be used in dataset training
     """
 
+    dataset_dao = data_access.DatasetDAO()
+    dataset_dto, err = dataset_dao.get_dataset_by_id(dataset_id)
+    # Generate the filepath to the dataset
+    dtset_path = dataset_dao.build_dataset_path()
     # Loads the current dataset
     dtset = dataset.Dataset()
-    dtset.load_from_binary(dataset_path)
+    dtset.load_from_binary(dtset_path)
 
     # Creates an optional parameters dict for better readability
     kwargs = {
@@ -94,9 +103,10 @@ def train_dataset_from_algorithm(self, dataset_path, algorithm_dict):
     # Heavy task
     model = algorithm.ModelTrainer(dtset, **kwargs)
     modeloentrenado = model.run()
-    modeloentrenado.save(dataset_path+".model.bin")
+    modeloentrenado.save(dtset_path+".model.bin")
 
     # Update values on DB when model training has finished TODO
+    dataset_dao.set_status(dataset_id, 1)
 
     return False
 
