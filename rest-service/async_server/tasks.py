@@ -104,10 +104,12 @@ def train_dataset_from_algorithm(self, dataset_id, algorithm_dict):
     # Heavy task
     model = algorithm.ModelTrainer(dtset, **kwargs)
     modeloentrenado = model.run()
-    modeloentrenado.save(dtset_path+".model.bin")
+    model_path = dtset_path[:-4] + "_model.bin"
+    modeloentrenado.save(model_path)
 
-    # Update values on DB when model training has finished TODO
+    # Update values on DB when model training has finished
     dataset_dao.set_status(dataset_id, 1)
+    dataset_dao.set_model(dataset_id, model_path)
 
     return False
 
@@ -124,5 +126,38 @@ def insert_triples_from_graph_pattern(self, dataset_path, graph_pattern):
     dtset.save_to_binary(dataset_path)
 
     # TODO Update values on dataset db
+
+    return False
+
+
+@app.task(bind=True)
+def build_search_index(self, dataset_id, n_trees):
+    """Builds the search index and stores in disk
+
+    :param str model_path: The path to the binary file which stores the model
+    :param int n_trees: The number of trees to be generated. Default is 100
+    """
+    # Check input Params
+    if n_trees is None:
+        n_trees = 100
+
+    dataset_dao = data_access.DatasetDAO()
+    # Set working status
+    dataset_dao.set_status(dataset_id, -2)
+    model_path = dataset_dao.get_model(dataset_id)
+    # Load the model and initialize the search index
+    model = skge.TransE.load(model_path)
+    search_index = server.SearchIndex()
+
+    # File to store the search index
+    search_index_file = model_path[:-4] + str("_annoy_{}.bin".format(n_trees))
+
+    # Heavy task
+    search_index.build_from_trained_model(model, n_trees)
+    search_index.save_to_binary(search_index_file)
+
+    # Update values on DB
+    dataset_dao.set_status(dataset_id, 2)
+    dataset_dao.set_search_index(dataset_id, search_index_file)
 
     return False
