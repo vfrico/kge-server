@@ -98,6 +98,7 @@ def train_dataset_from_algorithm(self, dataset_id, algorithm_dict):
         'model_type': skge.TransE,  # The default model will be used
         'ncomp': algorithm_dict['embedding_size'],  # Provided by the algorithm
         'margin': algorithm_dict['margin'],  # Provided by the algorithm
+        'max_epochs': algorithm_dict['max_epochs'],  # Max number of iterations
     }
 
     # Heavy task

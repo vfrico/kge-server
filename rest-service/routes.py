@@ -437,7 +437,7 @@ class TasksResource():
 
         if t_uuid.state == "SUCCESS":
             # Look if exists some next
-            if "next" in task_obj:
+            if "next" in task_obj and task_obj["next"] is not None:
                 print("This task has next {}".format(task_obj["next"]))
                 resp.status = falcon.HTTP_303
                 resp.location = task_obj["next"]

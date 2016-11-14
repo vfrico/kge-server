@@ -55,6 +55,7 @@ class MainDAO():
         self.execute_query("CREATE TABLE algorithm "
                            "(id INTEGER UNIQUE PRIMARY KEY, "
                            "embedding_size INTEGER, "
+                           "max_epochs INTEGER, "
                            "margin FLOAT) ; ")
 
         self.execute_query("CREATE TABLE dataset "
@@ -69,12 +70,6 @@ class MainDAO():
                            "status INTEGER, "
                            "FOREIGN KEY(algorithm) REFERENCES algorithm(id)"
                            ");")
-
-        self.execute_query("CREATE TABLE tasks "
-                           "(id INTEGER UNIQUE PRIMARY KEY, "
-                           "celery_uuid TEXT, "
-                           "progress_file TEXT "
-                           ") ; ")
 
         default_datasets = [
                         {"id": 0, "binary_dataset": 'wikidata_25k.bin',
