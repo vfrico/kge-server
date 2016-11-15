@@ -142,6 +142,12 @@ def build_search_index(self, dataset_id, n_trees):
     if n_trees is None:
         n_trees = 100
 
+    # Creates the progress object in redis
+    celery_uuid = self.request.id
+    progres_dao = data_access.ProgressDAO()
+    progres_dao.create_progress(celery_uuid, 3)
+    progres_dao.update_progress(celery_uuid, 0)
+
     dataset_dao = data_access.DatasetDAO()
     # Set working status
     dataset_dao.set_status(dataset_id, -2)
@@ -153,9 +159,12 @@ def build_search_index(self, dataset_id, n_trees):
     # File to store the search index
     search_index_file = model_path[:-4] + "_annoy_{}.bin".format(n_trees)
 
-    # Heavy task
+    # Execute heavy task and track the progress
+    progres_dao.update_progress(celery_uuid, 1)
     search_index.build_from_trained_model(model, n_trees)
+    progres_dao.update_progress(celery_uuid, 2)
     search_index.save_to_binary(search_index_file)
+    progres_dao.update_progress(celery_uuid, 3)
 
     # Update values on DB
     dataset_dao.set_status(dataset_id, 2)

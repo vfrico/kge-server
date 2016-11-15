@@ -379,6 +379,14 @@ class DatasetIndex():
         if dataset is None:
             raise falcon.HTTPNotFound(description=str(err))
 
+        # Check actual status of the dataset
+        if not dataset_dao.is_trained()[0]:
+            dataset_status = dataset['status']
+            err_title = "The dataset is not in correct state"
+            msg = "The dataset has {} status and is not ready to be indexed"
+            raise falcon.HTTPConflict(title=err_title,
+                                      description=msg.format(dataset_status))
+
         # Dig for the param on Query Params
         try:
             n_trees = int(req.get_param('n_trees'))

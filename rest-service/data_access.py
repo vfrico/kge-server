@@ -450,6 +450,22 @@ class DatasetDAO(MainDAO):
         else:
             return False, None
 
+    def is_trained(self):
+        """Check if dataset is in untrained state
+
+        Should return True if status is 1
+
+        :return: True if dataset is in untrained state
+        :rtype: tuple
+        """
+        dataset_status = self.dataset['status']
+        if dataset_status is None:
+            return None, (500, "Dataset not fully loaded")
+        elif dataset_status >= 1:
+            return True, None
+        else:
+            return False, None
+
     def set_untrained(self):
         """Set current dataset in untrained state
         """
@@ -639,19 +655,30 @@ class TaskDAO():
 
 
 class ProgressDTO():
+    """DTO object to help manage progress between python and the database
+    """
     def __init__(self):
         self.current = None
         self.total = None
         self.current_steps = None
         self.total_steps = None
 
-    def fill_from_dict(self, dict):
-        self.current = dict["current"]
-        self.total = dict["total"]
-        self.current_steps = dict["current_steps"]
-        self.total_steps = dict["total_steps"]
+    def fill_from_dict(self, dictionary):
+        """Given a dict, fills the ProgressDTO
+
+        :param dict dictionary: The dict to fill DTO from
+        """
+        self.current = dictionary["current"]
+        self.total = dictionary["total"]
+        self.current_steps = dictionary["current_steps"]
+        self.total_steps = dictionary["total_steps"]
 
     def to_dict(self):
+        """Create a dict from params on the DTO
+
+        :returns: A dictionary with all params on DTO
+        :rtype: dict
+        """
         return {"total": self.total,
                 "current": self.current,
                 "total_steps": self.total_steps,
@@ -659,24 +686,53 @@ class ProgressDTO():
 
 
 class ProgressDAO():
+    """This class allows to manage the status of a task on the database
+    """
     def __init__(self, backend=RedisBackend()):
         self.redis = backend
 
     def _redis_id(self, celery_uuid):
+        """auxiliar method to fastly create the redis id
+        """
         return "celery-task-progress-{}".format(celery_uuid)
 
-    def set_progress(self, celery_uuid, progress):
-        return self.redis.set(_redis_id(celery_uuid), progress)
+    def set_progress(self, celery_uuid, progress_dto):
+        """Set the full progress on redis from ProgressDTO
+
+        :param ProgressDTO progress_dto: The progress object
+        :param str celery_uuid: The uuid of the task
+        """
+        progress = {"progress": progress_dto.to_dict()}
+        return self.redis.set(self._redis_id(celery_uuid), progress)
 
     def get_progress(self, celery_uuid):
-        return self.redis.get(_redis_id(celery_uuid))
+        """Get a DTO of the progress given a celery task UUID
+
+        :param str celery_uuid: The uuid of the task
+        :return: The progress of the celery task
+        :rtype: ProgressDTO
+        """
+        progress = self.redis.get(self._redis_id(celery_uuid))
+        p_dto = ProgressDTO()
+        p_dto.fill_from_dict(progress["progress"])
+        return p_dto
 
     def update_progress(self, celery_uuid, current):
+        """Changes only current progres of an existing task
+
+        :param str celery_uuid: The uuid of the task
+        :param int current: The current progress to save
+        """
         progress = self.get_progress(celery_uuid)
-        progress["current"] = current
+        progress.current = current
         return self.set_progress(celery_uuid, progress)
 
     def create_progress(self, celery_uuid, total):
+        """Creates a progress DTO (empty) on the database
+
+        :param str celery_uuid: The uuid of the task
+        :param int total: Give a total value of the progress of the task
+        """
         progress = ProgressDTO()
         progress.total = total
-        return self.set_progress(celery_uuid, progress.to_dict())
+        return self.set_progress(celery_uuid, progress)
