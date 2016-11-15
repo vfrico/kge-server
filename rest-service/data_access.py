@@ -592,3 +592,47 @@ class TaskDAO():
 
     def update_task(self, task):
         self.redis.set(self.redis_id_build(task["id"]), task)
+
+
+class ProgressDTO():
+    def __init__(self):
+        self.current = None
+        self.total = None
+        self.current_steps = None
+        self.total_steps = None
+
+    def fill_from_dict(self, dict):
+        self.current = dict["current"]
+        self.total = dict["total"]
+        self.current_steps = dict["current_steps"]
+        self.total_steps = dict["total_steps"]
+
+    def to_dict(self):
+        return {"total": self.total,
+                "current": self.current,
+                "total_steps": self.total_steps,
+                "current_steps": self.current_steps}
+
+
+class ProgressDAO():
+    def __init__(self, backend=RedisBackend()):
+        self.redis = backend
+
+    def _redis_id(self, celery_uuid):
+        return "celery-task-progress-{}".format(celery_uuid)
+
+    def set_progress(self, celery_uuid, progress):
+        return self.redis.set(_redis_id(celery_uuid), progress)
+
+    def get_progress(self, celery_uuid):
+        return self.redis.get(_redis_id(celery_uuid))
+
+    def update_progress(self, celery_uuid, current):
+        progress = self.get_progress(celery_uuid)
+        progress["current"] = current
+        return self.set_progress(celery_uuid, progress)
+
+    def create_progress(self, celery_uuid, total):
+        progress = ProgressDTO()
+        progress.total = total
+        return self.set_progress(celery_uuid, progress.to_dict())
