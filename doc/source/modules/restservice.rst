@@ -183,6 +183,37 @@ a negative integer.
     :statuscode 409: The *dataset_id* does not allow this operation
     :statuscode 202: Se ha creado una tarea. Ver /tareas para más información
 
+.. http:post:: /datasets/(int:dataset_id)/embeddings
+
+    Retrieve from the trained dataset the embeddings from a list of entities.
+
+    If on the request list the user requests for a entity that does not exist,
+    the response won't contain that element. The 404 error is limited to the
+    dataset, not the entities inside the dataset.
+
+    The dataset must be in trained status (>= 1), because a model must exist to
+    extract triples from. If not, a 409 CONFLICT will be returned.
+
+    This could be useful if it is used with /similar_entities endpoint, to find
+    similar entities given a different embedding vector.
+
+    **Ejemplo**
+
+    :http:post:`/datasets/6/embeddings`
+
+    .. sourcecode:: json
+
+        {"entities": [
+            "http://www.wikidata.org/entity/Q1492",
+            "http://www.wikidata.org/entity/Q2807",
+            "http://www.wikidata.org/entity/Q1" ]
+        }
+
+    :param int dataset_id: Unique id of the dataset
+    :statuscode 200: Operation was successful
+    :statuscode 404: The dataset ID does not exist
+    :statuscode 409: The dataset is not on a correct status
+
 
 Tareas
 ``````
@@ -222,6 +253,7 @@ asíncronas en el servidor
     be kept on its own resource.
 
     :prioridad: 1
+    :todo: Not implemented
     :statuscode 204: The task has been deleted
     :statuscode 404: The task does not exists and cannot be deleted
     :statuscode 409: The current state of the task does not allow to delete it
@@ -350,7 +382,6 @@ Predicción de tripletas
         }
 
     :prioridad: 0
-    :todo: 501 Not Implemented
     :param int dataset_id: id único del dataset
     :param list embedding: Vector de *embedding* a obtener su probabilidad
 
