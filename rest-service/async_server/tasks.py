@@ -10,7 +10,10 @@ import kgeserver.server as server
 # Import parent directory (data_access)
 import sys
 sys.path.insert(0, '..')
-import data_access
+try:
+    import data_access
+except ImportError:
+    pass
 
 
 @app.task(bind=True)
@@ -171,3 +174,19 @@ def build_search_index(self, dataset_id, n_trees):
     dataset_dao.set_search_index(dataset_id, search_index_file)
 
     return False
+
+
+def find_embeddings_from_model(dataset_id, entities):
+    """Returns a list with the corresponding embeddings
+
+    :param str model_path: The path to the binary model
+    :param list entities: A list with the URI (or identifiers) of entities
+    :returns: The embedding vector of each entity
+    :rtype: dict
+    """
+    # Expected to return: {entities: [], embeddings: []} IN THE SAME ORDER!!
+    dataset_dao = data_access.DatasetDAO()
+    model_path, err = dataset_dao.get_model(dataset_id)
+    # Load the model and initialize the search index
+    model = skge.TransE.load(model_path)
+    # wip

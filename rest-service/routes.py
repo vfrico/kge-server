@@ -611,7 +611,7 @@ class AlgorithmFactory():
         try:
             extra = "Couldn't decode the input stream (body)."
             body = json.loads(req.stream.read().decode('utf-8'))
-            print(body)
+
             if "algorithm" not in body:
                 raise falcon.HTTPMissingParam("algorithm")
 
@@ -641,6 +641,55 @@ class AlgorithmFactory():
         resp.status = falcon.HTTP_201
 
 
+class EmbeddingResource():
+    def on_post(self, req, resp, dataset_id):
+        """Get the embedding given an entity or a list of entities (URI)
+
+        {"entities": ["Q1492", "Q2807", "Q1"]}
+
+        :query JSON embeddings: List of embeddings
+        :returns: A dict with all embeddings
+        """
+        # Read body
+        try:
+            extra = "Couldn't decode the input stream (body)."
+            body = json.loads(req.stream.read().decode('utf-8'))
+
+            if "entities" not in body:
+                raise falcon.HTTPMissingParam("entities")
+
+            if not isinstance(body["entities"], list):
+                msg = ("The param 'distance' must contain a list")
+                raise falcon.HTTPInvalidParam(msg, "entities")
+
+            # Redefine variables
+            entities = body["entities"]
+
+        except (json.decoder.JSONDecodeError, KeyError,
+                ValueError, TypeError) as err:
+            print(err)
+            err_title = "HTTP Body request not loaded correctly"
+            msg = ("The body couldn't be correctly loaded from HTTP request. "
+                   "Please, read the documentation carefully and try again. "
+                   "Extra info: "+extra)
+            raise falcon.HTTPBadRequest(title=err_title, description=msg)
+
+        # Extract model
+        dataset_dao = data_access.DatasetDAO()
+        
+        dataset_dto, err = dataset_dao.get_dataset_by_id(dataset_id)
+        if dataset_dto is None:
+            raise falcon.HTTPNotFound(
+                title="Dataset {} not found".format(dataset_id),
+                description="The dataset does not exists. "+str(err))
+
+        model, err = dataset_dao.get_model()
+        if model is None:
+            raise falcon.HTTPNotFound(
+                title="Dataset {} has not any model"
+                description="The model couldn't be located. "+str(err))
+
+
 # falcon.API instances are callable WSGI apps
 app = falcon.API()
 
@@ -653,6 +702,7 @@ gentriples = GenerateTriplesResource()
 triples_distance = DistanceTriples()
 dataset_train = DatasetTrain()
 dataset_index = DatasetIndex()
+dataset_embedding = EmbeddingResource()
 
 task_resource = TasksResource()
 
@@ -670,6 +720,7 @@ app.add_route('/datasets/{dataset_id}/similar_entities/{entity}',
 app.add_route('/datasets/{dataset_id}/similar_entities', similar_entities)
 app.add_route('/datasets/{dataset_id}/train', dataset_train)
 app.add_route('/datasets/{dataset_id}/generate_index', dataset_index)
+app.add_route('/datasets/{dataset_id}/embeddings', dataset_embedding)
 
 
 app.add_route('/tasks/{task_id}', task_resource)
