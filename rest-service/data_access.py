@@ -55,6 +55,7 @@ class MainDAO():
         self.execute_query("CREATE TABLE algorithm "
                            "(id INTEGER UNIQUE PRIMARY KEY, "
                            "embedding_size INTEGER, "
+                           "max_epochs INTEGER, "
                            "margin FLOAT) ; ")
 
         self.execute_query("CREATE TABLE dataset "
@@ -69,12 +70,6 @@ class MainDAO():
                            "status INTEGER, "
                            "FOREIGN KEY(algorithm) REFERENCES algorithm(id)"
                            ");")
-
-        self.execute_query("CREATE TABLE tasks "
-                           "(id INTEGER UNIQUE PRIMARY KEY, "
-                           "celery_uuid TEXT, "
-                           "progress_file TEXT "
-                           ") ; ")
 
         default_datasets = [
                         {"id": 0, "binary_dataset": 'wikidata_25k.bin',
@@ -219,6 +214,36 @@ class DatasetDAO(MainDAO):
             return (None, e.args[0])
 
         return (dtst_dict, None)
+
+    def get_model(self, dataset_id):
+        """Extracts from database the model file path
+
+        :param int dataset_id: The id of the dataset
+        """
+        query = "SELECT binary_model FROM dataset WHERE id=? ;"
+        res = self.execute_query(query, dataset_id)
+
+        if res is None or len(res) < 1:
+            return None, (404, "Binary model of dataset (id:{}) not found".
+                          format(dataset_id))
+
+        return res[0]['binary_model'], None
+
+    def set_model(self, dataset_id, model_path):
+        """Saves on database the model path file of a dataset_id
+
+        :param int dataset_id: The id of the dataset
+        :param str model_path: The path where binary file is located
+        """
+        query = "UPDATE dataset SET binary_model=? WHERE id=? ;"
+        res = self.execute_insertion(query, model_path, dataset_id)
+
+        if res.rowcount == 1:
+            res.close()
+            return True, None
+        else:
+            res.close()
+            return False, (400, "Failed when trying to save dataset on db")
 
     def build_dataset_info(self, result_dict):
         """Given a result dict, with proper fields, builds a datasetDAO

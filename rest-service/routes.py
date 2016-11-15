@@ -233,7 +233,12 @@ class PredictSimilarEntitiesResource(object):
 
 class DistanceTriples():
     def on_post(self, req, resp, dataset_id):
-        """
+        """This method return the true distance between two entities
+
+        {"distance":
+            ["http://www.wikidata.org/entity/Q1492",
+             "http://www.wikidata.org/entity/Q2807"]
+        }
         """
         try:
             extra = "Couldn't decode the input stream (body)."
@@ -350,8 +355,41 @@ class GenerateTriplesResource():
         task_obj, err = task_dao.add_task_by_uuid(task.id)
         if task_obj is None:
             raise falcon.HTTPNotFound(description=str(err))
-        task_obj["next"] = "/dataset/"+dataset_id
+        task_obj["next"] = "/datasets/"+dataset_id
         task_dao.update_task(task_obj)
+
+        msg = "Task {} created successfuly".format(task_obj['id'])
+        textbody = {"status": 202, "message": msg}
+        resp.location = "/tasks/"+str(task_obj['id'])
+        resp.body = json.dumps(textbody)
+        resp.content_type = 'application/json'
+        resp.status = falcon.HTTP_202
+
+
+class DatasetIndex():
+    def on_post(self, req, resp, dataset_id):
+        """Generates a search index to perform data lookups operations.
+
+        This task may take long time to complete, so it uses tasks.
+
+        :query int n_trees: The number of trees generated
+        """
+        dataset_dao = data_access.DatasetDAO()
+        dataset, err = dataset_dao.get_dataset_by_id(dataset_id)
+        if dataset is None:
+            raise falcon.HTTPNotFound(description=str(err))
+
+        # Dig for the param on Query Params
+        n_trees = req.get_param('n_trees')
+
+        # Call to the task
+        task = async_tasks.build_search_index(dataset_id, n_trees)
+
+        # Create the new task
+        task_dao = data_access.TaskDAO()
+        task_obj, err = task_dao.add_task_by_uuid(task.id)
+        if task_obj is None:
+            raise falcon.HTTPNotFound(description=str(err))
 
         msg = "Task {} created successfuly".format(task_obj['id'])
         textbody = {"status": 202, "message": msg}
@@ -378,9 +416,6 @@ class DatasetTrain():
         if dataset is None:
             raise falcon.HTTPNotFound(description=str(err))
 
-        # Generate the filepath to the dataset
-        dtset_path = dataset_dao.build_dataset_path()
-
         # Check if dataset can be trained
         if not dataset_dao.is_untrained()[0]:
             dataset_status = dataset['status']
@@ -406,7 +441,7 @@ class DatasetTrain():
 
         # Launch async task
         task = async_tasks.train_dataset_from_algorithm.delay(
-                                                        dtset_path, algorithm)
+                                                        dataset_id, algorithm)
 
         # Create the new task
         task_dao = data_access.TaskDAO()
@@ -440,7 +475,7 @@ class TasksResource():
 
         if t_uuid.state == "SUCCESS":
             # Look if exists some next
-            if "next" in task_obj:
+            if "next" in task_obj and task_obj["next"] is not None:
                 print("This task has next {}".format(task_obj["next"]))
                 resp.status = falcon.HTTP_303
                 resp.location = task_obj["next"]
@@ -606,6 +641,7 @@ triples = TriplesResource()
 gentriples = GenerateTriplesResource()
 triples_distance = DistanceTriples()
 dataset_train = DatasetTrain()
+dataset_index = DatasetIndex()
 
 task_resource = TasksResource()
 
@@ -622,6 +658,7 @@ app.add_route('/datasets/{dataset_id}/similar_entities/{entity}',
               similar_entities)
 app.add_route('/datasets/{dataset_id}/similar_entities', similar_entities)
 app.add_route('/datasets/{dataset_id}/train', dataset_train)
+app.add_route('/datasets/{dataset_id}/generate_index', dataset_index)
 
 
 app.add_route('/tasks/{task_id}', task_resource)
