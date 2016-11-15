@@ -5,6 +5,7 @@ import json
 import skge
 import kgeserver.dataset as dataset
 import kgeserver.algorithm as algorithm
+import kgeserver.server as server
 
 # Import parent directory (data_access)
 import sys
@@ -144,13 +145,13 @@ def build_search_index(self, dataset_id, n_trees):
     dataset_dao = data_access.DatasetDAO()
     # Set working status
     dataset_dao.set_status(dataset_id, -2)
-    model_path = dataset_dao.get_model(dataset_id)
+    model_path, err = dataset_dao.get_model(dataset_id)
     # Load the model and initialize the search index
     model = skge.TransE.load(model_path)
     search_index = server.SearchIndex()
 
     # File to store the search index
-    search_index_file = model_path[:-4] + str("_annoy_{}.bin".format(n_trees))
+    search_index_file = model_path[:-4] + "_annoy_{}.bin".format(n_trees)
 
     # Heavy task
     search_index.build_from_trained_model(model, n_trees)

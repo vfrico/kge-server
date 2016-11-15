@@ -380,10 +380,13 @@ class DatasetIndex():
             raise falcon.HTTPNotFound(description=str(err))
 
         # Dig for the param on Query Params
-        n_trees = req.get_param('n_trees')
+        try:
+            n_trees = int(req.get_param('n_trees'))
+        except ValueError:
+            n_trees = None
 
         # Call to the task
-        task = async_tasks.build_search_index(dataset_id, n_trees)
+        task = async_tasks.build_search_index.delay(dataset_id, n_trees)
 
         # Create the new task
         task_dao = data_access.TaskDAO()

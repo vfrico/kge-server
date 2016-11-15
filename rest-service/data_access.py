@@ -299,6 +299,25 @@ class DatasetDAO(MainDAO):
     def build_dataset_path(self):
         return self.bin_path + self.binary_dataset
 
+    def set_search_index(self, dataset_id, index_path):
+        """Saves on database the index of a dataset
+
+        :param int dataset_id: The id of the dataset
+        :param string index_path: The path on the filesystem of the index
+        :returns: If operation was successful
+        :rtype: tuple
+        """
+        query = "UPDATE dataset SET binary_index=? WHERE id=? ;"
+
+        res = self.execute_insertion(query, index_path, dataset_id)
+
+        if res.rowcount == 1:
+            res.close()
+            return True, None
+        else:
+            res.close()
+            return False, (400, "Failed when trying to save index on db")
+
     def get_search_index(self):
         """Returns an instantiated search index from choosen dataset.
 
