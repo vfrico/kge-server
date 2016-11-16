@@ -215,6 +215,20 @@ class DatasetDAO(MainDAO):
 
         return (dtst_dict, None)
 
+    def get_binary_path(self, dataset_id):
+        """Extracts from database the binary path of the dataset
+
+        :param int dataset_id: The id of the dataset
+        """
+        query = "SELECT binary_dataset FROM dataset WHERE id=? ;"
+        res = self.execute_query(query, dataset_id)
+
+        if res is None or len(res) < 1:
+            return None, (404, "Binary dataset of dataset (id:{}) not found".
+                          format(dataset_id))
+        final_path = os.path.join(self.bin_path, res[0]['binary_dataset'])
+        return final_path, None
+
     def get_model(self, dataset_id):
         """Extracts from database the model file path
 
@@ -226,8 +240,8 @@ class DatasetDAO(MainDAO):
         if res is None or len(res) < 1:
             return None, (404, "Binary model of dataset (id:{}) not found".
                           format(dataset_id))
-
-        return res[0]['binary_model'], None
+        final_path = os.path.join(self.bin_path, res[0]['binary_model'])
+        return final_path, None
 
     def set_model(self, dataset_id, model_path):
         """Saves on database the model path file of a dataset_id

@@ -209,6 +209,27 @@ a negative integer.
             "http://www.wikidata.org/entity/Q1" ]
         }
 
+    **Respuesta**
+
+    .. sourcecode:: json
+
+        { "embeddings": [
+            [
+                "Q1",
+                [0.321, -0.178, 0.195, 0.816]
+            ],
+            [
+                "Q2807",
+                [-0.192, 0.172, -0.124, 0.138]
+            ],
+            [
+                "Q1492",
+                [0.238, -0.941, 0.116, -0.518]
+            ]
+          ]
+        }
+
+
     :param int dataset_id: Unique id of the dataset
     :statuscode 200: Operation was successful
     :statuscode 404: The dataset ID does not exist

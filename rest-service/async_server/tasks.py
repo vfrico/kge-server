@@ -176,8 +176,12 @@ def build_search_index(self, dataset_id, n_trees):
     return False
 
 
-def find_embeddings_from_model(dataset_id, entities):
+def find_embeddings_on_model(dataset_id, entities):
     """Returns a list with the corresponding embeddings
+
+    This will return a list like this:
+
+    [["Q1", [0, 1, -1, 0.4]], ["Q5", [1, -0.5, -0.1, 0]]]
 
     :param str model_path: The path to the binary model
     :param list entities: A list with the URI (or identifiers) of entities
@@ -186,7 +190,30 @@ def find_embeddings_from_model(dataset_id, entities):
     """
     # Expected to return: {entities: [], embeddings: []} IN THE SAME ORDER!!
     dataset_dao = data_access.DatasetDAO()
+    # dataset, err = dataset_dao.get_dataset_by_id(dataset_id)
+    # if dataset is None:
+    #     raise LookupError("The dataset couldn't be located")
+
+    dataset_path, err = dataset_dao.get_binary_path(dataset_id)
+    if dataset_path is None:
+        raise FileNotFoundError("The binary dataset doesn't exist on database")
+
+    # Load dataset from binary
+    dtset = dataset.Dataset()
+    dtset.load_from_binary(dataset_path)
+
     model_path, err = dataset_dao.get_model(dataset_id)
+    if model_path is None:
+        raise FileNotFoundError("The model path does not exist on database")
     # Load the model and initialize the search index
     model = skge.TransE.load(model_path)
-    # wip
+
+    return_list = []
+    for entity in entities:
+        position = dtset.get_entity_id(entity)
+        if position < 0:
+            continue
+        else:
+            embedding = model.E[position]
+        return_list.append([entity, embedding.tolist()])
+    return return_list

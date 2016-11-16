@@ -648,7 +648,8 @@ class EmbeddingResource():
         {"entities": ["Q1492", "Q2807", "Q1"]}
 
         :query JSON embeddings: List of embeddings
-        :returns: A dict with all embeddings
+        :returns: A list of list with entities and its embeddings
+        :rtype: list
         """
         # Read body
         try:
@@ -676,18 +677,38 @@ class EmbeddingResource():
 
         # Extract model
         dataset_dao = data_access.DatasetDAO()
-        
+
         dataset_dto, err = dataset_dao.get_dataset_by_id(dataset_id)
         if dataset_dto is None:
             raise falcon.HTTPNotFound(
                 title="Dataset {} not found".format(dataset_id),
                 description="The dataset does not exists. "+str(err))
 
-        model, err = dataset_dao.get_model()
+        istrained, err = dataset_dao.is_trained()
+        if istrained is None or not istrained:
+            raise falcon.HTTPConflict(
+                title="Dataset has not a valid state",
+                description="Dataset {} has a {} state".format(
+                    dataset_id, dataset_dto["status"]))
+
+        model, err = dataset_dao.get_model(dataset_id)
         if model is None:
             raise falcon.HTTPNotFound(
-                title="Dataset {} has not any model"
+                title="Dataset {} has not any model",
                 description="The model couldn't be located. "+str(err))
+
+        try:
+            result = async_tasks.find_embeddings_on_model(dataset_id, entities)
+        except OSError as err:
+            filerr = err.filename
+            raise falcon.HTTPNotFound(
+                title="The file on database couldn't be located",
+                description=("A file ({}) has been found on database, but it "
+                             "does not exist on filesystem").format(filerr))
+
+        textbody = {"embeddings": result}
+        resp.body = json.dumps(textbody)
+        resp.status = falcon.HTTP_200
 
 
 # falcon.API instances are callable WSGI apps
