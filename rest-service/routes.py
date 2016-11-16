@@ -20,6 +20,7 @@
 import falcon
 import json
 import data_access
+import kgeserver.server as server
 import async_server.tasks as async_tasks
 import async_server.celery as celery_server
 
@@ -34,7 +35,7 @@ class DatasetResource(object):
             raise falcon.HTTPNotFound(description=str(err))
 
         response = {
-            "dataset": resource,
+            "dataset": resource.to_dict(),
         }
         resp.body = json.dumps(response)
         resp.content_type = 'application/json'
@@ -51,7 +52,7 @@ class DatasetFactory(object):
         if listdts is None:
             raise falcon.HTTPNotFound(description=str(err))
 
-        response = [{"dataset": dtst} for dtst in listdts]
+        response = [{"dataset": dtst.to_dict()} for dtst in listdts]
         resp.body = json.dumps(response)
         resp.content_type = 'application/json'
         resp.status = falcon.HTTP_200
@@ -61,17 +62,14 @@ class DatasetFactory(object):
 
         This method will create a new empty dataset, and returns a 201 CREATED
         with Location header filled with the URI of the dataset.
-
-        If dataset must be created with a certain graph pattern, a task
-        will be created instead
         """
-        graph_pattern = None
-        try:
-            body = json.loads(req.stream.read().decode('utf-8'))
-            if "graph_pattern" in body:
-                graph_pattern = body["graph_pattern"]
-        except json.decoder.JSONDecodeError as err:
-            print(err)
+        # graph_pattern = None
+        # try:
+        #     body = json.loads(req.stream.read().decode('utf-8'))
+        #     if "graph_pattern" in body:
+        #         graph_pattern = body["graph_pattern"]
+        # except json.decoder.JSONDecodeError as err:
+        #     print(err)
 
         dao = data_access.DatasetDAO()
         # Get dataset type
@@ -84,32 +82,31 @@ class DatasetFactory(object):
         dataset_type = dao.get_dataset_types()[dts_type]["class"]
         id_dts, err = dao.insert_empty_dataset(dataset_type)
 
-        if not graph_pattern:
-            # Dataset created, evrything is done
-            resp.status = falcon.HTTP_201
-            resp.body = "Created"
-            resp.location = "/datasets/"+str(id_dts)
-        else:
-            dtset = dao.build_dataset_path()
-
-            # Generate the dataset with initial graph pattern
-            task = async_tasks.insert_triples_from_graph_pattern.delay(
-                    dtset, graph_pattern)
-
-            # Create a new task
-            task_dao = data_access.TaskDAO()
-            task_obj, err = task_dao.add_task_by_uuid(task.id)
-            if task_obj is None:
-                raise falcon.HTTPNotFound(description=str(err))
-            task_obj["next"] = "/datasets/"+str(id_dts)
-            task_dao.update_task(task_obj)
-
-            msg = "Task {} created successfuly".format(task_obj['id'])
-            textbody = {"status": 202, "message": msg}
-            resp.location = "/tasks/"+str(task_obj['id'])
-            resp.body = json.dumps(textbody)
-            resp.content_type = 'application/json'
-            resp.status = falcon.HTTP_202
+        # Dataset created, evrything is done
+        resp.status = falcon.HTTP_201
+        resp.body = "Created"
+        resp.location = "/datasets/"+str(id_dts)
+        # else:
+        #     dtset = dao.build_dataset_path()
+        #
+        #     # Generate the dataset with initial graph pattern
+        #     task = async_tasks.insert_triples_from_graph_pattern.delay(
+        #             dtset, graph_pattern)
+        #
+        #     # Create a new task
+        #     task_dao = data_access.TaskDAO()
+        #     task_obj, err = task_dao.add_task_by_uuid(task.id)
+        #     if task_obj is None:
+        #         raise falcon.HTTPNotFound(description=str(err))
+        #     task_obj["next"] = "/datasets/"+str(id_dts)
+        #     task_dao.update_task(task_obj)
+        #
+        #     msg = "Task {} created successfuly".format(task_obj['id'])
+        #     textbody = {"status": 202, "message": msg}
+        #     resp.location = "/tasks/"+str(task_obj['id'])
+        #     resp.body = json.dumps(textbody)
+        #     resp.content_type = 'application/json'
+        #     resp.status = falcon.HTTP_202
 
 
 class PredictSimilarEntitiesResource(object):
@@ -131,17 +128,19 @@ class PredictSimilarEntitiesResource(object):
         """
         # Get dataset
         dataset_dao = data_access.DatasetDAO()
-        resource, err = dataset_dao.get_dataset_by_id(dataset_id)
-        if resource is None:
+        dataset_dto, err = dataset_dao.get_dataset_by_id(dataset_id)
+        if dataset_dto is None:
             raise falcon.HTTPNotFound(description=str(err))
 
-        dataset = dataset_dao.build_dataset_object()
+        dataset = dataset_dao.build_dataset_object(dataset_dto)  # TODO: design
 
         # Get server to do 'queries'
-        server, err = dataset_dao.get_server()
-        if server is None:
+        search_index, err = dataset_dao.get_search_index(dataset_dto)
+        if search_index is None:
             msg_title = "Dataset not ready perform search operation"
             raise falcon.HTTPConflict(title=msg_title, description=str(err))
+        # TODO: Maybe extract server management anywhere to simplify this
+        search_server = server.Server(search_index)
 
         # Dig for the limit param on Query Params
         limit = req.get_param('limit')
@@ -158,7 +157,7 @@ class PredictSimilarEntitiesResource(object):
 
         # If looking for similar_entities given an embedding vector
         if embedding:
-            similar_entities = server.similarity_by_embedding(
+            similar_entities = search_server.similarity_by_embedding(
                 entity, limit, search_k=search_k)
             similar_entities = [{"entity": dataset.get_entity(e_id),
                                  "distance": dist}
@@ -174,7 +173,7 @@ class PredictSimilarEntitiesResource(object):
 
             similar_entities = [{"entity": dataset.get_entity(e_id),
                                  "distance": dist}
-                                for e_id, dist in server.similarity_by_id(
+                                for e_id, dist in search_server.similarity_by_id(
                                     entity_id, limit, search_k=search_k)]
             entity_used = {
                 "value": dataset.get_entity(entity_id),
@@ -182,7 +181,7 @@ class PredictSimilarEntitiesResource(object):
             }
 
         response = {
-            "dataset": resource,
+            "dataset": dataset_dto.to_dict(),
             "similar_entities": {
                 "entity": entity_used,
                 "limit": len(similar_entities),
@@ -268,22 +267,24 @@ class DistanceTriples():
 
         # Get dataset
         dataset_dao = data_access.DatasetDAO()
-        resource, err = dataset_dao.get_dataset_by_id(dataset_id)
-        if resource is None:
+        dataset_dto, err = dataset_dao.get_dataset_by_id(dataset_id)
+        if dataset_dto is None:
             raise falcon.HTTPNotFound(description=str(err))
 
-        dataset = dataset_dao.build_dataset_object()
+        dataset = dataset_dao.build_dataset_object(dataset_dto)  # TODO: design
 
         # Get server to do 'queries'
-        server, err = dataset_dao.get_server()
-        if server is None:
+        search_index, err = dataset_dao.get_search_index(dataset_dto)
+        if search_index is None:
             msg_title = "Dataset not ready perform search operation"
             raise falcon.HTTPConflict(title=msg_title, description=str(err))
+        # TODO: Maybe extract server management anywhere to simplify this
+        search_server = server.Server(search_index)
 
         id_x = dataset.get_entity_id(entity_x)
         id_y = dataset.get_entity_id(entity_y)
 
-        dist = server.distance_between_entities(id_x, id_y)
+        dist = search_server.distance_between_entities(id_x, id_y)
 
         resp.body = json.dumps({"distance": dist})
         resp.content_type = 'application/json'
@@ -329,26 +330,20 @@ class GenerateTriplesResource():
             return
 
         dataset_dao = data_access.DatasetDAO()
-        dataset, err = dataset_dao.get_dataset_by_id(dataset_id)
-        if dataset is None:
+        dataset_dto, err = dataset_dao.get_dataset_by_id(dataset_id)
+        if dataset_dto is None:
             raise falcon.HTTPNotFound(description=str(err))
 
         # Generate the filepath to the dataset
-        dtset = dataset_dao.build_dataset_path()
+        dtset_path = dataset_dto.get_binary_dataset()
 
         # Read arguments from body
         graph_pattern = json_rpc.pop("graph_pattern")
         levels = json_rpc.pop("levels")
 
-        # Dict of arguments
-        # args = {}
-        # for arg in json_rpc:
-        #     if arg is not None:
-        #         args[arg] = json_rpc[arg]
-
         # Launch async task
         task = async_tasks.generate_dataset_from_sparql.delay(
-                dtset, graph_pattern, levels)
+                dtset_path, graph_pattern, levels)
 
         # Create a new task
         task_dao = data_access.TaskDAO()
@@ -367,6 +362,7 @@ class GenerateTriplesResource():
 
 
 class DatasetIndex():
+    # TODO: Save anywhere the number of trees used
     def on_post(self, req, resp, dataset_id):
         """Generates a search index to perform data lookups operations.
 
@@ -375,13 +371,13 @@ class DatasetIndex():
         :query int n_trees: The number of trees generated
         """
         dataset_dao = data_access.DatasetDAO()
-        dataset, err = dataset_dao.get_dataset_by_id(dataset_id)
-        if dataset is None:
+        dataset_dto, err = dataset_dao.get_dataset_by_id(dataset_id)
+        if dataset_dto is None:
             raise falcon.HTTPNotFound(description=str(err))
 
         # Check actual status of the dataset
-        if not dataset_dao.is_trained()[0]:
-            dataset_status = dataset['status']
+        if not dataset_dto.is_trained():
+            dataset_status = dataset_dto.status
             err_title = "The dataset is not in correct state"
             msg = "The dataset has {} status and is not ready to be indexed"
             raise falcon.HTTPConflict(title=err_title,
@@ -411,6 +407,7 @@ class DatasetIndex():
 
 
 class DatasetTrain():
+    # TODO: Test if works well
     def on_post(self, req, resp, dataset_id):
         """Generates a model that fits the dataset and trains it
 
@@ -423,13 +420,13 @@ class DatasetTrain():
         :query int algorithm_id: The algorithm used to train the dataset
         """
         dataset_dao = data_access.DatasetDAO()
-        dataset, err = dataset_dao.get_dataset_by_id(dataset_id)
-        if dataset is None:
+        dataset_dto, err = dataset_dao.get_dataset_by_id(dataset_id)
+        if dataset_dto is None:
             raise falcon.HTTPNotFound(description=str(err))
 
         # Check if dataset can be trained
         if not dataset_dao.is_untrained()[0]:
-            dataset_status = dataset['status']
+            dataset_status = dataset_dto.status
             err_title = "The dataset is not in correct state"
             msg = "The dataset has {} status and is not ready to be trained"
             raise falcon.HTTPConflict(title=err_title,
@@ -522,8 +519,13 @@ class TriplesResource():
     """Receives HTTP Request to manage triples on dataset
 
     This will expect an input on the body similar to This
-    {"triples": [{"subject":"Q1492", "predicate":"P17", "object":"Q29"}]}
-
+        {"triples": [
+                {
+                    "subject": {"value": "Q1492"},
+                    "predicate": {"value": "P17"},
+                    "object": {"value": "Q29"}
+                }
+            ] }
     """
     def on_post(self, req, resp, dataset_id):
         try:
@@ -556,14 +558,14 @@ class TriplesResource():
             return
 
         dataset_dao = data_access.DatasetDAO()
-        resource, err = dataset_dao.get_dataset_by_id(dataset_id)
-        if resource is None:
+        dataset_dto, err = dataset_dao.get_dataset_by_id(dataset_id)
+        if dataset_dto is None:
             raise falcon.HTTPNotFound(description=str(err))
 
         # dataset = dataset_dao.build_dataset_object()
-        res, err = dataset_dao.insert_triples(body['triples'])
+        res, err = dataset_dao.insert_triples(dataset_dto, body['triples'])
         if res is None:
-            raise falcon.HTTPNotFound(description=str(err))
+            raise falcon.HTTPBadRequest(description=str(err))
 
         textbody = {"status": 202, "message": "Resources created successfuly"}
         resp.body = json.dumps(textbody)
@@ -684,18 +686,18 @@ class EmbeddingResource():
                 title="Dataset {} not found".format(dataset_id),
                 description="The dataset does not exists. "+str(err))
 
-        istrained, err = dataset_dao.is_trained()
+        istrained = dataset_dto.is_trained()
         if istrained is None or not istrained:
             raise falcon.HTTPConflict(
                 title="Dataset has not a valid state",
                 description="Dataset {} has a {} state".format(
-                    dataset_id, dataset_dto["status"]))
+                    dataset_id, dataset_dto.status))
 
-        model, err = dataset_dao.get_model(dataset_id)
-        if model is None:
-            raise falcon.HTTPNotFound(
-                title="Dataset {} has not any model",
-                description="The model couldn't be located. "+str(err))
+        # model, err = dataset_dto.get_binary_model()
+        # if model is None:
+        #     raise falcon.HTTPNotFound(
+        #         title="Dataset {} has not any model",
+        #         description="The model couldn't be located. "+str(err))
 
         try:
             result = async_tasks.find_embeddings_on_model(dataset_id, entities)
