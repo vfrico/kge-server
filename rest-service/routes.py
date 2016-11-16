@@ -425,7 +425,7 @@ class DatasetTrain():
             raise falcon.HTTPNotFound(description=str(err))
 
         # Check if dataset can be trained
-        if not dataset_dao.is_untrained()[0]:
+        if not dataset_dto.is_untrained():
             dataset_status = dataset_dto.status
             err_title = "The dataset is not in correct state"
             msg = "The dataset has {} status and is not ready to be trained"
