@@ -26,9 +26,9 @@ import json
 import kgeserver.server as server
 import kgeserver.dataset as dataset
 import kgeserver.wikidata_dataset as wikidata_dataset
-import data_access_base
-from dataset_dto import DatasetDTO
-from algorithm_dao import AlgorithmDAO
+import data_access.data_access_base as data_access_base
+from data_access.dataset_dto import DatasetDTO
+from data_access.algorithm_dao import AlgorithmDAO
 
 
 class DatasetDAO(data_access_base.MainDAO):

@@ -87,6 +87,11 @@ class Experiment(object):
         self.th_num = th_num
         self.dataset = dataset
 
+        try:
+            self.external_callback = k.pop("external_callback")
+        except Exception:
+            self.external_callback = None
+
     def run(self):
         """Configure ModelTrainer and start the trainer.
 
@@ -171,6 +176,12 @@ class Experiment(object):
                     }
                     with open(self.fout, 'wb') as fout:
                         pickle.dump(st, fout, protocol=2)
+        try:
+            self.external_callback(trn)
+        except Exception:
+            # Callback is not present
+            pass
+
         return True
 
     def lp_callback(self, m, with_eval=False):

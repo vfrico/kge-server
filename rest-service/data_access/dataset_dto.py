@@ -18,9 +18,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
-import data_access_base
+import data_access.data_access_base as data_access_base
 import kgeserver.dataset as dataset
-from algorithm_dao import AlgorithmDAO
+from data_access.algorithm_dao import AlgorithmDAO
 
 
 class DatasetDTO(data_access_base.DTOClass):
