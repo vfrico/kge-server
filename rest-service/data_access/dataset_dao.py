@@ -125,6 +125,47 @@ class DatasetDAO(data_access_base.MainDAO):
             res.close()
             return False, (400, "Failed when trying to save dataset on db")
 
+    def set_name(self, dataset_id, dataset_name):
+        """Saves the dataset with a new name
+
+        This method will not change the name of binary files on namespace.
+        It is intended only to help user locate and understand better the
+        content of a dataset.
+
+        :param int dataset_id: The id of the dataset7
+        :param str dataset_name: The new name of the dataset
+        :return: If operation was successful
+        :rtype: tuple
+        """
+        query = "UPDATE dataset SET name=? WHERE id=? ;"
+        res = self.execute_insertion(query, dataset_name, dataset_id)
+
+        if res.rowcount == 1:
+            res.close()
+            return True, None
+        else:
+            res.close()
+            return False, (400, "Failed when trying to save dataset on db")
+
+    def get_name(self, dataset_id):
+        """Gets the current name of a given dataset
+
+        This method will not change the name of binary files on namespace.
+        It is intended only to help user locate and understand better the
+        content of a dataset.
+
+        :param int dataset_id: The id of the dataset7
+        :return: The dataset name
+        :rtype: tuple(string, err)
+        """
+        query = "SELECT name FROM dataset WHERE id=? ;"
+        res = self.execute_query(query, dataset_id)
+
+        if res is None or len(res) < 1 or res[0]['name']:
+            return None, (404, "Name of dataset (id:{}) not found".
+                          format(dataset_id))
+        return res[0]['name'], None
+
     def build_dataset_object(self, dataset_dto):  # TODO: Maybe uneeded?
         """Returns a Dataset object if required by rest service
 
@@ -197,22 +238,31 @@ class DatasetDAO(data_access_base.MainDAO):
         else:
             return server.Server(search_index), None
 
-    def insert_empty_dataset(self, datasetClass):  # TODO: Unknown if needed
+    def insert_empty_dataset(self, datasetClass, name=None):
         """Creates an empty dataset on database.
 
         :param kgeserver.dataset.Dataset datasetClass: The class of the dataset
+        :param str name: The name of the dataset
         :return: The id of dataset created, or None
         :rtype: tuple
         """
-        unique_name = str(int(time.time()))+".bin"
-        sql_sentence = ("INSERT INTO dataset (id, binary_dataset, algorithm, "
-                        "status) VALUES (NULL, '"+unique_name+"', -1, 0)")
+        if name is not None:
+            unique_name = "{}_{}.bin".format(name, str(int(time.time())))
+            sql_sentence = ("INSERT INTO dataset (id, binary_dataset, "
+                            "algorithm, status, name) VALUES (NULL, '" +
+                            unique_name + "', -1, 0, ?);")
+
+        else:
+            unique_name = str(int(time.time()))+".bin"
+            sql_sentence = ("INSERT INTO dataset (id, binary_dataset, "
+                            "algorithm, status) VALUES (NULL, '"+unique_name +
+                            "', -1, 0);")
 
         newdataset = datasetClass()
         self.binary_dataset = unique_name
-        newdataset.save_to_binary(self.bin_path+unique_name)
+        newdataset.save_to_binary(self.bin_path + unique_name)
 
-        result = self.execute_insertion(sql_sentence)
+        result = self.execute_insertion(sql_sentence, name)
         rowid = result.lastrowid
         result.close()
 

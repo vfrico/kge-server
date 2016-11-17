@@ -30,6 +30,7 @@ import data_access.algorithm_dao as algorithm_dao
 import data_access.data_access_base as data_access_base
 DatasetDAO = dataset_dao.DatasetDAO
 AlgorithmDAO = algorithm_dao.AlgorithmDAO
+MainDAO = data_access_base.MainDAO
 
 
 class RedisBackend:

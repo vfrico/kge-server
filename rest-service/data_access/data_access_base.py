@@ -63,6 +63,7 @@ class MainDAO():
         self.execute_query("CREATE TABLE dataset "
                            "(id INTEGER UNIQUE PRIMARY KEY, "
                            "binary_dataset TEXT, "
+                           "name TEXT, "
                            "binary_model TEXT, "
                            "binary_index TEXT,"
                            "algorithm INTEGER, "

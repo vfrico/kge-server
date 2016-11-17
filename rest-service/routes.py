@@ -17,8 +17,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import falcon
 import json
+import copy
+import falcon
 import data_access
 import kgeserver.server as server
 import async_server.tasks as async_tasks
@@ -34,6 +35,43 @@ class DatasetResource(object):
         if resource is None:
             raise falcon.HTTPNotFound(description=str(err))
 
+        response = {
+            "dataset": resource.to_dict(),
+        }
+        resp.body = json.dumps(response)
+        resp.content_type = 'application/json'
+        resp.status = falcon.HTTP_200
+
+    def on_put(self, req, resp, dataset_id):
+        """Change trivial data like dataset name
+        """
+        body_dataset = {}
+        try:
+            body = json.loads(req.stream.read().decode('utf-8'))
+            if body is None or "dataset" not in body:
+                raise falcon.HTTPBadRequest("dataset")
+            else:
+                body_dataset = copy.copy(body["dataset"])
+        except json.decoder.JSONDecodeError as err:
+            raise falcon.HTTPBadRequest(
+                title="Body not found",
+                description="You must provide a JSON object on body")
+
+        dataset_dao = data_access.DatasetDAO()
+        resource, err = dataset_dao.get_dataset_by_id(dataset_id)
+        if resource is None:
+            raise falcon.HTTPNotFound(description=str(err))
+
+        for key in body_dataset:
+            if key == "name":
+                print("Encontrado", key)
+                res, err = dataset_dao.set_name(dataset_id, body_dataset[key])
+                if res is None:
+                    raise falcon.HTTPInternalServerError(
+                        title="Server Error",
+                        description="Unable to process '{}' param".format(key))
+
+        resource, err = dataset_dao.get_dataset_by_id(dataset_id)
         response = {
             "dataset": resource.to_dict(),
         }
@@ -63,13 +101,13 @@ class DatasetFactory(object):
         This method will create a new empty dataset, and returns a 201 CREATED
         with Location header filled with the URI of the dataset.
         """
-        # graph_pattern = None
-        # try:
-        #     body = json.loads(req.stream.read().decode('utf-8'))
-        #     if "graph_pattern" in body:
-        #         graph_pattern = body["graph_pattern"]
-        # except json.decoder.JSONDecodeError as err:
-        #     print(err)
+        dataset_name = None
+        try:
+            body = json.loads(req.stream.read().decode('utf-8'))
+            if "name" in body:
+                dataset_name = body["name"]
+        except json.decoder.JSONDecodeError as err:
+            print(err)
 
         dao = data_access.DatasetDAO()
         # Get dataset type
@@ -80,7 +118,7 @@ class DatasetFactory(object):
             dts_type = 0
 
         dataset_type = dao.get_dataset_types()[dts_type]["class"]
-        id_dts, err = dao.insert_empty_dataset(dataset_type)
+        id_dts, err = dao.insert_empty_dataset(dataset_type, name=dataset_name)
 
         # Dataset created, evrything is done
         resp.status = falcon.HTTP_201
@@ -170,11 +208,11 @@ class PredictSimilarEntitiesResource(object):
         # If looking for similar_entities given an entity
         else:
             entity_id = dataset.get_entity_id(entity)
-
+            sim_entities = search_server.similarity_by_id(
+                entity_id, limit, search_k=search_k)
             similar_entities = [{"entity": dataset.get_entity(e_id),
                                  "distance": dist}
-                                for e_id, dist in search_server.similarity_by_id(
-                                    entity_id, limit, search_k=search_k)]
+                                for e_id, dist in sim_entities]
             entity_used = {
                 "value": dataset.get_entity(entity_id),
                 "type": "uri"
