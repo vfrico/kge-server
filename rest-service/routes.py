@@ -456,6 +456,8 @@ class DatasetTrain():
         task_obj, err = task_dao.add_task_by_uuid(task.id)
         if task_obj is None:
             raise falcon.HTTPNotFound(description=str(err))
+        task_obj["next"] = "/datasets/"+dataset_id
+        task_dao.update_task(task_obj)
 
         msg = "Task {} created successfuly".format(task_obj['id'])
         textbody = {"status": 202, "message": msg}

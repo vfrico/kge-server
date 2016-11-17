@@ -110,10 +110,36 @@ def train_dataset_from_algorithm(self, dataset_id, algorithm_dict):
     dataset_dao = data_access.DatasetDAO()
     dataset_dto, err = dataset_dao.get_dataset_by_id(dataset_id)
     # Generate the filepath to the dataset
-    dtset_path = dataset_dao.build_dataset_path()
+    dtset_path = dataset_dto.get_binary_dataset()
     # Loads the current dataset
     dtset = dataset.Dataset()
     dtset.load_from_binary(dtset_path)
+
+    # Obtains the Redis connection from celery.
+    redis = self.app.backend
+    # The id of the object
+    celery_uuid = "celery-task-progress-"+self.request.id
+    # Saves the empty id to be retrieved first time without error
+    progress = {"current": -1,
+                "total":  algorithm_dict['max_epochs'],
+                "current_steps": None,
+                "total_steps": None}
+    redis.set(celery_uuid, json.dumps({"progress": progress}).encode("utf-8"))
+
+    def status_callback(trainer):
+        """Saves the progress of the task on redis db"""
+        print("Status Callback. Trainer {}".format(trainer.epoch))
+        # Retrieve task from redis
+        task = redis.get(celery_uuid).decode("utf-8")
+        task = json.loads(task)
+
+        # Add task progress
+        task['progress']['current'] = trainer.epoch
+
+        # Save again on redis
+        task = json.dumps(task).encode("utf-8")
+        redis.set(celery_uuid, task)
+        return
 
     # Creates an optional parameters dict for better readability
     kwargs = {
@@ -123,6 +149,7 @@ def train_dataset_from_algorithm(self, dataset_id, algorithm_dict):
         'ncomp': algorithm_dict['embedding_size'],  # Provided by the algorithm
         'margin': algorithm_dict['margin'],  # Provided by the algorithm
         'max_epochs': algorithm_dict['max_epochs'],  # Max number of iterations
+        'external_callback': status_callback,  # The status callback
     }
 
     # Heavy task
