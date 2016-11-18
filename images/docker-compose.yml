@@ -1,0 +1,18 @@
+version: '2'
+services:
+  celery:
+    build: celery/
+    volumes:
+     - ..:/home/jovyan/work
+    depends_on:
+     - redis
+  web:
+    build: web/
+    ports:
+     - "6789:8000"
+    volumes:
+     - ..:/home/jovyan/work
+    depends_on:
+     - redis
+  redis:
+    image: redis

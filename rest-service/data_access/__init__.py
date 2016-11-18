@@ -43,10 +43,10 @@ class RedisBackend:
     """
     def __init__(self):
         # Reads REDIS conf from environment variables
-        port = os.environ['REDIS_PORT_6379_TCP_PORT']
-        host = os.environ['REDIS_PORT_6379_TCP_ADDR']
+        # port = os.environ['REDIS_PORT_6379_TCP_PORT']
+        # host = os.environ['REDIS_PORT_6379_TCP_ADDR']
 
-        self.connection = redis.StrictRedis(host=host, port=port, db=0)
+        self.connection = redis.StrictRedis(host="redis", port="6379", db=0)
 
     def get(self, key):
         task_str = self.connection.get(key)

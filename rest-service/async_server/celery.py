@@ -2,9 +2,10 @@ from __future__ import absolute_import, unicode_literals
 from celery import Celery
 import os
 
-port = os.environ['REDIS_PORT_6379_TCP_PORT']
-host = os.environ['REDIS_PORT_6379_TCP_ADDR']
-redis_uri = "redis://{0}:{1}/0".format(host, port)
+# port = os.environ['REDIS_PORT_6379_TCP_PORT']
+# host = os.environ['REDIS_PORT_6379_TCP_ADDR']
+# redis_uri = "redis://{0}:{1}/0".format(host, port)
+redis_uri = "redis://redis:6379"
 rabbit_mq = 'amqp://'
 
 app = Celery('async_server',
