@@ -114,8 +114,8 @@ class DatasetFactory(object):
         try:
             dts_type = int(req.get_param("dataset_type"))
         except Exception:
-            # Fallback to read default type: 0
-            dts_type = 0
+            # Fallback when type not present: WikidataDataset
+            dts_type = 1
 
         dataset_type = dao.get_dataset_types()[dts_type]["class"]
         id_dts, err = dao.insert_empty_dataset(dataset_type, name=dataset_name)
