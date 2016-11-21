@@ -42,12 +42,12 @@ class DatasetDAO(data_access_base.MainDAO):
     Example with error: (None, (404, "Not found on database"))
     """
 
-    def __init__(self, database_file="server.db"):
+    def __init__(self):
         """Instantiates the object and creates *private* variables
 
         :param string database_file: A database file if differs from default.
         """
-        super(DatasetDAO, self).__init__(database_file=database_file)
+        super(DatasetDAO, self).__init__()
         # self.dataset = {
         #     "status": None,
         #     "entities": None,
@@ -260,7 +260,8 @@ class DatasetDAO(data_access_base.MainDAO):
 
         newdataset = datasetClass()
         self.binary_dataset = unique_name
-        newdataset.save_to_binary(self.bin_path + unique_name)
+        dtst_path = os.path.join(self.bin_path, unique_name)
+        newdataset.save_to_binary(dtst_path)
 
         result = self.execute_insertion(sql_sentence, name)
         rowid = result.lastrowid

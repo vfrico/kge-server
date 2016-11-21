@@ -36,6 +36,8 @@ class DatasetDTO(data_access_base.DTOClass):
     _binary_model = None
     _binary_index = None
 
+    _base = data_access_base._CONFIG_get_dataset_path()
+
     def from_dict(self, result_dict):
         """Given a result dict, with proper fields, builds a datasetDTO
 
@@ -60,7 +62,8 @@ class DatasetDTO(data_access_base.DTOClass):
         else:
             # Fields should be readed from file
             dtst = dataset.Dataset()
-            dtst.load_from_binary("../datasets/"+self._binary_dataset)
+            dtst_path = os.path.join(self._base, self._binary_dataset)
+            dtst.load_from_binary(dtst_path)
             self.triples = len(dtst.subs)
             self.entities = len(dtst.entities)
             self.relations = len(dtst.relations)
@@ -104,10 +107,10 @@ class DatasetDTO(data_access_base.DTOClass):
             return False
 
     def get_binary_index(self):
-        return os.path.join("../datasets/", self._binary_index)
+        return os.path.join(self._base, self._binary_index)
 
     def get_binary_dataset(self):
-        return os.path.join("../datasets/", self._binary_dataset)
+        return os.path.join(self._base, self._binary_dataset)
 
     def get_binary_model(self):
-        return os.path.join("../datasets/", self._binary_model)
+        return os.path.join(self._base, self._binary_model)

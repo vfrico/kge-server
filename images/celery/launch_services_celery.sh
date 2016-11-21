@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "RUNNING SERVICES (Only celery) :("
+echo "RUNNING CELERY"
 CODE_PATH="/home/$NB_USER/work"
 WORKING_DIR_EX="$CODE_PATH/rest-service/"
 cd $WORKING_DIR_EX

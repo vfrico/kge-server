@@ -30,8 +30,8 @@ import data_access.data_access_base as data_access_base
 
 
 class AlgorithmDAO(data_access_base.MainDAO):
-    def __init__(self, database_file="server.db"):
-        super(AlgorithmDAO, self).__init__(database_file=database_file)
+    def __init__(self):
+        super(AlgorithmDAO, self).__init__()
         self.algorithm = {}
 
     def get_algorithm_by_id(self, algorithm_id):

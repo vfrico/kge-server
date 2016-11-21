@@ -27,14 +27,27 @@ import copy
 import kgeserver.server as server
 import kgeserver.dataset as dataset
 import kgeserver.wikidata_dataset as wikidata_dataset
-database_file = "server.db"
+
+
+def _CONFIG_get_dataset_path():
+    try:
+        return os.environ["DATASETS_PATH"]
+    except KeyError:
+        return "../datasets/"
+
+
+def _CONFIG_get_sqlite_database():
+    try:
+        return os.environ["SQLITE_DATABASE_FILE_PATH"]
+    except KeyError:
+        return "server.db"
 
 
 class MainDAO():
-    def __init__(self, database_file="server.db"):
+    def __init__(self):
         "Comprueba si existe la base de datos y/o la inicializa"
 
-        self.database_file = database_file
+        self.database_file = _CONFIG_get_sqlite_database()
 
         # Create the file itself
         try:
@@ -48,7 +61,14 @@ class MainDAO():
             self.build_basic_db()
 
         # Path where all binary files have its relative path
-        self.bin_path = "../datasets/"
+        self.bin_path = _CONFIG_get_dataset_path()
+        if not os.path.exists(self.bin_path):
+            print("The path {} does not exist, creating".format(self.bin_path))
+            os.makedirs(self.bin_path)
+        elif not os.access(self.bin_path, os.W_OK):
+            msg = "The path {} is not writable".format(self.bin_path)
+            print(msg)
+            raise PermissionError(msg)
 
         self.connection = sqlite3.connect(self.database_file)
 
