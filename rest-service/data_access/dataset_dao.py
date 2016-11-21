@@ -241,29 +241,33 @@ class DatasetDAO(data_access_base.MainDAO):
     def insert_empty_dataset(self, datasetClass, name=None):
         """Creates an empty dataset on database.
 
+        If name is not provided, dataset will use the current timestamp as
+        name instead
+
         :param kgeserver.dataset.Dataset datasetClass: The class of the dataset
         :param str name: The name of the dataset
         :return: The id of dataset created, or None
         :rtype: tuple
         """
         if name is not None:
-            unique_name = "{}_{}.bin".format(name, str(int(time.time())))
-            sql_sentence = ("INSERT INTO dataset (id, binary_dataset, "
-                            "algorithm, status, name) VALUES (NULL, '" +
-                            unique_name + "', -1, 0, ?);")
+            unique_name = "{0}/{0}_{1}".format(name, str(int(time.time())))
+            bin_name = unique_name+".bin"
 
         else:
-            unique_name = str(int(time.time()))+".bin"
-            sql_sentence = ("INSERT INTO dataset (id, binary_dataset, "
-                            "algorithm, status) VALUES (NULL, '"+unique_name +
-                            "', -1, 0);")
+            name = str(int(time.time()))
+            unique_name = "{0}/{0}".format(int_date)
+            bin_name = unique_name+".bin"
+
+        os.makedirs(os.path.join(self.bin_path, name))
+        sql_sentence = ("INSERT INTO dataset (id, binary_dataset, "
+                        "algorithm, status, name) VALUES (NULL, '" +
+                        bin_name + "', -1, 0, ?);")
+        result = self.execute_insertion(sql_sentence, name)
 
         newdataset = datasetClass()
         self.binary_dataset = unique_name
-        dtst_path = os.path.join(self.bin_path, unique_name)
+        dtst_path = os.path.join(self.bin_path, bin_name)
         newdataset.save_to_binary(dtst_path)
-
-        result = self.execute_insertion(sql_sentence, name)
         rowid = result.lastrowid
         result.close()
 
