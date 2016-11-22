@@ -1,7 +1,8 @@
 #!/bin/bash
 echo "RUNNING GUNICORN"
-ls -laR /home/$CONDA_USER
-CODE_PATH="/home/$CONDA_USER/work"
+CODE_PATH="/home/$CONDA_USER/kge-server"
+cd $CODE_PATH
+python3 setup.py install
 DATASETS_PATH="$CODE_PATH/datasets/"
 export $DATASETS_PATH
 WORKING_DIR_EX="$CODE_PATH/rest-service/"

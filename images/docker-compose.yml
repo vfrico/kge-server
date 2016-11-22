@@ -3,7 +3,7 @@ services:
   celery:
     build: celery/
     volumes:
-     - ..:/home/kgeserver/work
+     - ..:/home/kgeserver/kge-server
     depends_on:
      - redis
   web:
@@ -11,8 +11,8 @@ services:
     ports:
      - "6789:8000"
     volumes:
-     - ..:/home/kgeserver/work
+     - ..:/home/kgeserver/kge-server
     depends_on:
      - redis
   redis:
-    image: redis
+    image: redis:alpine
