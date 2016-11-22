@@ -290,9 +290,12 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         if verbose > 0:
             print("Found {} entities".format(entities_number))
 
-        limit = 100000
+        limit = 50000
         seed_vector = []
-        for q in range(0, math.ceil(entities_number / limit)):
+        rounds_number = range(0, math.ceil(entities_number / limit))
+        print("Hay {} tripletas, se van a hacer {} consultas".format(
+            entities_number, rounds_number))
+        for q in rounds_number:
             offset = q * limit
             first_query = """
                 PREFIX wikibase: <http://wikiba.se/ontology>

@@ -26,7 +26,11 @@ import threading
 from datetime import datetime
 import time
 import copy
+import logging
 from collections import defaultdict
+
+# Disable logging for requests library
+logging.getLogger("requests").setLevel(logging.WARNING)
 
 
 class Dataset():
@@ -276,7 +280,7 @@ class Dataset():
         result_query = self.execute_query(query)
         if result_query[0] is not 200:
             raise Exception("Error on endpoint. HTTP status code: " +
-                            str(response.status_code))
+                            str(result_query[0]))
         else:
             jsonlist = result_query[1]
         # print(json.dumps(jsonlist, indent=4, sort_keys=True))
@@ -831,6 +835,9 @@ class Dataset():
                         response.json()["results"]["bindings"])
         except requests.exceptions.ConnectionError:
             raise ExecuteQueryError("Error on endpoint")
+        except json.decoder.JSONDecodeError:
+            print(response.content)
+            raise ExecuteQueryError("Error on JSON decoder")
 
 
 class ExecuteQueryError(Exception):
