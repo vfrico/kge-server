@@ -435,6 +435,8 @@ class DatasetIndex():
         task_obj, err = task_dao.add_task_by_uuid(task.id)
         if task_obj is None:
             raise falcon.HTTPNotFound(description=str(err))
+        task_obj["next"] = "/datasets/"+dataset_id
+        task_dao.update_task(task_obj)
 
         msg = "Task {} created successfuly".format(task_obj['id'])
         textbody = {"status": 202, "message": msg}
@@ -520,6 +522,12 @@ class TasksResource():
         task["state"] = t_uuid.state
         # task["is_ready"] = t_uuid.ready()
         task["id"] = task_obj["id"]
+
+        try:
+            if req.get_param('get_debug_info') == "true":
+                task["debug"] = task_obj
+        except Exception:
+            pass
 
         if t_uuid.state == "SUCCESS":
             # Look if exists some next

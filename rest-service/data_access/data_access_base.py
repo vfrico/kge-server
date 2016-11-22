@@ -43,6 +43,17 @@ def _CONFIG_get_sqlite_database():
         return "server.db"
 
 
+def _CONFIG_get_database_fill():
+    try:
+        var = os.environ["FILL_DATABASE_DUMMY"]
+        if var.lower() == "true":
+            return True
+        else:
+            return False
+    except KeyError:
+        return False
+
+
 class MainDAO():
     def __init__(self):
         "Comprueba si existe la base de datos y/o la inicializa"
@@ -58,7 +69,7 @@ class MainDAO():
             f = open(self.database_file, "w+")
             f.close()
             self.connection = sqlite3.connect(self.database_file)
-            self.build_basic_db()
+            self.build_basic_db(insert_dummy=_CONFIG_get_database_fill())
 
         # Path where all binary files have its relative path
         self.bin_path = _CONFIG_get_dataset_path()
@@ -72,7 +83,7 @@ class MainDAO():
 
         self.connection = sqlite3.connect(self.database_file)
 
-    def build_basic_db(self):
+    def build_basic_db(self, insert_dummy=False):
 
         self.execute_query("CREATE TABLE algorithm "
                            "(id INTEGER UNIQUE PRIMARY KEY, "
@@ -124,14 +135,15 @@ class MainDAO():
                          "margin": 2.0},
                         {"id": -1, "embedding_size": -1}
         ]
-        for alg in default_algorithms:
-            self.execute_query(
-                "INSERT INTO algorithm {0} VALUES {1} ;"
-                .format(tuple(alg.keys()), tuple(alg.values())))
-        for dtset in default_datasets:
-            self.execute_query(
-                "INSERT INTO dataset {0} VALUES {1} ;"
-                .format(tuple(dtset.keys()), tuple(dtset.values())))
+        if insert_dummy:
+            for alg in default_algorithms:
+                self.execute_query(
+                    "INSERT INTO algorithm {0} VALUES {1} ;"
+                    .format(tuple(alg.keys()), tuple(alg.values())))
+            for dtset in default_datasets:
+                self.execute_query(
+                    "INSERT INTO dataset {0} VALUES {1} ;"
+                    .format(tuple(dtset.keys()), tuple(dtset.values())))
 
     def execute_query(self, query, *args):
         """Executes a query and returns a list of rows
