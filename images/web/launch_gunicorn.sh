@@ -1,6 +1,7 @@
 #!/bin/bash
 echo "RUNNING GUNICORN"
-CODE_PATH="/home/$NB_USER/work"
+ls -laR /home/$CONDA_USER
+CODE_PATH="/home/$CONDA_USER/work"
 DATASETS_PATH="$CODE_PATH/datasets/"
 export $DATASETS_PATH
 WORKING_DIR_EX="$CODE_PATH/rest-service/"

@@ -3,7 +3,7 @@ services:
   celery:
     build: celery/
     volumes:
-     - ..:/home/jovyan/work
+     - ..:/home/kgeserver/work
     depends_on:
      - redis
   web:
@@ -11,7 +11,7 @@ services:
     ports:
      - "6789:8000"
     volumes:
-     - ..:/home/jovyan/work
+     - ..:/home/kgeserver/work
     depends_on:
      - redis
   redis:

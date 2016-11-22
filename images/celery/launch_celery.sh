@@ -1,6 +1,7 @@
 #!/bin/bash
 echo "RUNNING CELERY"
-CODE_PATH="/home/$NB_USER/work"
+ls -laR /home/$CONDA_USER
+CODE_PATH="/home/$CONDA_USER/work"
 WORKING_DIR_EX="$CODE_PATH/rest-service/"
 cd $WORKING_DIR_EX
 echo "$WORKING_DIR_EX"
