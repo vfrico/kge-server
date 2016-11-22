@@ -17,7 +17,7 @@ RUN useradd -m -s /bin/bash -N -u $CONDA_USER_UID $CONDA_USER && \
     chown $CONDA_USER_UID:users -R /opt/conda
 
 # Install some conda dependencies
-RUN conda install scikit-learn scipy cython
+RUN conda install --yes scikit-learn scipy cython
 
 # Install kge-server and its dependencies
 RUN pip install --upgrade pip
@@ -28,12 +28,13 @@ RUN git clone https://github.com/vfrico/kge-server.git && cd kge-server/ && pyth
 RUN apt-get remove gcc g++ -y && \
     apt-get autoremove -y
 
-
+# Init system and launch script
 ENTRYPOINT ["tini", "--"]
 CMD ["/bin/bash", "launch_gunicorn.sh"]
 
 COPY launch_gunicorn.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/launch_gunicorn.sh
 
+# Exit from root user
 USER $CONDA_USER
 ENV PATH /opt/conda/bin:$PATH
