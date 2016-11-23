@@ -31,111 +31,119 @@ Aquí se detallarán todos los endpoints del servicio. El valor de la prioridad
 que se muestra indica la importancia que se le va a dar a la implementación
 de ese servicio. Cuanto menor sea, más importancia se le dará.
 
-Gestión de Datasets
+Datasets management
 ```````````````````
+The `/dataset` collection contains several methods to create, add triples to
+the dataset, train and generate search indexes.
 
-Un dataset se compone de los siguientes campos públicos:
+It also contains these main params
 
-{"entities", "relations", "triples", "status", "algorithm"}
+.. sourcecode:: json
 
-El recurso *Algorithm*, que todavía no está disponible, dispondrá de todos
-los parámetros que se han utilizado para entrenar el dataset. Por el momento
-sólo contendrá "embedding_size".
+    {"entities", "relations", "triples", "status", "algorithm"}
+
+The `algorithm` parameter contains all the information the dataset are trained with.
+See `/algorithm` collection to get more information about this.
 
 Dataset will be changing its status when actions such training or indexing
 are performed. The *status* can only grow up. When a changing status is taking
 place, the dataset cannot be edited. In this situations, the status will be
 a negative integer.
 
-**status**: untrained -> trained -> indexed
+**status**: `untrained` -> `trained` -> `indexed`
 
 .. http:get:: /datasets/(int:dataset_id)/
 
-    Obtener toda la información de un dataset.
+    Get all the information about a dataset, given a `dataset_id`
 
-    **Ejemplo**
+    **Sample request and response**
 
     :http:get:`/datasets/1/`
 
     .. sourcecode:: json
 
         {
-            "dataset": {
-                "entities": 664444,
-                "relations": 647,
-                "id": 1,
-                "status": 2,
-                "triples": 3261785,
-                "algorithm": 100
-            }
+        	"dataset": {
+        		"relations": 655,
+        		"triples": 3307248,
+        		"algorithm": {
+        			"id": 2,
+        			"embedding_size": 100,
+        			"max_epochs": null,
+        			"margin": 2
+        		},
+        		"entities": 651759,
+        		"status": 2,
+        		"name": null,
+        		"id": 4
+        	}
         }
+    :param int dataset_id: Unique *dataset_id*
+    :statuscode 200: Returns all information about a dataset.
+    :statuscode 404: The dataset can't be found.
 
-    :param int dataset_id: id único del dataset
-    :statuscode 200: Devuelve el dataset sin errores
-    :statuscode 404: El dataset no ha sido encontrado
+.. http:post:: /datasets/(int:dataset_id)/train?algorithm=(int:id_algorithm)
 
-.. ver celery para añadir peticiones asíncronas a un "demonio" https://github.com/celery/celery/
-.. http:put:: /datasets/(int:dataset_id)/train?algorithm=(int:id_algorithm)
+    Train a dataset with a given algorithm id. The training process can be
+    quite large, so this REST method uses a asynchronous model to perform
+    each request.
 
-    Entrenar un dataset con un algoritmo dado. Se usará un modelo de petición
-    asíncrona, dado que puede tardar una cantidad de tiempo considerable.
+    The response of this method will only be a `202 ACCEPTED` status code, with
+    the `Location:` header filled with the task path element. See `/tasks`
+    collection to get more information about how tasks are managed on the
+    service.
 
-    El dataset ya tiene que existir y no debe haber sido entrenado previamente
+    The dataset must be in a 'untrained' (0) state to get this operation done.
+    Also, no operation such as `add_triples` must be being processed.
+    Otherwise, a 409 CONFLICT status code will be obtained.
 
-    Se pondrá la petición en una cola y se devolverá un 202 ACCPEPTED, con
-    la cabecera LOCATION: rellena con una tarea (/task/{id}), que mostrará el progreso.
-    Al finalizar, la tarea mostrará un 303, ya que se habrá creado un nuevo
-    recurso /datasets/{id}, y la cabecera LOCATION vendrá rellena con esa URI.
-
-    Basado en: <http://restcookbook.com/Resources/asynchroneous-operations/>
-
-    :prioridad: 2
-    :param int dataset_id: id único del dataset.
-    :query int id_algorithm: id del algoritmo utilizado para entrenar el dataset.
+    :param int dataset_id: Unique *dataset_id*
+    :query int id_algorithm: The wanted algorithm to train the dataset
+    :statuscode 202: The requests has been accepted to the system and a task has
+                     been created. See Location header to get more information.
+    :statuscode 404: The dataset or the algorithm can't be found.
+    :statuscode 409: The dataset cannot be trained due to its status.
 
 .. http:get:: /datasets/
 
-    Obtener todos los ID de Datasets. No muestra (por defecto) los tamaños
-    de los datasets.
+    Gets all datasets available on the system.
 
     :statuscode 200: All the datasets are shown correctly
 
+.. TODO: This method is not implemented
+    .. http:get:: /dataset_types
 
-.. http:get:: /dataset_types
+        Obtener todos los tipos de dataset disponibles en el sistema. No pueden
+        ser modificados.
 
-    Obtener todos los tipos de dataset disponibles en el sistema. No pueden
-    ser modificados.
-
-    :prioridad: 1
-    :statuscode 200: Se muestran adecuadamente los tipos
+        :statuscode 200: Se muestran adecuadamente los tipos
 
 
-.. Problema: Un WikidataDataset no tiene las mismas operaciones que un Dataset
-.. normal. Ver cómo puede afectar esto en la gestión de los métodos HTTP:
-.. **Solución**: Utilizar sólo los métodos *públicos* de Dataset
 .. http:post:: /dataset?type=(int:dataset_type)
 
-    Crear un dataset nuevo y vacío. Se deberán utilizar otras consultas para
-    llenar con tripletas el dataset. Se creará el objeto con un determinado
-    *dataset_type*, que determinará qué funciones podrá tener en un futuro.
+    Creates a new and empty dataset. To fill in you must use other requests.
 
-    :prioridad: 1
-    :query int dataset_type: El tipo de dataset a ser creado.
-    :statuscode 201: Se ha creado un dataset nuevo correctamente. Ver cabecera
-                     Location para saber la URI del recurso.
-    :statuscode 404: El *dataset_type* no existe.
-    :statuscode 500: No se ha podido crear el dataset.
+    You also must provide `dataset_type` query param. This method will create
+    a WikidataDataset (id: 1) by default, but you also can create different
+    datasets providing a different dataset_type.
+
+    :query int dataset_type: The dataset type to be created. 0 is for a simple
+                             Dataset and 1 is for WikidataDataset (default).
+    :statuscode 201: A new dataset has been created successfuly. See `Location:`
+                     header to get the id and the new resource path.
+    :statuscode 404: The given *dataset_type* does not exist.
 
 
 .. http:post:: /datasets/(int:dataset_id)/triples
 
-    Añadir una tripleta al dataset. Se debe enviar un JSON con un objeto o lista
-    de objetos *triple*, que tienen los parámetros.
-    {"subject", "predicate", "object"}¹. Sólo se pueden añadir tripletas a un
-    dataset con estado *0*, ya que no puede ser reentrenado.
+    Adds a triple or a list of triples to the dataset. You must provide a JSON
+    object on the request body, as shown below on the example. The name of the
+    JSON object must be *triples* and must contain a list of all entities to be
+    introduced inside the dataset. These entities must contain
+    {"subject", "predicate", "object"} params. This notation is similar to other
+    known as *head*, *label* and *tail*.
 
-    ¹:*También se suelen representar las tripletas con la notación de head,*
-    *label y tail, refiriéndose respectivamente a subject, predicate y object*
+    Only triples can be added on a `untrained` (0) dataset.
 
     **Ejemplo**
 
@@ -144,44 +152,80 @@ a negative integer.
     .. sourcecode:: json
 
         {"triples": [
-            {"subject":"Q1492", "predicate":"P17", "object":"Q29"},
-            {"subject":"Q2807", "predicate":"P17", "object":"Q29"}
-                    ]
+                {
+                    "subject": {"value": "Q1492"},
+                    "predicate": {"value": "P17"},
+                    "object": {"value": "Q29"}
+                },
+                {
+                    "subject": {"value": "Q2807"},
+                    "predicate": {"value": "P17"},
+                    "object": {"value": "Q29"}
+                }
+            ]
         }
 
-    :param int dataset_id: id único del dataset.
-    :statuscode 202: La petición se ha procesado correctamente.
-    :statuscode 404: El *dataset_id* no existe.
-    :statuscode 409: El estado del *dataset_id* no es correcto.
+    :param int dataset_id: Unique *dataset_id*
+    :statuscode 200: The request has been successful
+    :statuscode 404: The dataset or the algorithm can't be found.
+    :statuscode 409: The dataset cannot be trained due to its status.
 
 
 .. http:post:: /datasets/(int:dataset_id)/generate_triples
 
     Adds triples to dataset doing a sequence of SPARQL queries by levels,
     starting with a seed vector. This operation is supported only by
-    certain types of datasets.
+    certain types of datasets (the default one, type=1)
 
     The request will use asyncronous operations. This means that the request
     will not be satisfied on the same HTTP connection. Instead, the service
-    will return a `task` resource that will be queried with the progress
+    will return a `/task` resource that will be queried with the progress
     of the task.
+
+    The `graph_pattern` argument must be the where part of a SPARQL query. It
+    **must** contain three variables named as `?subject` `?predicate`
+    and `?object`. The service will try to make a query with these names.
+
+    You also must provide the `levels` to make a deep lookup of the entities
+    retrieved from previous queries.
+
+    The optional param `batch_size` is used
+    on the first lookup for SPARQL query. For big queries you must tweak this
+    parameter to avoid server errors as well as to increase performance. It is
+    the LIMIT statement when doing this queries.
+
+    **Sample request**
 
     .. sourcecode:: json
 
         {
-        "generate_triples":
-            {
-                "levels": 2,
-                "sparql_seed_query": "",
-                "sparql_graph_pattern": "",
-                "limit_ent": 200,
-            }
+            "generate_triples":
+                {
+                    "graph_pattern": "SPARQL Query",
+                    "levels": 2,
+                    "batch_size": 30000
+                }
         }
 
-    :param int dataset_id: id único del dataset.
-    :statuscode 404: El *dataset_id* no existe.
+    **Sample response**
+
+    The `location:` header of the response will contain the relative URI for the
+    created task resouce:
+
+        `location: /tasks/32`
+
+    .. sourcecode:: json
+
+        {
+            "status": 202,
+            "message": "Task 32 created successfuly"
+        }
+
+    :param int dataset_id: Unique identifier of dataset
+    :statuscode 404: The provided *dataset_id* does not exist.
     :statuscode 409: The *dataset_id* does not allow this operation
-    :statuscode 202: Se ha creado una tarea. Ver /tareas para más información
+    :statuscode 202: A new task has been created. See /tasks resource
+                     to get more information.
 
 .. http:post:: /datasets/(int:dataset_id)/embeddings
 
@@ -197,7 +241,7 @@ a negative integer.
     This could be useful if it is used with /similar_entities endpoint, to find
     similar entities given a different embedding vector.
 
-    **Ejemplo**
+    **Sample request**
 
     :http:post:`/datasets/6/embeddings`
 
@@ -209,7 +253,7 @@ a negative integer.
             "http://www.wikidata.org/entity/Q1" ]
         }
 
-    **Respuesta**
+    **Sample response**
 
     .. sourcecode:: json
 
@@ -229,6 +273,7 @@ a negative integer.
           ]
         }
 
+    *Note: The upper vectors are only shown as illustrative, they are not real values*
 
     :param int dataset_id: Unique id of the dataset
     :statuscode 200: Operation was successful
@@ -236,16 +281,16 @@ a negative integer.
     :statuscode 409: The dataset is not on a correct status
 
 
-Tareas
-``````
+Tasks
+`````
+The task collection stores all the information that async request need. This
+collection are made mainly to get the actual state of tasks, but no to edit or
+delete tasks (Not implemented).
 
-Esta factoría almacena toda la información que generen todas las peticiones
-asíncronas en el servidor
+.. http:get:: /tasks/(int:task_id)?get_debug_info=(boolean:get_debug_info)&?no_redirect=(boolean:no_redirect)
 
-.. http:get:: /tasks/(int:task_id)
-
-    Muestra la progresión de la tarea con id *task_id*. Las tareas que hayan
-    acabado pueden ser eliminadas sin previo aviso.
+    Shows the progress of a task with a `task_id`. The finished tasks can be
+    deleted from the system without previous advise.
 
     Some tasks can inform to the user about its progress. It is done through
     the progress param, which has *current* and *total* relative arguments, and
@@ -255,87 +300,61 @@ asíncronas en el servidor
     step, and will not include previous step, expected to be already done, or next
     step which is expected to be empty.
 
-    :param int task_id: id único de la tarea a consultar
-    :statuscode 200: Muestra el estado de la tarea
-    :statuscode 303: La tarea se ha completado. See Location para ver
-                     el recurso al que afecta.
-    :statuscode 404: La *task_id* no existe.
+    The resource has two optional parameters: `get_debug_info` and `no_redirect`.
+    The first one, `get_debug_info` set to true on the query params will return
+    additional information from the task. The other param, `no_redirect` will
+    avoid send a 303 status to the client to redirect to the created resource.
+    Instead it will send a simple 200 status code, but with the location header
+    filled.
 
+    :param int task_id: Unique *task_id* from the task.
+    :statuscode 200: Shows the status from the current task.
+    :statuscode 303: The task has finished. See Location header to find the
+                     resource it has created/modified. With `no_redirect` query
+                     param set to true, the location header will be filled, but
+                     a 200 code will be returned instead.
+    :statuscode 404: The given *task_id* does not exist.
 
-.. http:delete:: /tasks/(int:task_id)
+.. NOT IMPLEMENTED STILL...
+    .. http:delete:: /tasks/(int:task_id)
 
-    Deletes a task from database. If it is possible to stop a task which is
-    started but not finished, it will be stopped and deleted. If this is not
-    possible, the task resource will be kept as is, and a 409 status code will
-    be sent along a reason why the task cannot be stopped.
+        Deletes a task from database. If it is possible to stop a task which is
+        started but not finished, it will be stopped and deleted. If this is not
+        possible, the task resource will be kept as is, and a 409 status code will
+        be sent along a reason why the task cannot be stopped.
 
-    If the task is deleted, the status will not be queried in a future, but any
-    result produced by the task (such as adding triples to a dataset), will
-    be kept on its own resource.
+        If the task is deleted, the status will not be queried in a future, but any
+        result produced by the task (such as adding triples to a dataset), will
+        be kept on its own resource.
 
-    :prioridad: 1
-    :todo: Not implemented
-    :statuscode 204: The task has been deleted
-    :statuscode 404: The task does not exists and cannot be deleted
-    :statuscode 409: The current state of the task does not allow to delete it
+        :prioridad: 1
+        :todo: Not implemented
+        :statuscode 204: The task has been deleted
+        :statuscode 404: The task does not exists and cannot be deleted
+        :statuscode 409: The current state of the task does not allow to delete it
 
-Predicción de tripletas
-```````````````````````
+Triples prediction
+``````````````````
 
 .. http:get:: /datasets/(int:dataset_id)/similar_entities/(string:entity)?limit=(int:limit)?search_k=(int:search_k)
-
-    Obtener las *limit* entidades más similares a *entity* dentro
-    del *dataset_id*. El número dado en *limit* excluye la propia entidad.
-    Sólo es válido para ciertas representaciones de entidad.
-
-
-    **Ejemplo**
-
-    :http:get:`/datasets/1/similar_entities/Q1492?limit=1`
-
-    .. sourcecode:: json
-
-        {    "similar_entities":
-            {    "response":
-                [
-                    {"distance": 0, "entity": "http://www.wikidata.org/entity/Q1492"},
-                    {"distance": 0.8224636912345886, "entity": "http://www.wikidata.org/entity/Q15090"}
-                ],
-                "entity": "http://www.wikidata.org/entity/Q1492",
-                "limit": 2
-            },
-            "dataset": {
-                "entities": 664444,
-                "relations": 647,
-                "id": 1,
-                "status": 2,
-                "triples": 3261785,
-                "algorithm": 100
-            }
-        }
-
-
-    :param int dataset_id: id único del dataset
-    :param string entity: Representación de la entidad (Elemento o vector)
-    :query int limit: Límite de entidades similares que se piden. Por defecto
-                      tiene el valor 10.
-    :query int search_k: Número máximo de nodos donde se realiza la búsqueda.
-                         Mejora la calidad de las búsquedas, a costa de un
-                         rendimiento más bajo. Por defecto tiene el valor -1.
-
-
 .. http:post:: /datasets/(int:dataset_id)/similar_entities?limit=(int:limit)?search_k=(int:search_k)
 
-    Obtener las *limit* entidades más similares a *entity* dentro
-    del *dataset_id*. El número dado en *limit* excluye la propia entidad.
-    La representación de la entidad puede ser una URI completa o cualquier
-    otra de su representación
+    Get the *limit* entities most similar to a *entity* inside a *dataset_id*.
+    The given number in *limit* excludes the entity given itself.
 
-    Debe de incluirse en el body un documento JSON formateado así:
+    The POST method allows any representation of the wanted resource. See the
+    example below. You can provide an entity as an URI or other similar
+    representation, even an embedding. The type param inside entity JSON object
+    must be "uri" for a URI or similar representation and "embedding" for an
+    embedding.
 
-    **Ejemplo**
+    The `search_k` param is used to tweak the results of the search. When this
+    value is greater, the precission of the results are also greater, but the
+    time it takes to find the response is also bigger.
 
-    :http:post:`/datasets/0/similar_entities?limit=1`
+    **Sample request**
+    
+    :http:get:`/datasets/7/similar_entities?limit=1&search_k=10000`
 
     .. sourcecode:: json
 
@@ -343,7 +362,7 @@ Predicción de tripletas
               {"value": "http://www.wikidata.org/entity/Q1492", "type": "uri"}
         }
 
-    *Respuesta*
+    **Sample response**
 
     .. sourcecode:: json
 
@@ -367,23 +386,23 @@ Predicción de tripletas
         }
 
 
-    :param int dataset_id: id único del dataset
-    :param string entity: Representación de la entidad (Elemento o vector)
-    :query int limit: Límite de entidades similares que se piden. Por defecto
-                      tiene el valor 10.
-    :query int search_k: Número máximo de nodos donde se realiza la búsqueda.
-                         Mejora la calidad de las búsquedas, a costa de un
-                         rendimiento más bajo. Por defecto tiene el valor -1.
+    :param int dataset_id: Unique id of the dataset
+    :query int limit: Limit of similar entities requested. By default this is
+                      set to 10.
+    :query int search_k: Max number of trees where the lookup is performed.
+                         This increase the result quality, but reduces the
+                         performance of the request. By default is set to -1
+    :statuscode 200: The request has been performed successfully
+    :statuscode 404: The dataset can't be found
 
-
-.. http:get:: /datasets/(int:dataset_id)/distance/
+.. http:post:: /datasets/(int:dataset_id)/distance
 
     Returns the distance between two elements. The lower this is, most probable
-    to be both the same triple.
+    to be both the same triple. The minimum distance is 0.
 
     **Request Example**
 
-    :http:post:`/datasets/0/similar_entities?limit=1`
+    :http:post:`/datasets/0/similar_entities`
 
     .. sourcecode:: json
 
@@ -402,17 +421,17 @@ Predicción de tripletas
             "distance": 1.460597038269043
         }
 
-    :prioridad: 0
-    :param int dataset_id: id único del dataset
-    :param list embedding: Vector de *embedding* a obtener su probabilidad
+    :param int dataset_id: Unique id of the dataset
+    :statuscode 200: The request has been performed successfully
+    :statuscode 404: The dataset can't be found
 
+.. TODO: It is unknown the method on kgeserver library to get the wanted value
+    .. http:get:: /datasets/(int:dataset_id)/embedding_probability/(string:embedding)
 
-.. http:get:: /datasets/(int:dataset_id)/embedding_probability/(string:embedding)
+        Devuelve la probabilidad de que un vector de *embedding* sea verdadero
+        dentro de un *dataset_id* dado.
 
-    Devuelve la probabilidad de que un vector de *embedding* sea verdadero
-    dentro de un *dataset_id* dado.
-
-    :prioridad: 0
-    :todo: 501 Not Implemented
-    :param int dataset_id: id único del dataset
-    :param list embedding: Vector de *embedding* a obtener su probabilidad
+        :prioridad: 0
+        :todo: 501 Not Implemented
+        :param int dataset_id: Unique id of the dataset
+        :param list embedding: Vector de *embedding* a obtener su probabilidad
