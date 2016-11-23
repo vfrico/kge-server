@@ -5,21 +5,61 @@ Service Architecture
 ====================
 
 The service has an architecture based in docker containers. Currently it uses
-two different containers:
+three different containers:
 
-- **Service container**: This holds all the code for the application to run,
-  as well as different servers:
 
-  - **gunicorn**: Is a web server that runs the code needed to access to all HTTP
-    methods.
-  - **celery**: Is a server running as daemon that runs the code for the heaviest
-    tasks.
+- **Web container**: This container exposes the only open port of all system.
+  Provides a web server (*gunicorn*) that accepts HTTP requests to the REST API
+  and responds to them
 
-- **Redis container**: To get celery correctly work with tasks, it is required to
-  run a redis database.
+- **celery**: This container is running on the background waiting for a task on
+  its queue. It contains all library code and celery.
 
-Server Deployment
------------------
+- **Redis container**: The redis key-value storage is a dependency from Celery.
+  It also stores all the progress of the tasks running on Celery queue.
+
+
+Server deployment v2
+--------------------
+
+The old version of this repository didn't had any Dockerfile or image available
+to run the code. This has changed, and two containers has been created to hold
+both web server and asyncronous task daemon (celery).
+
+Also, a simple container orchestation with docker-compose has been used. You can
+see all the information inside images/ folder. It contains two Dockerfiles and
+a docker-compose.yml that allows to build instantly the two images and connect
+the containers. To run them you only have to clone the entire repository and
+execute those commands:
+
+::
+
+    cd images/
+    docker-compose build
+    docker-compose up
+
+The previous method is still available if you can't use docker-compose on your
+machine
+
+Images used
+```````````
+The previous image used on developement environment was ``recognai/jupyter-scipy-kge``.
+This image contains a lot of code that the library and rest service does not use.
+
+Using ``continuumio/miniconda3`` docker image as base, it is possible to install
+only the required packages, minimizing the overall size of the container.
+
+Both containers will launch a script on startup that will reinstall the kge-server
+package on python path, to get latest developement version running, and then
+will launch the service itself: gunicorn or celery worker.
+
+Standalone containers to use in production are not still available.
+
+Server Deployment (deprecated)
+------------------------------
+
+**NOTE**: It is highly recommended to use the new server deployment method using
+docker compose. The images generated are smaller and faster to build.
 
 To configure the service we will need to install docker in our machine. After
 that we will start pulling containers or creating images, so you need a good
@@ -29,13 +69,13 @@ Getting all needed images
 `````````````````````````
 We need first to create the image for the service container. Until the container
 is uploaded somewhere you can download it, you can use the following Dockerfile.
-Copy it into a new folder and call it `Dockerfile`
+Copy it into a new folder and call it ``Dockerfile``
 
 ::
 
     FROM jupyter/scipy-notebook
 
-    MAINTAINER Víctor Fernández Rico <vfrico@gmail.com>
+    MAINTAINER Víctor Fernández <vfrico@gmail.com>
 
     USER root
 
@@ -74,7 +114,7 @@ Running the environment
 
 The redis container acts like a dependency for our service container, so we
 will launch it before. With the following command we start running a container
-called `myredis`.
+called ``myredis``.
 
 ::
 
@@ -92,7 +132,7 @@ tweak as you want.
     kgeservice:v1
 
 If everythin went ok, we can see all running containers. We must see at least our
-two containers, called `myredis` and `serviciokge`
+two containers, called ``myredis`` and ``serviciokge``
 
 ::
 

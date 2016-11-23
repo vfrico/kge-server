@@ -42,7 +42,7 @@ It also contains these main params
 
     {"entities", "relations", "triples", "status", "algorithm"}
 
-The `algorithm` parameter contains all the information the dataset are trained with.
+The ``algorithm`` parameter contains all the information the dataset are trained with.
 See `/algorithm` collection to get more information about this.
 
 Dataset will be changing its status when actions such training or indexing
@@ -50,11 +50,11 @@ are performed. The *status* can only grow up. When a changing status is taking
 place, the dataset cannot be edited. In this situations, the status will be
 a negative integer.
 
-**status**: `untrained` -> `trained` -> `indexed`
+**status**: ``untrained`` -> ``trained`` -> ``indexed``
 
 .. http:get:: /datasets/(int:dataset_id)/
 
-    Get all the information about a dataset, given a `dataset_id`
+    Get all the information about a dataset, given a ``dataset_id``
 
     **Sample request and response**
 
@@ -88,13 +88,13 @@ a negative integer.
     quite large, so this REST method uses a asynchronous model to perform
     each request.
 
-    The response of this method will only be a `202 ACCEPTED` status code, with
-    the `Location:` header filled with the task path element. See `/tasks`
+    The response of this method will only be a ``202 ACCEPTED`` status code, with
+    the ``Location:`` header filled with the task path element. See ``/tasks``
     collection to get more information about how tasks are managed on the
     service.
 
     The dataset must be in a 'untrained' (0) state to get this operation done.
-    Also, no operation such as `add_triples` must be being processed.
+    Also, no operation such as ``add_triples`` must be being processed.
     Otherwise, a 409 CONFLICT status code will be obtained.
 
     :param int dataset_id: Unique *dataset_id*
@@ -123,13 +123,13 @@ a negative integer.
 
     Creates a new and empty dataset. To fill in you must use other requests.
 
-    You also must provide `dataset_type` query param. This method will create
+    You also must provide ``dataset_type`` query param. This method will create
     a WikidataDataset (id: 1) by default, but you also can create different
     datasets providing a different dataset_type.
 
     :query int dataset_type: The dataset type to be created. 0 is for a simple
                              Dataset and 1 is for WikidataDataset (default).
-    :statuscode 201: A new dataset has been created successfuly. See `Location:`
+    :statuscode 201: A new dataset has been created successfuly. See ``Location:``
                      header to get the id and the new resource path.
     :statuscode 404: The given *dataset_type* does not exist.
 
@@ -140,10 +140,10 @@ a negative integer.
     object on the request body, as shown below on the example. The name of the
     JSON object must be *triples* and must contain a list of all entities to be
     introduced inside the dataset. These entities must contain
-    {"subject", "predicate", "object"} params. This notation is similar to other
+    ``{"subject", "predicate", "object"}`` params. This notation is similar to other
     known as *head*, *label* and *tail*.
 
-    Only triples can be added on a `untrained` (0) dataset.
+    Only triples can be added on a ``untrained`` (0) dataset.
 
     **Ejemplo**
 
@@ -182,14 +182,14 @@ a negative integer.
     will return a `/task` resource that will be queried with the progress
     of the task.
 
-    The `graph_pattern` argument must be the where part of a SPARQL query. It
-    **must** contain three variables named as `?subject` `?predicate`
-    and `?object`. The service will try to make a query with these names.
+    The ``graph_pattern`` argument must be the where part of a SPARQL query. It
+    **must** contain three variables named as ``?subject``, ``?predicate``
+    and ``?object``. The service will try to make a query with these names.
 
-    You also must provide the `levels` to make a deep lookup of the entities
+    You also must provide the ``levels`` to make a deep lookup of the entities
     retrieved from previous queries.
 
-    The optional param `batch_size` is used
+    The optional param ``batch_size`` is used
     on the first lookup for SPARQL query. For big queries you must tweak this
     parameter to avoid server errors as well as to increase performance. It is
     the LIMIT statement when doing this queries.
@@ -209,10 +209,10 @@ a negative integer.
 
     **Sample response**
 
-    The `location:` header of the response will contain the relative URI for the
+    The ``location:`` header of the response will contain the relative URI for the
     created task resouce:
 
-        `location: /tasks/32`
+        ``location: /tasks/32``
 
     .. sourcecode:: json
 
@@ -289,7 +289,7 @@ delete tasks (Not implemented).
 
 .. http:get:: /tasks/(int:task_id)?get_debug_info=(boolean:get_debug_info)&?no_redirect=(boolean:no_redirect)
 
-    Shows the progress of a task with a `task_id`. The finished tasks can be
+    Shows the progress of a task with a ``task_id``. The finished tasks can be
     deleted from the system without previous advise.
 
     Some tasks can inform to the user about its progress. It is done through
@@ -300,9 +300,9 @@ delete tasks (Not implemented).
     step, and will not include previous step, expected to be already done, or next
     step which is expected to be empty.
 
-    The resource has two optional parameters: `get_debug_info` and `no_redirect`.
-    The first one, `get_debug_info` set to true on the query params will return
-    additional information from the task. The other param, `no_redirect` will
+    The resource has two optional parameters: ``get_debug_info`` and ``no_redirect``.
+    The first one, ``get_debug_info`` set to true on the query params will return
+    additional information from the task. The other param, ``no_redirect`` will
     avoid send a 303 status to the client to redirect to the created resource.
     Instead it will send a simple 200 status code, but with the location header
     filled.
@@ -310,7 +310,7 @@ delete tasks (Not implemented).
     :param int task_id: Unique *task_id* from the task.
     :statuscode 200: Shows the status from the current task.
     :statuscode 303: The task has finished. See Location header to find the
-                     resource it has created/modified. With `no_redirect` query
+                     resource it has created/modified. With ``no_redirect`` query
                      param set to true, the location header will be filled, but
                      a 200 code will be returned instead.
     :statuscode 404: The given *task_id* does not exist.
@@ -348,12 +348,12 @@ Triples prediction
     must be "uri" for a URI or similar representation and "embedding" for an
     embedding.
 
-    The `search_k` param is used to tweak the results of the search. When this
+    The ``search_k`` param is used to tweak the results of the search. When this
     value is greater, the precission of the results are also greater, but the
     time it takes to find the response is also bigger.
 
     **Sample request**
-    
+
     :http:get:`/datasets/7/similar_entities?limit=1&search_k=10000`
 
     .. sourcecode:: json

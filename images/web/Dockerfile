@@ -1,6 +1,6 @@
 FROM continuumio/miniconda3
 
-MAINTAINER Víctor Fernández Rico <vfrico@gmail.com>
+MAINTAINER Víctor Fernández <vfrico@gmail.com>
 
 USER root
 
@@ -23,7 +23,8 @@ RUN conda install --yes scikit-learn scipy cython &&\
 # Install kge-server and its dependencies
 RUN pip install --upgrade pip
 RUN pip install setuptools requests nose
-RUN cd /home/$CONDA_USER/ && git clone https://github.com/vfrico/kge-server.git && cd kge-server/ && python3 setup.py install
+RUN cd /home/$CONDA_USER/ && git clone https://github.com/vfrico/kge-server.git && \
+    cd kge-server/ && python3 setup.py install
 
 # Once tools to build Annoy are used, uninstall them
 RUN apt-get remove gcc g++ -y && \
