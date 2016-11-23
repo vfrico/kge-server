@@ -169,6 +169,16 @@ class ProgressDAO():
         progress.current = current
         return self.set_progress(celery_uuid, progress)
 
+    def add_progress(self, celery_uuid):
+        """Sums +1 to current progres of an existing task
+
+        :param str celery_uuid: The uuid of the task
+        :param int current: The current progress to save
+        """
+        progress = self.get_progress(celery_uuid)
+        progress.current += 1
+        return self.set_progress(celery_uuid, progress)
+
     def create_progress(self, celery_uuid, total):
         """Creates a progress DTO (empty) on the database
 

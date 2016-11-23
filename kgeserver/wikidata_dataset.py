@@ -259,7 +259,7 @@ class WikidataDataset(kgeserver.dataset.Dataset):
                             for entity in first_json]
         return seed_vector
 
-    def load_from_graph_pattern(self, verbose=0, where=""):
+    def load_from_graph_pattern(self, verbose=0, where="", **kwargs):
         """Auxiliar method that outputs a list of seed elements
 
         This seed vector will be the 'root nodes' of a tree with the
@@ -267,6 +267,7 @@ class WikidataDataset(kgeserver.dataset.Dataset):
 
         :param verbose: The desired level of verbosity
         :param string where: SPARQL where to construct query
+        :param int batch_size: The size of batches queried each time
         :return: A list of entities
         :rtype: list
         """
@@ -290,12 +291,18 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         if verbose > 0:
             print("Found {} entities".format(entities_number))
 
-        limit = 50000
+        if 'batch_size' in kwargs:
+            limit = kwargs['batch_size']
+        else:
+            limit = 100000
+
         seed_vector = []
-        rounds_number = range(0, math.ceil(entities_number / limit))
+        rounds_number = math.ceil(entities_number / limit)
         print("Hay {} tripletas, se van a hacer {} consultas".format(
             entities_number, rounds_number))
-        for q in rounds_number:
+        if 'start_callback' in kwargs:
+            kwargs['start_callback'](rounds_number)
+        for q in range(0, rounds_number):
             offset = q * limit
             first_query = """
                 PREFIX wikibase: <http://wikiba.se/ontology>
@@ -308,6 +315,8 @@ class WikidataDataset(kgeserver.dataset.Dataset):
                 print("The first query is: \n", first_query)
             self.load_dataset_from_query(first_query)
             self.show()
+            if 'callback' in kwargs:
+                kwargs['callback']()
             # sts, first_json = self.execute_query(first_query)
             # if verbose > 2:
             #     print(sts, len(first_json))

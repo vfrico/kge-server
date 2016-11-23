@@ -337,8 +337,9 @@ class GenerateTriplesResource():
 
         {"generate_triples":
             {
-                "graph_pattern": "<SPARQL Query>",
-                "levels": 2
+                "graph_pattern": "<SPARQL Query (Where part)>",
+                "levels": 2,
+                "batch_size": 30000   # Optional
             }
         }
 
@@ -378,10 +379,14 @@ class GenerateTriplesResource():
         # Read arguments from body
         graph_pattern = json_rpc.pop("graph_pattern")
         levels = json_rpc.pop("levels")
+        try:
+            batch_size = json_rpc.pop("batch_size")
+        except KeyError:
+            batch_size = None
 
         # Launch async task
         task = async_tasks.generate_dataset_from_sparql.delay(
-                dtset_path, graph_pattern, levels)
+                dtset_path, graph_pattern, levels, batch_size=batch_size)
 
         # Create a new task
         task_dao = data_access.TaskDAO()
@@ -533,11 +538,12 @@ class TasksResource():
             # Look if exists some next
             if "next" in task_obj and task_obj["next"] is not None:
                 print("This task has next {}".format(task_obj["next"]))
-                resp.status = falcon.HTTP_303
+                try:
+                    if req.get_param('no_redirect') == "true":
+                        resp.status = falcon.HTTP_200
+                except Exception:
+                    resp.status = falcon.HTTP_303
                 resp.location = task_obj["next"]
-            else:
-                # print("nothing else")
-                pass
 
         elif t_uuid.state == "STARTED":
             # Get task progress and show to the user

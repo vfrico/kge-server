@@ -58,12 +58,36 @@ def generate_dataset_from_sparql(self, dataset_path, graph_pattern, levels,
     # Obtains the Redis connection from celery.
     redis = self.app.backend
     # The id of the object
-    celery_uuid = "celery-task-progress-"+self.request.id
+    celery_uuid = self.request.id
     # Saves the empty id to be retrieved first time without error
-    redis.set(celery_uuid, "{}".encode("utf-8"))
+    # redis.set(celery_uuid, "{}".encode("utf-8"))
+    progres_dao = data_access.ProgressDAO()
+    progres_dao.create_progress(celery_uuid, 1)
+    progress = progres_dao.get_progress(celery_uuid)
+    progress.total_steps = 1
+    progress.current_steps = 1
+    progress.current = 0
+    progress.total = 0
+    progres_dao.set_progress(celery_uuid, progress)
+
+    def init_progress_callback(max_iter):
+        progress = progres_dao.get_progress(celery_uuid)
+        progress.total = max_iter
+        progres_dao.set_progress(celery_uuid, progress)
+
+    sv_kwargs = {}
+    sv_kwargs['where'] = graph_pattern
+    sv_kwargs['callback'] = lambda: progres_dao.add_progress(celery_uuid)
+    sv_kwargs['start_callback'] = init_progress_callback
+
+    # Batch limit has to be an integer
+    if keyw_args['batch_size']:
+        sv_kwargs['batch_size'] = int(keyw_args.pop('batch_size'))
 
     # Get the seed vector and load first entities
-    seed_vector = dtset.load_from_graph_pattern(where=graph_pattern)
+    seed_vector = dtset.load_from_graph_pattern(**sv_kwargs)
+
+    celery_uuid = "celery-task-progress-"+self.request.id
 
     def status_callback(status):
         """Saves the progress of the task on redis db"""
