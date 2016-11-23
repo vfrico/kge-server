@@ -15,15 +15,31 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+try:
+    import sys
+
+    doc_build_requires = ['sphinx', 'sphinx_rtd_theme',
+                          'sphinxcontrib-httpdomain']
+    execution_requires = ['scikit-kge', 'annoy', 'nose']
+    service_celery_requires = ['celery>=4.0.0', 'redis']
+    service_web_requires = ['gunicorn', 'falcon', 'celery>=4.0.0', 'redis']
+
+    # You can tweak this through arguments
+    if "async_server" in sys.argv:
+        sys.argv.remove("async_server")
+        all_dependencies = execution_requires + service_celery_requires
+    elif "web_server" in sys.argv:
+        sys.argv.remove("web_server")
+        all_dependencies = execution_requires + service_web_requires
+    else:
+        all_dependencies = doc_build_requires + execution_requires +\
+                           service_web_requires
+
+except Exception:
+    print("An error occured")
+    exit(1)
 
 from setuptools import setup
-doc_build_requires = ['sphinx', 'sphinx_rtd_theme',
-                      'sphinxcontrib-httpdomain']
-execution_requires = ['scikit-kge', 'annoy', 'nose']
-service_requires = ['gunicorn', 'falcon', 'celery>=4.0.0', 'redis']
-
-# You can tweak this to add or delete dependencies
-all_dependencies = doc_build_requires + execution_requires + service_requires
 
 setup(name='kgeserver',
       version='0.1',

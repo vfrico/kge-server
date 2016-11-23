@@ -22,9 +22,9 @@ RUN conda install --yes scikit-learn scipy cython &&\
 
 # Install kge-server and its dependencies
 RUN pip install --upgrade pip
-RUN pip install setuptools requests nose
+RUN pip install setuptools requests nose 'celery>=4.0.0' redis annoy
 RUN cd /home/$CONDA_USER/ && git clone https://github.com/vfrico/kge-server.git && \
-    cd kge-server/ && python3 setup.py install
+    cd kge-server/ && python3 setup.py install async_server
 
 # Once tools to build Annoy are used, uninstall them
 RUN apt-get remove gcc g++ -y && \
