@@ -127,6 +127,17 @@ a negative integer.
     a WikidataDataset (id: 1) by default, but you also can create different
     datasets providing a different dataset_type.
 
+    Inside the body of the request you can provide a name for the dataset. For
+    example:
+
+    **Sample request**
+
+    :http:post:`/datasets`
+
+    .. sourcecode:: json
+
+        {"name": "peliculas"}
+
     :query int dataset_type: The dataset type to be created. 0 is for a simple
                              Dataset and 1 is for WikidataDataset (default).
     :statuscode 201: A new dataset has been created successfuly. See ``Location:``
@@ -280,6 +291,53 @@ a negative integer.
     :statuscode 404: The dataset ID does not exist
     :statuscode 409: The dataset is not on a correct status
 
+
+Algorithms
+``````````
+
+The algorithm collection is used mainly to create and see the different algorithms
+created on the server.
+
+The hyperparameters that are allowed currently to tweak are:
+- `embedding_size`: The size of the embeddigs the trainer will use
+- ``margin``: The margin used on the trainer
+- ``max_epochs``: The maximum number of iterations of the algorithm
+
+.. http:get:: /algorithms/
+
+    Gets a list with all the algorithms created on the service.
+
+.. http:get:: /algorithms/(int:algorithm_id)
+
+    Gets only one algorithm
+
+    :param int algorithm_id: The algorithm unique identifier
+
+.. http:post:: /algorithms/
+
+    Create one algorithm on the service. On success, this method will return
+    a 201 CREATED status code and the header parameter `Location:` filled with
+    the relative path to the created resource.
+
+    The body of the request must contain all parameters for the new algorithm.
+    See the example below:
+
+    **Sample request**
+
+    :http:post:`/algorithms`
+
+    .. sourcecode:: json
+        {
+        	"algorithm": {
+        		"embedding_size": 50,
+        		"margin": 2,
+        		"max_epochs": 80
+        	}
+        }
+
+    :statuscode 201: The request has been processed successfuly and a new
+                     resource has been created. See ``Location:`` header
+                     to get the new path.
 
 Tasks
 `````
