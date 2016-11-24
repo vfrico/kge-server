@@ -135,7 +135,7 @@ class DatasetDAO(data_access_base.MainDAO):
         It is intended only to help user locate and understand better the
         content of a dataset.
 
-        :param int dataset_id: The id of the dataset7
+        :param int dataset_id: The id of the dataset
         :param str dataset_name: The new name of the dataset
         :return: If operation was successful
         :rtype: tuple
@@ -148,7 +148,7 @@ class DatasetDAO(data_access_base.MainDAO):
             return True, None
         else:
             res.close()
-            return False, (400, "Failed when trying to save dataset on db")
+            return False, (500, "Failed when trying to save dataset on db")
 
     def get_name(self, dataset_id):
         """Gets the current name of a given dataset
@@ -157,7 +157,7 @@ class DatasetDAO(data_access_base.MainDAO):
         It is intended only to help user locate and understand better the
         content of a dataset.
 
-        :param int dataset_id: The id of the dataset7
+        :param int dataset_id: The id of the dataset
         :return: The dataset name
         :rtype: tuple(string, err)
         """
@@ -168,6 +168,47 @@ class DatasetDAO(data_access_base.MainDAO):
             return None, (404, "Name of dataset (id:{}) not found".
                           format(dataset_id))
         return res[0]['name'], None
+
+    def set_description(self, dataset_id, dataset_description):
+        """Updates the dataset description
+
+        This method will not change the name of binary files on namespace.
+        It is intended only to help user locate and understand better the
+        content of a dataset.
+
+        :param int dataset_id: The id of the dataset
+        :param str dataset_name: The new name of the dataset
+        :return: If operation was successful
+        :rtype: tuple
+        """
+        query = "UPDATE dataset SET description=? WHERE id=? ;"
+        res = self.execute_insertion(query, dataset_description, dataset_id)
+
+        if res.rowcount == 1:
+            res.close()
+            return True, None
+        else:
+            res.close()
+            return False, (500, "Failed when trying to save dataset on db")
+
+    def get_description(self, dataset_id):
+        """Gets the current description of a given dataset
+
+        This method will not change the name of binary files on namespace.
+        It is intended only to help user locate and understand better the
+        content of a dataset.
+
+        :param int dataset_id: The id of the dataset
+        :return: The dataset description
+        :rtype: tuple(string, err)
+        """
+        query = "SELECT description FROM dataset WHERE id=? ;"
+        res = self.execute_query(query, dataset_id)
+
+        if res is None or len(res) < 1 or res[0]['description']:
+            return None, (404, "Description of dataset (id:{}) not found".
+                          format(dataset_id))
+        return res[0]['description'], None
 
     def build_dataset_object(self, dataset_dto):  # TODO: Maybe uneeded?
         """Returns a Dataset object if required by rest service
@@ -243,7 +284,7 @@ class DatasetDAO(data_access_base.MainDAO):
         else:
             return server.Server(search_index), None
 
-    def insert_empty_dataset(self, datasetClass, name=None):
+    def insert_empty_dataset(self, datasetClass, name=None, description=None):
         """Creates an empty dataset on database.
 
         If name is not provided, dataset will use the current timestamp as
@@ -268,7 +309,14 @@ class DatasetDAO(data_access_base.MainDAO):
             unique_name = "{0}/{0}".format(name)
             bin_name = unique_name+".bin"
 
-        os.makedirs(os.path.join(self.bin_path, name))
+        try:
+            os.makedirs(os.path.join(self.bin_path, name))
+        except FileExistsError:
+            return None, (500, ("The server already contains a dataset with "
+                                "{} name, but database cannot locate to which "
+                                "dataset it correspond. Try to delete the "
+                                "dataset folder or change the name of the "
+                                "dataset.").format(name))
         sql_sentence = ("INSERT INTO dataset (id, binary_dataset, "
                         "algorithm, status, name) VALUES (NULL, '" +
                         bin_name + "', NULL, 0, ?);")
@@ -280,6 +328,9 @@ class DatasetDAO(data_access_base.MainDAO):
         newdataset.save_to_binary(dtst_path)
         rowid = result.lastrowid
         result.close()
+
+        if description is not None:
+            self.set_description(rowid, description)
 
         return rowid, None
 

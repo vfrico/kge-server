@@ -63,9 +63,9 @@ class DatasetResource(object):
             raise falcon.HTTPNotFound(description=str(err))
 
         for key in body_dataset:
-            if key == "name":
-                print("Encontrado", key)
-                res, err = dataset_dao.set_name(dataset_id, body_dataset[key])
+            if key == "description":
+                res, err = dataset_dao.set_description(dataset_id,
+                                                       body_dataset[key])
                 if res is None:
                     raise falcon.HTTPInternalServerError(
                         title="Server Error",
@@ -102,10 +102,13 @@ class DatasetFactory(object):
         with Location header filled with the URI of the dataset.
         """
         dataset_name = None
+        dataset_description = None
         try:
             body = json.loads(req.stream.read().decode('utf-8'))
             if "name" in body:
                 dataset_name = body["name"]
+            if "description" in body:
+                dataset_description = body["description"]
         except json.decoder.JSONDecodeError as err:
             print(err)
 
@@ -118,10 +121,13 @@ class DatasetFactory(object):
             dts_type = 1
 
         dataset_type = dao.get_dataset_types()[dts_type]["class"]
-        id_dts, err = dao.insert_empty_dataset(dataset_type, name=dataset_name)
+        id_dts, err = dao.insert_empty_dataset(
+            dataset_type, name=dataset_name, description=dataset_description)
         if id_dts is None and err[0] == 409:
             raise falcon.HTTPConflict(
                 title="The dataset name is already used", description=err[1])
+        elif id_dts is None and err[0] == 500:
+            raise falcon.HTTPInternalServerError(description=err[1])
 
         # Dataset created, evrything is done
         resp.status = falcon.HTTP_201

@@ -95,6 +95,7 @@ class MainDAO():
                            "(id INTEGER UNIQUE PRIMARY KEY, "
                            "binary_dataset TEXT, "
                            "name TEXT, "
+                           "description TEXT, "
                            "binary_model TEXT, "
                            "binary_index TEXT,"
                            "algorithm INTEGER, "

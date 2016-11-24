@@ -31,6 +31,7 @@ class DatasetDTO(data_access_base.DTOClass):
     triples = None
     algorithm = None
     name = None
+    description = None
 
     _binary_dataset = None
     _binary_model = None
@@ -51,6 +52,7 @@ class DatasetDTO(data_access_base.DTOClass):
         self._binary_index = result_dict['binary_index']
         self.status = result_dict['status']
         self.name = result_dict['name']
+        self.description = result_dict['description']
         self.id = int(result_dict['id'])
 
         if result_dict['triples'] and result_dict['relations'] and\
