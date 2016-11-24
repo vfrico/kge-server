@@ -107,10 +107,16 @@ class DatasetDTO(data_access_base.DTOClass):
             return False
 
     def get_binary_index(self):
+        """Returns the path to the binary index file.
+        """
         return os.path.join(self._base, self._binary_index)
 
     def get_binary_dataset(self):
+        """Return the path to the binary dataset file
+        """
         return os.path.join(self._base, self._binary_dataset)
 
     def get_binary_model(self):
+        """Return the path of the binary model file
+        """
         return os.path.join(self._base, self._binary_model)

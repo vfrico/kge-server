@@ -23,6 +23,7 @@ import time
 import sqlite3
 import redis
 import json
+from pathlib import PurePath
 import kgeserver.server as server
 import kgeserver.dataset as dataset
 import kgeserver.wikidata_dataset as wikidata_dataset
@@ -115,8 +116,10 @@ class DatasetDAO(data_access_base.MainDAO):
         :param int dataset_id: The id of the dataset
         :param str model_path: The path where binary file is located
         """
+        # Substract to the model_path the relative bin_path
+        relative_model_path = PurePath(model_path).relative_to(self.bin_path)
         query = "UPDATE dataset SET binary_model=? WHERE id=? ;"
-        res = self.execute_insertion(query, model_path, dataset_id)
+        res = self.execute_insertion(query, relative_model_path, dataset_id)
 
         if res.rowcount == 1:
             res.close()
@@ -176,17 +179,17 @@ class DatasetDAO(data_access_base.MainDAO):
         """
         if dataset_dto and dataset_dto._binary_dataset:
             dtst = dataset.Dataset()
-            path = os.path.join("../datasets/", dataset_dto._binary_dataset)
+            path = os.path.join(self.bin_path, dataset_dto._binary_dataset)
             dtst.load_from_binary(path)
             return dtst
         else:
             return None
 
-    def build_dataset_path(self, dataset_dto):  # TODO deprecated
-        """Generates a relative path to the dataset from a DTO
-        :deprecated: See get_binary_path
-        """
-        return "../datasets/" + get_binary_path._binary_dataset
+    # def build_dataset_path(self, dataset_dto):  # TODO deprecated
+    #     """Generates a relative path to the dataset from a DTO
+    #     :deprecated: See get_binary_path
+    #     """
+    #     return self.bin_path + get_binary_path._binary_dataset
 
     def set_search_index(self, dataset_id, index_path):
         """Saves on database the index of a dataset
@@ -196,9 +199,11 @@ class DatasetDAO(data_access_base.MainDAO):
         :returns: If operation was successful
         :rtype: tuple
         """
+        # Substract to the index_path the relative bin_path
+        relative_index_path = PurePath(index_path).relative_to(self.bin_path)
         query = "UPDATE dataset SET binary_index=? WHERE id=? ;"
 
-        res = self.execute_insertion(query, index_path, dataset_id)
+        res = self.execute_insertion(query, relative_index_path, dataset_id)
 
         if res.rowcount == 1:
             res.close()
