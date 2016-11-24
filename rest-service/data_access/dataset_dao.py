@@ -61,7 +61,7 @@ class DatasetDAO(data_access_base.MainDAO):
         self.binary_model = None
         self.binary_index = None
 
-    def get_dataset_by_id(self, dataset_id):
+    def get_dataset_by_id(self, dataset_id, update_cache=True, use_cache=True):
         """Returns a dataset information given its id
 
         :return: A dataset dictionary or none
@@ -76,11 +76,47 @@ class DatasetDAO(data_access_base.MainDAO):
         # Fill a DatasetDTO
         try:
             dataset_dto = DatasetDTO()
-            dataset_dto.from_dict(res[0])
-        except LookupError as e:  # TODO: Unknown
+            dataset_dto.from_dict(res[0], use_cache=use_cache)
+            # Update cache
+            if update_cache:
+                self.update_dataset_stats(dataset_dto.id, dataset_dto.triples,
+                                          dataset_dto.entities,
+                                          dataset_dto.relations)
+
+        except LookupError as e:
             return (None, e.args[0])
 
         return (dataset_dto, None)
+
+    def get_all_datasets(self, update_cache=True, use_cache=True):
+        """Queries the DB to retrieve all datasets
+
+        :returns: A list of datasets objects
+        :rtype: tuple
+        """
+        sql_getall = "SELECT * FROM dataset"
+        results = self.execute_query(sql_getall)
+        if results is None:
+            return None, (404, "Any dataset found")
+
+        # Store all datasets dictionaries
+        all_datasets = []
+        for result in results:
+            try:
+                dataset_dto = DatasetDTO()
+                dataset_dto.from_dict(result, use_cache=use_cache)
+                if update_cache:
+                    self.update_dataset_stats(dataset_dto.id,
+                                              dataset_dto.triples,
+                                              dataset_dto.entities,
+                                              dataset_dto.relations)
+                all_datasets.append(dataset_dto)
+            except LookupError as e:
+                err_msg = "On dataset {0}: {1}".format(result['id'],
+                                                       e.args[0][1])
+                return (None, (e.args[0][0], err_msg))
+
+        return all_datasets, None
 
     def get_binary_path(self, dataset_id):
         """Extracts from database the binary path of the dataset
@@ -334,31 +370,6 @@ class DatasetDAO(data_access_base.MainDAO):
 
         return rowid, None
 
-    def get_all_datasets(self):
-        """Queries the DB to retrieve all datasets
-
-        :returns: A list of datasets objects
-        :rtype: tuple
-        """
-        sql_getall = "SELECT * FROM dataset"
-        results = self.execute_query(sql_getall)
-        if results is None:
-            return None, (404, "Any dataset found")
-
-        # Store all datasets dictionaries
-        all_datasets = []
-        for result in results:
-            try:
-                dataset_dto = DatasetDTO()
-                dataset_dto.from_dict(result)
-                all_datasets.append(dataset_dto)
-            except LookupError as e:
-                err_msg = "On dataset {0}: {1}".format(result['id'],
-                                                       e.args[0][1])
-                return (None, (e.args[0][0], err_msg))
-
-        return all_datasets, None
-
     def get_dataset_types(self):  # TODO: This should not be here...
         """Stores the different datasets that can be created
 
@@ -470,3 +481,16 @@ class DatasetDAO(data_access_base.MainDAO):
             return (None, 404, e.args[0])
 
         return dataset_dto, None
+
+    def update_dataset_stats(self, dataset_id, triples, entities, relations):
+        query = ("UPDATE dataset SET triples = ?, entities = ?, relations = ?"
+                 "WHERE id=?")
+        res = self.execute_insertion(query, triples, entities, relations,
+                                     dataset_id)
+        print("Updating dataset stats")
+        if res.rowcount == 1:
+            res.close()
+            return True, None
+        else:
+            res.close()
+            return False, (404, "Some of your variables are not correct")

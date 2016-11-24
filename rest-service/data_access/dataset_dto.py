@@ -21,6 +21,7 @@ import os
 import data_access.data_access_base as data_access_base
 import kgeserver.dataset as dataset
 from data_access.algorithm_dao import AlgorithmDAO
+# from data_access.dataset_dao import DatasetDAO
 
 
 class DatasetDTO(data_access_base.DTOClass):
@@ -39,7 +40,7 @@ class DatasetDTO(data_access_base.DTOClass):
 
     _base = data_access_base._CONFIG_get_dataset_path()
 
-    def from_dict(self, result_dict):
+    def from_dict(self, result_dict, use_cache=True):
         """Given a result dict, with proper fields, builds a datasetDTO
 
         :param dict result_dict: A dict with all fields required
@@ -54,15 +55,19 @@ class DatasetDTO(data_access_base.DTOClass):
         self.name = result_dict['name']
         self.description = result_dict['description']
         self.id = int(result_dict['id'])
-
-        if result_dict['triples'] and result_dict['relations'] and\
-           result_dict['entities']:
+        print(result_dict['triples'], result_dict['relations'],
+              result_dict['entities'])
+        if result_dict['triples'] is not None and\
+           result_dict['relations'] is not None and\
+           result_dict['entities'] is not None and use_cache:
             # These fields are filled and can be readable
+            print("Using cached values")
             self.triples = result_dict['triples']
             self.entities = result_dict['entities']
             self.relations = result_dict['relations']
         else:
             # Fields should be readed from file
+            print("Without cache")
             dtst = dataset.Dataset()
             dtst_path = os.path.join(self._base, self._binary_dataset)
             dtst.load_from_binary(dtst_path)

@@ -30,8 +30,13 @@ class DatasetResource(object):
     def on_get(self, req, resp, dataset_id):
         """Return a HTTP response with all information about one dataset
         """
+        if str(req.get_param("use_cache")).upper == "FALSE":
+            cache = False
+        else:
+            cache = True
+
         dataset = data_access.DatasetDAO()
-        resource, err = dataset.get_dataset_by_id(dataset_id)
+        resource, err = dataset.get_dataset_by_id(dataset_id, use_cache=cache)
         if resource is None:
             raise falcon.HTTPNotFound(description=str(err))
 
@@ -83,9 +88,14 @@ class DatasetResource(object):
 class DatasetFactory(object):
     def on_get(self, req, resp):
         """Return all datasets"""
+        try:
+            cache = req.get_param("use_cache")
+        except LookupError:
+            cache = True
+
         dao = data_access.DatasetDAO()
 
-        listdts, err = dao.get_all_datasets()
+        listdts, err = dao.get_all_datasets(use_cache=cache)
 
         if listdts is None:
             raise falcon.HTTPNotFound(description=str(err))
