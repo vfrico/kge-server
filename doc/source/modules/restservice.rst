@@ -142,7 +142,7 @@ a negative integer.
                              Dataset and 1 is for WikidataDataset (default).
     :statuscode 201: A new dataset has been created successfuly. See ``Location:``
                      header to get the id and the new resource path.
-    :statuscode 404: The given *dataset_type* does not exist.
+    :statuscode 409: The given name already exists on the server.
 
 
 .. http:post:: /datasets/(int:dataset_id)/triples

@@ -41,6 +41,7 @@ execute those commands:
 The previous method is still available if you can't use docker-compose on your
 machine
 
+
 Images used
 ```````````
 The previous image used on developement environment was ``recognai/jupyter-scipy-kge``.
@@ -54,6 +55,17 @@ package on python path, to get latest developement version running, and then
 will launch the service itself: gunicorn or celery worker.
 
 Standalone containers to use in production are not still available.
+
+Filesystem permissions
+``````````````````````
+The images used creates a new user called `kgeserver` with 900 as its UID and
+owns to the users group. This
+is helpful because a 900 UID does not interfer with other processes running on
+the machine. But the docker-compose file mounts some folders from host machine
+that can create some ``PermissionError`` exceptions. To avoid them, always use
+write permissions for users group. You are also free to modify the Dockerfile
+to solve the UID issues you could have inside your system.
+
 
 Server Deployment (deprecated)
 ------------------------------

@@ -119,6 +119,9 @@ class DatasetFactory(object):
 
         dataset_type = dao.get_dataset_types()[dts_type]["class"]
         id_dts, err = dao.insert_empty_dataset(dataset_type, name=dataset_name)
+        if id_dts is None and err[0] == 409:
+            raise falcon.HTTPConflict(
+                title="The dataset name is already used", description=err[1])
 
         # Dataset created, evrything is done
         resp.status = falcon.HTTP_201
@@ -541,6 +544,8 @@ class TasksResource():
                 try:
                     if req.get_param('no_redirect') == "true":
                         resp.status = falcon.HTTP_200
+                    else:
+                        resp.status = falcon.HTTP_303
                 except Exception:
                     resp.status = falcon.HTTP_303
                 resp.location = task_obj["next"]

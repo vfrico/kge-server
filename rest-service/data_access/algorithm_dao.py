@@ -35,6 +35,8 @@ class AlgorithmDAO(data_access_base.MainDAO):
         self.algorithm = {}
 
     def get_algorithm_by_id(self, algorithm_id):
+        if algorithm_id is None:
+            return self.algorithm, None
         query = "SELECT * FROM algorithm WHERE id=?"
         res = self.execute_query(query, algorithm_id)
 

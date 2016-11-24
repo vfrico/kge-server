@@ -117,9 +117,9 @@ class DatasetDAO(data_access_base.MainDAO):
         :param str model_path: The path where binary file is located
         """
         # Substract to the model_path the relative bin_path
-        relative_model_path = PurePath(model_path).relative_to(self.bin_path)
+        rel_model_path = PurePath(model_path).relative_to(self.bin_path)
         query = "UPDATE dataset SET binary_model=? WHERE id=? ;"
-        res = self.execute_insertion(query, relative_model_path, dataset_id)
+        res = self.execute_insertion(query, str(rel_model_path), dataset_id)
 
         if res.rowcount == 1:
             res.close()
@@ -254,19 +254,24 @@ class DatasetDAO(data_access_base.MainDAO):
         :return: The id of dataset created, or None
         :rtype: tuple
         """
+        # Check first if it does not exist a dataset with the same name
         if name is not None:
+            dtsid, err = self.get_dataset_by_name(name)
+            if dtsid is not None:
+                return None, (409, ("A dataset with name {} already exists "
+                                    "with id {}").format(name, dtsid.id))
             unique_name = "{0}/{0}_{1}".format(name, str(int(time.time())))
             bin_name = unique_name+".bin"
 
         else:
             name = str(int(time.time()))
-            unique_name = "{0}/{0}".format(int_date)
+            unique_name = "{0}/{0}".format(name)
             bin_name = unique_name+".bin"
 
         os.makedirs(os.path.join(self.bin_path, name))
         sql_sentence = ("INSERT INTO dataset (id, binary_dataset, "
                         "algorithm, status, name) VALUES (NULL, '" +
-                        bin_name + "', -1, 0, ?);")
+                        bin_name + "', NULL, 0, ?);")
         result = self.execute_insertion(sql_sentence, name)
 
         newdataset = datasetClass()
@@ -398,3 +403,19 @@ class DatasetDAO(data_access_base.MainDAO):
         else:
             res.close()
             return False, (404, "Some of your variables are not correct")
+
+    def get_dataset_by_name(self, dataset_name):
+        query = "SELECT * FROM dataset WHERE name=? ;"
+        res = self.execute_query(query, dataset_name)
+
+        if res is None or len(res) == 0:
+            return None, (404, "Dataset {} not found".format(dataset_name))
+
+        # Fill a DatasetDTO
+        try:
+            dataset_dto = DatasetDTO()
+            dataset_dto.from_dict(res[0])
+        except LookupError as e:
+            return (None, 404, e.args[0])
+
+        return dataset_dto, None
