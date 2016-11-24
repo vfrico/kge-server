@@ -81,8 +81,10 @@ def generate_dataset_from_sparql(self, dataset_path, graph_pattern, levels,
     sv_kwargs['start_callback'] = init_progress_callback
 
     # Batch limit has to be an integer
-    if keyw_args['batch_size']:
+    try:
         sv_kwargs['batch_size'] = int(keyw_args.pop('batch_size'))
+    except (LookupError, ValueError, TypeError):
+        pass
 
     # Get the seed vector and load first entities
     seed_vector = dtset.load_from_graph_pattern(**sv_kwargs)
