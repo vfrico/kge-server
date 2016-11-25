@@ -392,8 +392,15 @@ class GenerateTriplesResource():
         if dataset_dto is None:
             raise falcon.HTTPNotFound(description=str(err))
 
+        if dataset_dto.status != 0:
+            raise falcon.HTTPConflict(
+                title="The dataset is not in a correct state",
+                description=("The dataset {id} has an status {status}, which "
+                             "is not valid to insert triples. Required is 0 "
+                             ).format(**dataset_dto.to_dict()))
+
         # Generate the filepath to the dataset
-        dtset_path = dataset_dto.get_binary_dataset()
+        # dtset_path = dataset_dto.get_binary_dataset()
 
         # Read arguments from body
         graph_pattern = json_rpc.pop("graph_pattern")
@@ -405,7 +412,7 @@ class GenerateTriplesResource():
 
         # Launch async task
         task = async_tasks.generate_dataset_from_sparql.delay(
-                dtset_path, graph_pattern, levels, batch_size=batch_size)
+                dataset_id, graph_pattern, levels, batch_size=batch_size)
 
         # Create a new task
         task_dao = data_access.TaskDAO()

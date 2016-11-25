@@ -37,7 +37,7 @@ except ImportError:
 
 
 @app.task(bind=True)
-def generate_dataset_from_sparql(self, dataset_path, graph_pattern, levels,
+def generate_dataset_from_sparql(self, dataset_id, graph_pattern, levels,
                                  **keyw_args):
     """Creates a recurrent dataset from a seed vector
 
@@ -51,6 +51,13 @@ def generate_dataset_from_sparql(self, dataset_path, graph_pattern, levels,
     :kwparam limit_ent: Use only for testing purposes
     """
     from celery import current_task  # in task definition
+    dataset_dao = data_access.DatasetDAO()
+    dataset_dao.set_status(dataset_id, -1)
+
+    dataset_path, err = dataset_dao.get_binary_path(dataset_id)
+    if dataset_path is None:
+        raise FileNotFoundError("Dataset path is not on the system")
+
     # Load current dataset
     dtset = dataset.Dataset()
     dtset.load_from_binary(dataset_path)
@@ -120,6 +127,9 @@ def generate_dataset_from_sparql(self, dataset_path, graph_pattern, levels,
 
     # Save new binary
     dtset.save_to_binary(dataset_path)
+
+    # Restore status
+    dataset_dao.set_status(dataset_id, 0)
 
     return False
 
