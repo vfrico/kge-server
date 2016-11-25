@@ -212,7 +212,6 @@ class Dataset():
         subject = self.check_entity(subject)
         pred = self.check_relation(pred)
         obj = self.check_entity(obj)
-
         if pred and obj and subject:
             # Add relation
             id_subj = self.add_entity(subject)
@@ -421,7 +420,7 @@ class Dataset():
                                   "implemented through a child object")
 
     def process_entity(self, entity, append_queue=lambda x: None, max_tries=10,
-                       callback=lambda: None, verbose=0, _times=0, **kwargs):
+                       callback=lambda x: None, verbose=0, _times=0, **kwargs):
         """Wrapper for child method `dataset._process_entity`_
 
         Will call self method `dataset._process_entity`_ and examine the return
@@ -479,7 +478,7 @@ class Dataset():
                                   "implemented through a child object")
 
     def load_dataset_recurrently(self, levels, seed_vector, verbose=1,
-                                 limit_ent=None, ext_callback=lambda: None,
+                                 limit_ent=None, ext_callback=lambda x: None,
                                  **keyword_args):
         """Loads to dataset all entities with BNE ID and their relations
 

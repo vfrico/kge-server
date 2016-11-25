@@ -495,8 +495,13 @@ class DatasetTrain():
         if dataset_dto is None:
             raise falcon.HTTPNotFound(description=str(err))
 
+        force_train = req.get_param("force_train")
+        if force_train and force_train.upper() == "TRUE":
+            force_train = True
+        else:
+            force_train = False
         # Check if dataset can be trained
-        if not dataset_dto.is_untrained():
+        if not dataset_dto.is_untrained() and not force_train:
             dataset_status = dataset_dto.status
             err_title = "The dataset is not in correct state"
             msg = "The dataset has {} status and is not ready to be trained"

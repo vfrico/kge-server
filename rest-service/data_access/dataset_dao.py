@@ -27,6 +27,7 @@ from pathlib import PurePath
 import kgeserver.server as server
 import kgeserver.dataset as dataset
 import kgeserver.wikidata_dataset as wikidata_dataset
+import kgeserver.dbpedia_dataset as dbpedia_dataset
 import data_access.data_access_base as data_access_base
 from data_access.dataset_dto import DatasetDTO
 from data_access.algorithm_dao import AlgorithmDAO
@@ -277,10 +278,10 @@ class DatasetDAO(data_access_base.MainDAO):
         :rtype: tuple
         """
         # Substract to the index_path the relative bin_path
-        relative_index_path = PurePath(index_path).relative_to(self.bin_path)
+        rel_index_path = PurePath(index_path).relative_to(self.bin_path)
         query = "UPDATE dataset SET binary_index=? WHERE id=? ;"
 
-        res = self.execute_insertion(query, relative_index_path, dataset_id)
+        res = self.execute_insertion(query, str(rel_index_path), dataset_id)
 
         if res.rowcount == 1:
             res.close()
@@ -298,7 +299,7 @@ class DatasetDAO(data_access_base.MainDAO):
         """
         if dataset_dto.status < 2:
             return None, (409, "Dataset {id} has {status} status and is not "
-                               "ready for search".format(**self.dataset))
+                               "ready for search".format(**dataset_dto.to_dict()))
         try:
             sch_in = server.SearchIndex()
             sch_in.load_from_file(dataset_dto.get_binary_index(),
@@ -386,6 +387,11 @@ class DatasetDAO(data_access_base.MainDAO):
                 "id": 1,
                 "name": "WikidataDataset",
                 "class": wikidata_dataset.WikidataDataset
+            },
+            {
+                "id": 2,
+                "name": "ESDBpediaDataset",
+                "class": dbpedia_dataset.ESDBpediaDataset
             }
         ]
 
