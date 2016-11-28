@@ -299,7 +299,7 @@ class DatasetDAO(data_access_base.MainDAO):
         """
         if dataset_dto.status < 2:
             return None, (409, "Dataset {id} has {status} status and is not "
-                               "ready for search".format(**dataset_dto.to_dict()))
+                          "ready for search".format(**dataset_dto.to_dict()))
         try:
             sch_in = server.SearchIndex()
             sch_in.load_from_file(dataset_dto.get_binary_index(),
@@ -339,12 +339,12 @@ class DatasetDAO(data_access_base.MainDAO):
                 return None, (409, ("A dataset with name {} already exists "
                                     "with id {}").format(name, dtsid.id))
             unique_name = "{0}/{0}_{1}".format(name, str(int(time.time())))
-            bin_name = unique_name+".bin"
+            bin_name = unique_name + ".bin"
 
         else:
             name = str(int(time.time()))
             unique_name = "{0}/{0}".format(name)
-            bin_name = unique_name+".bin"
+            bin_name = unique_name + ".bin"
 
         try:
             os.makedirs(os.path.join(self.bin_path, name))
@@ -355,9 +355,10 @@ class DatasetDAO(data_access_base.MainDAO):
                                 "dataset folder or change the name of the "
                                 "dataset.").format(name))
         sql_sentence = ("INSERT INTO dataset (id, binary_dataset, "
-                        "algorithm, status, name) VALUES (NULL, '" +
-                        bin_name + "', NULL, 0, ?);")
-        result = self.execute_insertion(sql_sentence, name)
+                        "algorithm, status, name, dataset_type) VALUES "
+                        "(NULL, '" + bin_name + "', NULL, 0, ?, ?);")
+        result = self.execute_insertion(
+            sql_sentence, name, datasetClass.__name__)
 
         newdataset = datasetClass()
         self.binary_dataset = unique_name
@@ -380,7 +381,7 @@ class DatasetDAO(data_access_base.MainDAO):
         return [
             {
                 "id": 0,
-                "name": "dataset",
+                "name": "Dataset",
                 "class": dataset.Dataset
             },
             {
@@ -500,3 +501,33 @@ class DatasetDAO(data_access_base.MainDAO):
         else:
             res.close()
             return False, (404, "Some of your variables are not correct")
+
+    def delete_dataset(self, dataset_id):
+        """This method will delete the given dataset_id from database and
+        will return all files stored by it, to delete them in a higher level.
+
+        :param int dataset_id: The dataset id
+        :return: A list of binary files or None
+        :rtype: tuple
+        """
+        lookup_query = ("SELECT binary_dataset, binary_model, binary_index, "
+                        "name FROM dataset WHERE id=? ;")
+        delete_query = ("DELETE FROM dataset WHERE id = ? ;")
+
+        res = self.execute_query(lookup_query, dataset_id)
+        try:
+            bin_list = [bin_file for bin_file in res[0]
+                        if bin_file is not None]
+            bin_list = [os.path.abspath(os.path.join(self.bin_path, bin_file))
+                        for bin_file in bin_list]
+        except LookupError:
+            return None, (404, "Maybe the dataset does not exists")
+
+        res = self.execute_insertion(delete_query, dataset_id)
+        if res.rowcount == 1:
+            res.close()
+            print(bin_list)
+            return bin_list, None
+        else:
+            res.close()
+            return None, (404, "Some of your variables are not correct")

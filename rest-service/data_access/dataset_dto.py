@@ -33,6 +33,7 @@ class DatasetDTO(data_access_base.DTOClass):
     algorithm = None
     name = None
     description = None
+    dataset_type = None
 
     _binary_dataset = None
     _binary_model = None
@@ -55,8 +56,8 @@ class DatasetDTO(data_access_base.DTOClass):
         self.name = result_dict['name']
         self.description = result_dict['description']
         self.id = int(result_dict['id'])
-        print(result_dict['triples'], result_dict['relations'],
-              result_dict['entities'])
+        self.dataset_type = result_dict['dataset_type']
+
         if result_dict['triples'] is not None and\
            result_dict['relations'] is not None and\
            result_dict['entities'] is not None and use_cache:

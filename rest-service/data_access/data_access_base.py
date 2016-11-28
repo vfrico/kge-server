@@ -30,6 +30,9 @@ import kgeserver.wikidata_dataset as wikidata_dataset
 
 
 def _CONFIG_get_dataset_path():
+    """This path should be relative to ``data_access/`` folder or provide a full
+    path inside the filesystem
+    """
     try:
         return os.environ["DATASETS_PATH"]
     except KeyError:
@@ -37,6 +40,8 @@ def _CONFIG_get_dataset_path():
 
 
 def _CONFIG_get_sqlite_database():
+    """This path should be relative to ``data_access/`` folder.
+    """
     try:
         return os.environ["SQLITE_DATABASE_FILE_PATH"]
     except KeyError:
@@ -44,6 +49,9 @@ def _CONFIG_get_sqlite_database():
 
 
 def _CONFIG_get_database_fill():
+    """If this variable is set, it will fill the database on startup with
+    sample data.
+    """
     try:
         var = os.environ["FILL_DATABASE_DUMMY"]
         if var.lower() == "true":
@@ -55,6 +63,7 @@ def _CONFIG_get_database_fill():
 
 
 class MainDAO():
+
     def __init__(self):
         "Comprueba si existe la base de datos y/o la inicializa"
 
@@ -103,38 +112,39 @@ class MainDAO():
                            "relations INTEGER, "
                            "triples INTEGER, "
                            "status INTEGER, "
+                           "dataset_type TEXT, "
                            "FOREIGN KEY(algorithm) REFERENCES algorithm(id)"
                            ");")
 
         default_datasets = [
-                        {"id": 0, "binary_dataset": 'wikidata_25k.bin',
-                         "binary_model": "",
-                         "binary_index": 'wikidata_25k.annoy.bin',
-                         "status": 0, 'algorithm': 0},
-                        {"id": 1, "binary_dataset": '4levels.bin',
-                         "binary_model": 'modelo_guardado.bin',
-                         "binary_index": 'annoyIndex.500.bin',
-                         "status": 2, 'algorithm': 0},
-                        {"id": 2, "binary_dataset": '4levels.bin',
-                         "binary_model": 'modelo_guardado.bin',
-                         "binary_index": 'annoyIndex.600.bin',
-                         "status": 2, 'algorithm': 0},
-                        {"id": 3, "binary_dataset": 'newDataset4lvl.bin',
-                         "binary_model": 'Unnuevomodeloentrenado.bin',
-                         "binary_index": 'unuevoAnnoy.600.bin',
-                         "status": 2, 'algorithm': 1},
-                        {"id": 4, "binary_dataset": 'newDataset4lvl.bin',
-                         "binary_model": 'modelo_newDataset4lvl_m2.bin',
-                         "binary_index": 'Annoy.nuevo.600.m2.bin',
-                         "status": 2, 'algorithm': 2}
-                        ]
+            {"id": 0, "binary_dataset": 'wikidata_25k.bin',
+             "binary_model": "",
+             "binary_index": 'wikidata_25k.annoy.bin',
+             "status": 0, 'algorithm': 0},
+            {"id": 1, "binary_dataset": '4levels.bin',
+             "binary_model": 'modelo_guardado.bin',
+             "binary_index": 'annoyIndex.500.bin',
+             "status": 2, 'algorithm': 0},
+            {"id": 2, "binary_dataset": '4levels.bin',
+             "binary_model": 'modelo_guardado.bin',
+             "binary_index": 'annoyIndex.600.bin',
+             "status": 2, 'algorithm': 0},
+            {"id": 3, "binary_dataset": 'newDataset4lvl.bin',
+             "binary_model": 'Unnuevomodeloentrenado.bin',
+             "binary_index": 'unuevoAnnoy.600.bin',
+             "status": 2, 'algorithm': 1},
+            {"id": 4, "binary_dataset": 'newDataset4lvl.bin',
+             "binary_model": 'modelo_newDataset4lvl_m2.bin',
+             "binary_index": 'Annoy.nuevo.600.m2.bin',
+             "status": 2, 'algorithm': 2}
+        ]
         default_algorithms = [
-                        {"id": 0, "embedding_size": 100},
-                        {"id": 1, "embedding_size": 100,
-                         "margin": 1.0},
-                        {"id": 2, "embedding_size": 100,
-                         "margin": 2.0},
-                        {"id": -1, "embedding_size": -1}
+            {"id": 0, "embedding_size": 100},
+            {"id": 1, "embedding_size": 100,
+             "margin": 1.0},
+            {"id": 2, "embedding_size": 100,
+             "margin": 2.0},
+            {"id": -1, "embedding_size": -1}
         ]
         if insert_dummy:
             for alg in default_algorithms:
@@ -204,6 +214,7 @@ class MainDAO():
 
 
 class DTOClass():
+
     def __str__(self):
         return str(self.__dict__)
 

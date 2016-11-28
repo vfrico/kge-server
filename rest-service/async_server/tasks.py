@@ -17,8 +17,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 from __future__ import absolute_import, unicode_literals
+import os
 from .celery import app
 import time
 import json
@@ -300,3 +300,14 @@ def find_embeddings_on_model(dataset_id, entities):
             embedding = model.E[position]
         return_list.append([entity, embedding.tolist()])
     return return_list
+
+
+def delete_dataset_by_id(dataset_id):
+    dataset_dao = data_access.DatasetDAO()
+    list_bin_files, err = dataset_dao.delete_dataset(dataset_id)
+    for bin_file in list_bin_files:
+        print(bin_file)
+        try:
+            os.remove(bin_file)
+        except IsADirectoryError as err:
+            os.rmdir(bin_file)
