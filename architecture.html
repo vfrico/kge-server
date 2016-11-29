@@ -1,0 +1,333 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Service Architecture &mdash; Knowledge Graph Embedding Server 1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="Knowledge Graph Embedding Server 1 documentation" href="index.html"/>
+        <link rel="prev" title="REST Service" href="modules/restservice.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Knowledge Graph Embedding Server
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules/modules.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/restservice.html">REST Service</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Service Architecture</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#server-deployment-v2">Server deployment v2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#images-used">Images used</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#server-deployment-deprecated">Server Deployment (deprecated)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#getting-all-needed-images">Getting all needed images</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#running-the-environment">Running the environment</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Knowledge Graph Embedding Server</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Service Architecture</li>
+    <li class="wy-breadcrumbs-aside">
+      
+          
+          <a href="_sources/architecture.rst.txt" rel="nofollow"> View page source</a>
+        
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="service-architecture">
+<span id="architecture"></span><h1>Service Architecture<a class="headerlink" href="#service-architecture" title="Permalink to this headline">¶</a></h1>
+<p>The service has an architecture based in docker containers. Currently it uses
+three different containers:</p>
+<ul class="simple">
+<li><strong>Web container</strong>: This container exposes the only open port of all system.
+Provides a web server (<em>gunicorn</em>) that accepts HTTP requests to the REST API
+and responds to them</li>
+<li><strong>celery</strong>: This container is running on the background waiting for a task on
+its queue. It contains all library code and celery.</li>
+<li><strong>Redis container</strong>: The redis key-value storage is a dependency from Celery.
+It also stores all the progress of the tasks running on Celery queue.</li>
+</ul>
+<div class="section" id="server-deployment-v2">
+<h2>Server deployment v2<a class="headerlink" href="#server-deployment-v2" title="Permalink to this headline">¶</a></h2>
+<p>The old version of this repository didn&#8217;t had any Dockerfile or image available
+to run the code. This has changed, and two containers has been created to hold
+both web server and asyncronous task daemon (celery).</p>
+<p>Also, a simple container orchestation with docker-compose has been used. You can
+see all the information inside images/ folder. It contains two Dockerfiles and
+a docker-compose.yml that allows to build instantly the two images and connect
+the containers. To run them you only have to clone the entire repository and
+execute those commands:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="nb">cd</span> images/
+docker-compose build
+docker-compose up
+</pre></div>
+</div>
+<p>The previous method is still available if you can&#8217;t use docker-compose on your
+machine</p>
+<div class="section" id="images-used">
+<h3>Images used<a class="headerlink" href="#images-used" title="Permalink to this headline">¶</a></h3>
+<p>The previous image used on developement environment was <code class="docutils literal"><span class="pre">recognai/jupyter-scipy-kge</span></code>.
+This image contains a lot of code that the library and rest service does not use.</p>
+<p>Using <code class="docutils literal"><span class="pre">continuumio/miniconda3</span></code> docker image as base, it is possible to install
+only the required packages, minimizing the overall size of the container.</p>
+<p>Both containers will launch a script on startup that will reinstall the kge-server
+package on python path, to get latest developement version running, and then
+will launch the service itself: gunicorn or celery worker.</p>
+<p>Standalone containers to use in production are not still available.</p>
+</div>
+</div>
+<div class="section" id="server-deployment-deprecated">
+<h2>Server Deployment (deprecated)<a class="headerlink" href="#server-deployment-deprecated" title="Permalink to this headline">¶</a></h2>
+<p><strong>NOTE</strong>: It is highly recommended to use the new server deployment method using
+docker compose. The images generated are smaller and faster to build.</p>
+<p>To configure the service we will need to install docker in our machine. After
+that we will start pulling containers or creating images, so you need a good
+internet connection and at least ~6 GB of free disk space</p>
+<div class="section" id="getting-all-needed-images">
+<h3>Getting all needed images<a class="headerlink" href="#getting-all-needed-images" title="Permalink to this headline">¶</a></h3>
+<p>We need first to create the image for the service container. Until the container
+is uploaded somewhere you can download it, you can use the following Dockerfile.
+Copy it into a new folder and call it <code class="docutils literal"><span class="pre">Dockerfile</span></code></p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">FROM</span> <span class="n">jupyter</span><span class="o">/</span><span class="n">scipy</span><span class="o">-</span><span class="n">notebook</span>
+
+<span class="n">MAINTAINER</span> <span class="n">Víctor</span> <span class="n">Fernández</span> <span class="o">&lt;</span><span class="n">vfrico</span><span class="nd">@gmail</span><span class="o">.</span><span class="n">com</span><span class="o">&gt;</span>
+
+<span class="n">USER</span> <span class="n">root</span>
+
+<span class="c1"># install scikit-kge from github</span>
+<span class="n">RUN</span> <span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">vfrico</span><span class="o">/</span><span class="n">kge</span><span class="o">-</span><span class="n">server</span><span class="o">.</span><span class="n">git</span>
+<span class="n">RUN</span> <span class="n">pip3</span> <span class="n">install</span> <span class="n">requests</span> <span class="o">--</span><span class="n">upgrade</span>
+<span class="n">RUN</span> <span class="n">pip3</span> <span class="n">install</span> <span class="n">setuptools</span>
+<span class="n">RUN</span> <span class="n">pip3</span> <span class="n">install</span> <span class="n">nose</span>
+<span class="n">RUN</span> <span class="n">cd</span> <span class="n">kge</span><span class="o">-</span><span class="n">server</span><span class="o">/</span> <span class="o">&amp;&amp;</span> <span class="n">python3</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+<span class="n">RUN</span> <span class="n">rm</span> <span class="o">-</span><span class="n">rf</span> <span class="n">kge</span><span class="o">-</span><span class="n">server</span><span class="o">/</span>
+<span class="n">RUN</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">update</span> <span class="o">&amp;&amp;</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="o">-</span><span class="n">y</span> <span class="n">redis</span><span class="o">-</span><span class="n">server</span>
+<span class="n">RUN</span> <span class="n">service</span> <span class="n">redis</span><span class="o">-</span><span class="n">server</span> <span class="n">stop</span>
+</pre></div>
+</div>
+<p>Now to build the image, change to the directory where you saved your Dockerfile
+and execute the following command. You can tweak the :v1 version to whatever you
+want.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">build</span> <span class="o">-</span><span class="n">t</span> <span class="n">kgeservice</span><span class="p">:</span><span class="n">v1</span> <span class="o">.</span>
+</pre></div>
+</div>
+<p>The second image we need to use is Redis. Fortunately the public docker registry
+already has this image, so we will use it:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">pull</span> <span class="n">redis</span>
+</pre></div>
+</div>
+<p>Once we have all needed images we need to run them</p>
+</div>
+<div class="section" id="running-the-environment">
+<h3>Running the environment<a class="headerlink" href="#running-the-environment" title="Permalink to this headline">¶</a></h3>
+<p>The redis container acts like a dependency for our service container, so we
+will launch it before. With the following command we start running a container
+called <code class="docutils literal"><span class="pre">myredis</span></code>.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="o">--</span><span class="n">name</span> <span class="n">myredis</span> <span class="o">-</span><span class="n">d</span> <span class="n">redis</span>
+</pre></div>
+</div>
+<p>After this, we will run the service container. This container still has several
+packages installed on it, like jupyter notebook. It has many parameters you can
+tweak as you want.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>docker run -d -p 14397:8888 -p 6789:8000 -e PASSWORD=&quot;password&quot;\
+--link myredis:redis --name serviciokge\
+-v $PWD/kge-server:/home/jovyan/work\
+kgeservice:v1
+</pre></div>
+</div>
+<p>If everythin went ok, we can see all running containers. We must see at least our
+two containers, called <code class="docutils literal"><span class="pre">myredis</span></code> and <code class="docutils literal"><span class="pre">serviciokge</span></code></p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">ps</span>
+</pre></div>
+</div>
+<p>Now we enter into our container:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">exec</span> <span class="o">-</span><span class="n">it</span> <span class="n">serviciokge</span> <span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">bash</span>
+</pre></div>
+</div>
+<p>and we have to run <cite>~/work/rest-service/servicestart.sh</cite> to run gunicorn and
+<cite>~/work/rest-service/celerystart.sh</cite> to run celery.</p>
+<p>After this you will be able to access the http rest service through the port :6789</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="modules/restservice.html" class="btn btn-neutral" title="REST Service" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Víctor Fernández Rico.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

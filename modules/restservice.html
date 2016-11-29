@@ -1,0 +1,706 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>REST Service &mdash; Knowledge Graph Embedding Server 1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Knowledge Graph Embedding Server 1 documentation" href="../index.html"/>
+        <link rel="next" title="Service Architecture" href="../architecture.html"/>
+        <link rel="prev" title="Algorithm module" href="algorithm.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Knowledge Graph Embedding Server
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Modules</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">REST Service</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#endpoints">Endpoints</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#datasets-management">Datasets management</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tasks">Tasks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#triples-prediction">Triples prediction</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Service Architecture</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Knowledge Graph Embedding Server</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>REST Service</li>
+    <li class="wy-breadcrumbs-aside">
+      
+          
+          <a href="../_sources/modules/restservice.rst.txt" rel="nofollow"> View page source</a>
+        
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="rest-service">
+<span id="restservice"></span><h1>REST Service<a class="headerlink" href="#rest-service" title="Permalink to this headline">¶</a></h1>
+<p>El servicio REST está compuesto principalmente de un recurso dataset con
+distintas operaciones</p>
+<div class="section" id="endpoints">
+<h2>Endpoints<a class="headerlink" href="#endpoints" title="Permalink to this headline">¶</a></h2>
+<p>Aquí se detallarán todos los endpoints del servicio. El valor de la prioridad
+que se muestra indica la importancia que se le va a dar a la implementación
+de ese servicio. Cuanto menor sea, más importancia se le dará.</p>
+<div class="section" id="datasets-management">
+<h3>Datasets management<a class="headerlink" href="#datasets-management" title="Permalink to this headline">¶</a></h3>
+<p>The <cite>/dataset</cite> collection contains several methods to create, add triples to
+the dataset, train and generate search indexes.</p>
+<p>It also contains these main params</p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">&quot;entities&quot;</span><span class="p">,</span> <span class="nt">&quot;relations&quot;</span><span class="p">,</span> <span class="nt">&quot;triples&quot;</span><span class="p">,</span> <span class="nt">&quot;status&quot;</span><span class="p">,</span> <span class="nt">&quot;algorithm&quot;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">algorithm</span></code> parameter contains all the information the dataset are trained with.
+See <cite>/algorithm</cite> collection to get more information about this.</p>
+<p>Dataset will be changing its status when actions such training or indexing
+are performed. The <em>status</em> can only grow up. When a changing status is taking
+place, the dataset cannot be edited. In this situations, the status will be
+a negative integer.</p>
+<p><strong>status</strong>: <code class="docutils literal"><span class="pre">untrained</span></code> -&gt; <code class="docutils literal"><span class="pre">trained</span></code> -&gt; <code class="docutils literal"><span class="pre">indexed</span></code></p>
+<dl class="get">
+<dt id="get--datasets-(int-dataset_id)-">
+<code class="descname">GET </code><code class="descname">/datasets/</code><span class="sig-paren">(</span><em class="property">int: </em><em>dataset_id</em><span class="sig-paren">)</span><code class="descname">/</code><a class="headerlink" href="#get--datasets-(int-dataset_id)-" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all the information about a dataset, given a <code class="docutils literal"><span class="pre">dataset_id</span></code></p>
+<p><strong>Sample request and response</strong></p>
+<p><code class="xref http http-get docutils literal"><span class="pre">GET</span> <span class="pre">/datasets/1/</span></code></p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span>
+        <span class="nt">&quot;dataset&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;relations&quot;</span><span class="p">:</span> <span class="mi">655</span><span class="p">,</span>
+                <span class="nt">&quot;triples&quot;</span><span class="p">:</span> <span class="mi">3307248</span><span class="p">,</span>
+                <span class="nt">&quot;algorithm&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                        <span class="nt">&quot;embedding_size&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+                        <span class="nt">&quot;max_epochs&quot;</span><span class="p">:</span> <span class="kc">null</span><span class="p">,</span>
+                        <span class="nt">&quot;margin&quot;</span><span class="p">:</span> <span class="mi">2</span>
+                <span class="p">},</span>
+                <span class="nt">&quot;entities&quot;</span><span class="p">:</span> <span class="mi">651759</span><span class="p">,</span>
+                <span class="nt">&quot;status&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="kc">null</span><span class="p">,</span>
+                <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="mi">4</span>
+        <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dataset_id</strong> (<em>int</em>) &#8211; Unique <em>dataset_id</em></li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Status Codes:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> &#8211; Returns all information about a dataset.</li>
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a> &#8211; The dataset can&#8217;t be found.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="post">
+<dt id="post--datasets-(int-dataset_id)-train?algorithm=(int-id_algorithm)">
+<code class="descname">POST </code><code class="descname">/datasets/</code><span class="sig-paren">(</span><em class="property">int: </em><em>dataset_id</em><span class="sig-paren">)</span><code class="descname">/train?algorithm=</code><span class="sig-paren">(</span><em class="property">int: </em><em>id_algorithm</em><span class="sig-paren">)</span><a class="headerlink" href="#post--datasets-(int-dataset_id)-train?algorithm=(int-id_algorithm)" title="Permalink to this definition">¶</a></dt>
+<dd><p>Train a dataset with a given algorithm id. The training process can be
+quite large, so this REST method uses a asynchronous model to perform
+each request.</p>
+<p>The response of this method will only be a <code class="docutils literal"><span class="pre">202</span> <span class="pre">ACCEPTED</span></code> status code, with
+the <code class="docutils literal"><span class="pre">Location:</span></code> header filled with the task path element. See <code class="docutils literal"><span class="pre">/tasks</span></code>
+collection to get more information about how tasks are managed on the
+service.</p>
+<p>The dataset must be in a &#8216;untrained&#8217; (0) state to get this operation done.
+Also, no operation such as <code class="docutils literal"><span class="pre">add_triples</span></code> must be being processed.
+Otherwise, a 409 CONFLICT status code will be obtained.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dataset_id</strong> (<em>int</em>) &#8211; Unique <em>dataset_id</em></li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Query Parameters:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><ul class="first simple">
+<li><strong>id_algorithm</strong> (<em>int</em>) &#8211; The wanted algorithm to train the dataset</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Status Codes:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.3">202 Accepted</a> &#8211; The requests has been accepted to the system and a task has
+been created. See Location header to get more information.</li>
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a> &#8211; The dataset or the algorithm can&#8217;t be found.</li>
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.10">409 Conflict</a> &#8211; The dataset cannot be trained due to its status.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="get">
+<dt id="get--datasets-">
+<code class="descname">GET </code><code class="descname">/datasets/</code><a class="headerlink" href="#get--datasets-" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets all datasets available on the system.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Status Codes:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> &#8211; All the datasets are shown correctly</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="post">
+<dt id="post--dataset?type=(int-dataset_type)">
+<code class="descname">POST </code><code class="descname">/dataset?type=</code><span class="sig-paren">(</span><em class="property">int: </em><em>dataset_type</em><span class="sig-paren">)</span><a class="headerlink" href="#post--dataset?type=(int-dataset_type)" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new and empty dataset. To fill in you must use other requests.</p>
+<p>You also must provide <code class="docutils literal"><span class="pre">dataset_type</span></code> query param. This method will create
+a WikidataDataset (id: 1) by default, but you also can create different
+datasets providing a different dataset_type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Query Parameters:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"><ul class="first simple">
+<li><strong>dataset_type</strong> (<em>int</em>) &#8211; The dataset type to be created. 0 is for a simple
+Dataset and 1 is for WikidataDataset (default).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Status Codes:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.2">201 Created</a> &#8211; A new dataset has been created successfuly. See <code class="docutils literal"><span class="pre">Location:</span></code>
+header to get the id and the new resource path.</li>
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a> &#8211; The given <em>dataset_type</em> does not exist.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="post">
+<dt id="post--datasets-(int-dataset_id)-triples">
+<code class="descname">POST </code><code class="descname">/datasets/</code><span class="sig-paren">(</span><em class="property">int: </em><em>dataset_id</em><span class="sig-paren">)</span><code class="descname">/triples</code><a class="headerlink" href="#post--datasets-(int-dataset_id)-triples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a triple or a list of triples to the dataset. You must provide a JSON
+object on the request body, as shown below on the example. The name of the
+JSON object must be <em>triples</em> and must contain a list of all entities to be
+introduced inside the dataset. These entities must contain
+<code class="docutils literal"><span class="pre">{&quot;subject&quot;,</span> <span class="pre">&quot;predicate&quot;,</span> <span class="pre">&quot;object&quot;}</span></code> params. This notation is similar to other
+known as <em>head</em>, <em>label</em> and <em>tail</em>.</p>
+<p>Only triples can be added on a <code class="docutils literal"><span class="pre">untrained</span></code> (0) dataset.</p>
+<p><strong>Ejemplo</strong></p>
+<p><code class="xref http http-post docutils literal"><span class="pre">POST</span> <span class="pre">/datasets/6/triples</span></code></p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">&quot;triples&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="nt">&quot;subject&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;Q1492&quot;</span><span class="p">},</span>
+            <span class="nt">&quot;predicate&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;P17&quot;</span><span class="p">},</span>
+            <span class="nt">&quot;object&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;Q29&quot;</span><span class="p">}</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="nt">&quot;subject&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;Q2807&quot;</span><span class="p">},</span>
+            <span class="nt">&quot;predicate&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;P17&quot;</span><span class="p">},</span>
+            <span class="nt">&quot;object&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;Q29&quot;</span><span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dataset_id</strong> (<em>int</em>) &#8211; Unique <em>dataset_id</em></li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Status Codes:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> &#8211; The request has been successful</li>
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a> &#8211; The dataset or the algorithm can&#8217;t be found.</li>
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.10">409 Conflict</a> &#8211; The dataset cannot be trained due to its status.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="post">
+<dt id="post--datasets-(int-dataset_id)-generate_triples">
+<code class="descname">POST </code><code class="descname">/datasets/</code><span class="sig-paren">(</span><em class="property">int: </em><em>dataset_id</em><span class="sig-paren">)</span><code class="descname">/generate_triples</code><a class="headerlink" href="#post--datasets-(int-dataset_id)-generate_triples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds triples to dataset doing a sequence of SPARQL queries by levels,
+starting with a seed vector. This operation is supported only by
+certain types of datasets (the default one, type=1)</p>
+<p>The request will use asyncronous operations. This means that the request
+will not be satisfied on the same HTTP connection. Instead, the service
+will return a <cite>/task</cite> resource that will be queried with the progress
+of the task.</p>
+<p>The <code class="docutils literal"><span class="pre">graph_pattern</span></code> argument must be the where part of a SPARQL query. It
+<strong>must</strong> contain three variables named as <code class="docutils literal"><span class="pre">?subject</span></code>, <code class="docutils literal"><span class="pre">?predicate</span></code>
+and <code class="docutils literal"><span class="pre">?object</span></code>. The service will try to make a query with these names.</p>
+<p>You also must provide the <code class="docutils literal"><span class="pre">levels</span></code> to make a deep lookup of the entities
+retrieved from previous queries.</p>
+<p>The optional param <code class="docutils literal"><span class="pre">batch_size</span></code> is used
+on the first lookup for SPARQL query. For big queries you must tweak this
+parameter to avoid server errors as well as to increase performance. It is
+the LIMIT statement when doing this queries.</p>
+<p><strong>Sample request</strong></p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;generate_triples&quot;</span><span class="p">:</span>
+        <span class="p">{</span>
+            <span class="nt">&quot;graph_pattern&quot;</span><span class="p">:</span> <span class="s2">&quot;SPARQL Query&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;levels&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="nt">&quot;batch_size&quot;</span><span class="p">:</span> <span class="mi">30000</span>
+        <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Sample response</strong></p>
+<p>The <code class="docutils literal"><span class="pre">location:</span></code> header of the response will contain the relative URI for the
+created task resouce:</p>
+<blockquote>
+<div><code class="docutils literal"><span class="pre">location:</span> <span class="pre">/tasks/32</span></code></div></blockquote>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;status&quot;</span><span class="p">:</span> <span class="mi">202</span><span class="p">,</span>
+    <span class="nt">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Task 32 created successfuly&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dataset_id</strong> (<em>int</em>) &#8211; Unique identifier of dataset</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Status Codes:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a> &#8211; The provided <em>dataset_id</em> does not exist.</li>
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.10">409 Conflict</a> &#8211; The <em>dataset_id</em> does not allow this operation</li>
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.3">202 Accepted</a> &#8211; A new task has been created. See /tasks resource
+to get more information.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="post">
+<dt id="post--datasets-(int-dataset_id)-embeddings">
+<code class="descname">POST </code><code class="descname">/datasets/</code><span class="sig-paren">(</span><em class="property">int: </em><em>dataset_id</em><span class="sig-paren">)</span><code class="descname">/embeddings</code><a class="headerlink" href="#post--datasets-(int-dataset_id)-embeddings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve from the trained dataset the embeddings from a list of entities.</p>
+<p>If on the request list the user requests for a entity that does not exist,
+the response won&#8217;t contain that element. The 404 error is limited to the
+dataset, not the entities inside the dataset.</p>
+<p>The dataset must be in trained status (&gt;= 1), because a model must exist to
+extract triples from. If not, a 409 CONFLICT will be returned.</p>
+<p>This could be useful if it is used with /similar_entities endpoint, to find
+similar entities given a different embedding vector.</p>
+<p><strong>Sample request</strong></p>
+<p><code class="xref http http-post docutils literal"><span class="pre">POST</span> <span class="pre">/datasets/6/embeddings</span></code></p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">&quot;entities&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">&quot;http://www.wikidata.org/entity/Q1492&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;http://www.wikidata.org/entity/Q2807&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;http://www.wikidata.org/entity/Q1&quot;</span> <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Sample response</strong></p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span> <span class="nt">&quot;embeddings&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;Q1&quot;</span><span class="p">,</span>
+        <span class="p">[</span><span class="mf">0.321</span><span class="p">,</span> <span class="mf">-0.178</span><span class="p">,</span> <span class="mf">0.195</span><span class="p">,</span> <span class="mf">0.816</span><span class="p">]</span>
+    <span class="p">],</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;Q2807&quot;</span><span class="p">,</span>
+        <span class="p">[</span><span class="mf">-0.192</span><span class="p">,</span> <span class="mf">0.172</span><span class="p">,</span> <span class="mf">-0.124</span><span class="p">,</span> <span class="mf">0.138</span><span class="p">]</span>
+    <span class="p">],</span>
+    <span class="p">[</span>
+        <span class="s2">&quot;Q1492&quot;</span><span class="p">,</span>
+        <span class="p">[</span><span class="mf">0.238</span><span class="p">,</span> <span class="mf">-0.941</span><span class="p">,</span> <span class="mf">0.116</span><span class="p">,</span> <span class="mf">-0.518</span><span class="p">]</span>
+    <span class="p">]</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><em>Note: The upper vectors are only shown as illustrative, they are not real values</em></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dataset_id</strong> (<em>int</em>) &#8211; Unique id of the dataset</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Status Codes:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> &#8211; Operation was successful</li>
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a> &#8211; The dataset ID does not exist</li>
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.10">409 Conflict</a> &#8211; The dataset is not on a correct status</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="tasks">
+<h3>Tasks<a class="headerlink" href="#tasks" title="Permalink to this headline">¶</a></h3>
+<p>The task collection stores all the information that async request need. This
+collection are made mainly to get the actual state of tasks, but no to edit or
+delete tasks (Not implemented).</p>
+<dl class="get">
+<dt id="get--tasks-(int-task_id)?get_debug_info=(boolean-get_debug_info)&amp;?no_redirect=(boolean-no_redirect)">
+<code class="descname">GET </code><code class="descname">/tasks/</code><span class="sig-paren">(</span><em class="property">int: </em><em>task_id</em><span class="sig-paren">)</span><code class="descname">?get_debug_info=</code><span class="sig-paren">(</span><em class="property">boolean: </em><em>get_debug_info</em><span class="sig-paren">)</span><code class="descname">&amp;?no_redirect=</code><span class="sig-paren">(</span><em class="property">boolean: </em><em>no_redirect</em><span class="sig-paren">)</span><a class="headerlink" href="#get--tasks-(int-task_id)?get_debug_info=(boolean-get_debug_info)&?no_redirect=(boolean-no_redirect)" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows the progress of a task with a <code class="docutils literal"><span class="pre">task_id</span></code>. The finished tasks can be
+deleted from the system without previous advise.</p>
+<p>Some tasks can inform to the user about its progress. It is done through
+the progress param, which has <em>current</em> and <em>total</em> relative arguments, and
+<em>current_steps</em> and <em>total_steps</em> absolute arguments. When a task involves
+some steps and the number of small tasks to be done in next step cannot
+be discovered, the current and total will only indicate progress in current
+step, and will not include previous step, expected to be already done, or next
+step which is expected to be empty.</p>
+<p>The resource has two optional parameters: <code class="docutils literal"><span class="pre">get_debug_info</span></code> and <code class="docutils literal"><span class="pre">no_redirect</span></code>.
+The first one, <code class="docutils literal"><span class="pre">get_debug_info</span></code> set to true on the query params will return
+additional information from the task. The other param, <code class="docutils literal"><span class="pre">no_redirect</span></code> will
+avoid send a 303 status to the client to redirect to the created resource.
+Instead it will send a simple 200 status code, but with the location header
+filled.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>task_id</strong> (<em>int</em>) &#8211; Unique <em>task_id</em> from the task.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Status Codes:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> &#8211; Shows the status from the current task.</li>
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.3.4">303 See Other</a> &#8211; The task has finished. See Location header to find the
+resource it has created/modified. With <code class="docutils literal"><span class="pre">no_redirect</span></code> query
+param set to true, the location header will be filled, but
+a 200 code will be returned instead.</li>
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a> &#8211; The given <em>task_id</em> does not exist.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="triples-prediction">
+<h3>Triples prediction<a class="headerlink" href="#triples-prediction" title="Permalink to this headline">¶</a></h3>
+<dl class="get">
+<dt id="get--datasets-(int-dataset_id)-similar_entities-(string-entity)?limit=(int-limit)?search_k=(int-search_k)">
+<code class="descname">GET </code><code class="descname">/datasets/</code><span class="sig-paren">(</span><em class="property">int: </em><em>dataset_id</em><span class="sig-paren">)</span><code class="descname">/similar_entities/</code><span class="sig-paren">(</span><em class="property">string: </em><em>entity</em><span class="sig-paren">)</span><code class="descname">?limit=</code><span class="sig-paren">(</span><em class="property">int: </em><em>limit</em><span class="sig-paren">)</span><code class="descname">?search_k=</code><span class="sig-paren">(</span><em class="property">int: </em><em>search_k</em><span class="sig-paren">)</span><a class="headerlink" href="#get--datasets-(int-dataset_id)-similar_entities-(string-entity)?limit=(int-limit)?search_k=(int-search_k)" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="post">
+<dt id="post--datasets-(int-dataset_id)-similar_entities?limit=(int-limit)?search_k=(int-search_k)">
+<code class="descname">POST </code><code class="descname">/datasets/</code><span class="sig-paren">(</span><em class="property">int: </em><em>dataset_id</em><span class="sig-paren">)</span><code class="descname">/similar_entities?limit=</code><span class="sig-paren">(</span><em class="property">int: </em><em>limit</em><span class="sig-paren">)</span><code class="descname">?search_k=</code><span class="sig-paren">(</span><em class="property">int: </em><em>search_k</em><span class="sig-paren">)</span><a class="headerlink" href="#post--datasets-(int-dataset_id)-similar_entities?limit=(int-limit)?search_k=(int-search_k)" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the <em>limit</em> entities most similar to a <em>entity</em> inside a <em>dataset_id</em>.
+The given number in <em>limit</em> excludes the entity given itself.</p>
+<p>The POST method allows any representation of the wanted resource. See the
+example below. You can provide an entity as an URI or other similar
+representation, even an embedding. The type param inside entity JSON object
+must be &#8220;uri&#8221; for a URI or similar representation and &#8220;embedding&#8221; for an
+embedding.</p>
+<p>The <code class="docutils literal"><span class="pre">search_k</span></code> param is used to tweak the results of the search. When this
+value is greater, the precission of the results are also greater, but the
+time it takes to find the response is also bigger.</p>
+<p><strong>Sample request</strong></p>
+<p><code class="xref http http-get docutils literal"><span class="pre">GET</span> <span class="pre">/datasets/7/similar_entities?limit=1&amp;search_k=10000</span></code></p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span> <span class="nt">&quot;entity&quot;</span><span class="p">:</span>
+      <span class="p">{</span><span class="nt">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;http://www.wikidata.org/entity/Q1492&quot;</span><span class="p">,</span> <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;uri&quot;</span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Sample response</strong></p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span>    <span class="nt">&quot;similar_entities&quot;</span><span class="p">:</span>
+    <span class="p">{</span>    <span class="nt">&quot;response&quot;</span><span class="p">:</span>
+        <span class="p">[</span>
+            <span class="p">{</span><span class="nt">&quot;distance&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="nt">&quot;entity&quot;</span><span class="p">:</span> <span class="s2">&quot;http://www.wikidata.org/entity/Q1492&quot;</span><span class="p">},</span>
+            <span class="p">{</span><span class="nt">&quot;distance&quot;</span><span class="p">:</span> <span class="mf">0.8224636912345886</span><span class="p">,</span> <span class="nt">&quot;entity&quot;</span><span class="p">:</span> <span class="s2">&quot;http://www.wikidata.org/entity/Q15090&quot;</span><span class="p">}</span>
+        <span class="p">],</span>
+        <span class="nt">&quot;entity&quot;</span><span class="p">:</span> <span class="s2">&quot;http://www.wikidata.org/entity/Q1492&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;limit&quot;</span><span class="p">:</span> <span class="mi">2</span>
+    <span class="p">},</span>
+    <span class="nt">&quot;dataset&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;entities&quot;</span><span class="p">:</span> <span class="mi">664444</span><span class="p">,</span>
+        <span class="nt">&quot;relations&quot;</span><span class="p">:</span> <span class="mi">647</span><span class="p">,</span>
+        <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="nt">&quot;status&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="nt">&quot;triples&quot;</span><span class="p">:</span> <span class="mi">3261785</span><span class="p">,</span>
+        <span class="nt">&quot;algorithm&quot;</span><span class="p">:</span> <span class="mi">100</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dataset_id</strong> (<em>int</em>) &#8211; Unique id of the dataset</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Query Parameters:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><ul class="first simple">
+<li><strong>limit</strong> (<em>int</em>) &#8211; Limit of similar entities requested. By default this is
+set to 10.</li>
+<li><strong>search_k</strong> (<em>int</em>) &#8211; Max number of trees where the lookup is performed.
+This increase the result quality, but reduces the
+performance of the request. By default is set to -1</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Status Codes:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> &#8211; The request has been performed successfully</li>
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a> &#8211; The dataset can&#8217;t be found</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="post">
+<dt id="post--datasets-(int-dataset_id)-distance">
+<code class="descname">POST </code><code class="descname">/datasets/</code><span class="sig-paren">(</span><em class="property">int: </em><em>dataset_id</em><span class="sig-paren">)</span><code class="descname">/distance</code><a class="headerlink" href="#post--datasets-(int-dataset_id)-distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distance between two elements. The lower this is, most probable
+to be both the same triple. The minimum distance is 0.</p>
+<p><strong>Request Example</strong></p>
+<p><code class="xref http http-post docutils literal"><span class="pre">POST</span> <span class="pre">/datasets/0/similar_entities</span></code></p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;distance&quot;</span><span class="p">:</span> <span class="p">[</span>
+         <span class="s2">&quot;http://www.wikidata.org/entity/Q1492&quot;</span><span class="p">,</span>
+         <span class="s2">&quot;http://www.wikidata.org/entity/Q5682&quot;</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><em>HTTP Response</em></p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;distance&quot;</span><span class="p">:</span> <span class="mf">1.460597038269043</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dataset_id</strong> (<em>int</em>) &#8211; Unique id of the dataset</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Status Codes:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> &#8211; The request has been performed successfully</li>
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a> &#8211; The dataset can&#8217;t be found</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../architecture.html" class="btn btn-neutral float-right" title="Service Architecture" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="algorithm.html" class="btn btn-neutral" title="Algorithm module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Víctor Fernández Rico.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,1136 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Dataset module &mdash; Knowledge Graph Embedding Server 1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Knowledge Graph Embedding Server 1 documentation" href="../index.html"/>
+        <link rel="up" title="Modules" href="modules.html"/>
+        <link rel="next" title="Algorithm module" href="algorithm.html"/>
+        <link rel="prev" title="Modules" href="modules.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Knowledge Graph Embedding Server
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Modules</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Dataset module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#methods">Methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-kgeserver.wikidata_dataset">WikidataDataset</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="algorithm.html">Algorithm module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="restservice.html">REST Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Service Architecture</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Knowledge Graph Embedding Server</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+        <li><a href="modules.html">Modules</a> &raquo;</li>
+      
+    <li>Dataset module</li>
+    <li class="wy-breadcrumbs-aside">
+      
+          
+          <a href="../_sources/modules/dataset.rst.txt" rel="nofollow"> View page source</a>
+        
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dataset-module">
+<span id="dataset"></span><h1>Dataset module<a class="headerlink" href="#dataset-module" title="Permalink to this headline">¶</a></h1>
+<p>The dataset class is used to create a valid object with the main idea
+to be used within the Experiment class. This approach allow us to
+create easily different models to be trained, leaving the complexity
+to the class itself.</p>
+<p>The main entry point is &#8216;load_dataset_recurrently&#8217;. This will make several
+HTTP requests to obtain all the dataset given a list of Wikidata ID&#8217;s. At this
+moment, it only uses the Wikidata Elements which are related with a BNE ID.</p>
+<p>To save the dataset into a binary format, you should use the &#8216;save_to_binary&#8217;
+method. This will allow to open the dataset later without executing any query.</p>
+<div class="section" id="methods">
+<h2>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h2>
+<p>Here is shown all the different methods to use with dataset class</p>
+<span class="target" id="module-kgeserver.dataset"></span><dl class="class">
+<dt id="kgeserver.dataset.Dataset">
+<em class="property">class </em><code class="descclassname">kgeserver.dataset.</code><code class="descname">Dataset</code><span class="sig-paren">(</span><em>sparql_endpoint=None</em>, <em>thread_limiter=32</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class used to create, modify, export and import Datasets from Wikidata</p>
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>sparql_endpoint=None</em>, <em>thread_limiter=32</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the dataset class</p>
+<p>The default endpoint is the original from wikidata.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sparql_endpoint</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The URI of the SPARQL endpoint</li>
+<li><strong>thread_limiter</strong> (<em>integer</em>) &#8211; The number of concurrent HTTP queries</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="kgeserver.dataset.Dataset.__weakref__">
+<code class="descname">__weakref__</code><a class="headerlink" href="#kgeserver.dataset.Dataset.__weakref__" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of weak references to the object (if defined)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset._load_elements_into_dict">
+<code class="descname">_load_elements_into_dict</code><span class="sig-paren">(</span><em>el_dict</em>, <em>el_list</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset._load_elements_into_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset._load_elements_into_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert elements from a list into dict</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>el_dict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; A dict to be inserted elements</li>
+<li><strong>el_list</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#list" title="(in Python v2.7)"><em>list</em></a>) &#8211; A list where elements are</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset._process_entity">
+<code class="descname">_process_entity</code><span class="sig-paren">(</span><em>entity</em>, <em>verbose=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset._process_entity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset._process_entity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add all relations and entities related with the entity to dataset</p>
+<p>Additionally, this method should return a list of the entities it is
+connected to scan those entities on next level exploration.</p>
+<p>This method is not implemented by parent class. <strong>MUST</strong> be
+implemented through a child object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>method</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The URI of the element to be processed</li>
+<li><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The level of verbosity. 0 is low, and 2 is high</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Entities to be scanned in next level</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.add_element">
+<code class="descname">add_element</code><span class="sig-paren">(</span><em>element</em>, <em>complete_list</em>, <em>complete_list_dict</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.add_element"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.add_element" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add element to a list of the dataset. Avoids duplicate elements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>element</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The element that will be added to list</li>
+<li><strong>complete_list</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#list" title="(in Python v2.7)"><em>list</em></a>) &#8211; The list in which will be added</li>
+<li><strong>complete_list_dict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; The dict which represents the list.</li>
+<li><strong>only_uri</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Allow load objects distincts than URI&#8217;s</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The id on the list of the added element</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">integer</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.add_triple">
+<code class="descname">add_triple</code><span class="sig-paren">(</span><em>subject</em>, <em>obj</em>, <em>pred</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.add_triple"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.add_triple" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the triple (subject, object, pred) to dataset</p>
+<p>This method will add the three elements and append the tuple of the
+relation into the dataset</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>subject</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Subject of the triple</li>
+<li><strong>obj</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Object of the triple</li>
+<li><strong>pred</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Predicate of the triple</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">If the operation was correct</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">boolean</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.build_levels">
+<code class="descname">build_levels</code><span class="sig-paren">(</span><em>n_levels</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.build_levels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.build_levels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a simple <em>chain</em> of triplets for the desired levels</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Deprecated:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n_levels</strong> (<em>integer</em>) &#8211; Deep of the search on wikidata graph</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A list of chained triplets</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#list" title="(in Python v2.7)">list</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.build_n_levels_query">
+<code class="descname">build_n_levels_query</code><span class="sig-paren">(</span><em>n_levels=3</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.build_n_levels_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.build_n_levels_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds a CONSTRUCT SPARQL query of the desired deep</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Deprecated:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><strong>n_levels</strong> (<em>integer</em>) &#8211; Deep of the search on wikidata graph</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The desired chained query</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)">string</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.check_entity">
+<code class="descname">check_entity</code><span class="sig-paren">(</span><em>entity</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.check_entity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.check_entity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check the entity given and return a valid representation</p>
+<p>The parent class assumes all entities are valid</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entity</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The input entity representation</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A valid representation or None</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)">string</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.check_relation">
+<code class="descname">check_relation</code><span class="sig-paren">(</span><em>relation</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.check_relation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.check_relation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check the relation given and return a valid representation</p>
+<p>The parent class assumes all relations are valid</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>relation</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The input relation representation</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A valid representation or None</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)">string</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.control_thread">
+<code class="descname">control_thread</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.control_thread"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.control_thread" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starts a loop waiting for user to request information about progress</p>
+<p>This method should not be called from other method
+distinct than &#8216;load_dataset_recurrently&#8217;</p>
+<p>TODO: Should end when parent thread ends...</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.execute_query">
+<code class="descname">execute_query</code><span class="sig-paren">(</span><em>query</em>, <em>headers={'Accept': 'application/json'}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.execute_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.execute_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes a SPARQL query to the endpoint</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>query</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The SPARQL query</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A tuple compound of (http_status, json_or_error)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.exist_element">
+<code class="descname">exist_element</code><span class="sig-paren">(</span><em>element</em>, <em>complete_list_dict</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.exist_element"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.exist_element" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if element exists on a given list</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>element</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The element itself</li>
+<li><strong>complete_list_dict</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; The dictionary to search in</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Wether the item was found or no</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)">bool</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.get_entity">
+<code class="descname">get_entity</code><span class="sig-paren">(</span><em>id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.get_entity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.get_entity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the entity given an id</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>id</strong> (<em>integer</em>) &#8211; The id to find</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.get_entity_id">
+<code class="descname">get_entity_id</code><span class="sig-paren">(</span><em>entity</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.get_entity_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.get_entity_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the id given an entity</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entity</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The entity string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.get_relation">
+<code class="descname">get_relation</code><span class="sig-paren">(</span><em>id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.get_relation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.get_relation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the relation given an id</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The relation identifier to find</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.get_relation_id">
+<code class="descname">get_relation_id</code><span class="sig-paren">(</span><em>relation</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.get_relation_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.get_relation_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the id given an relation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entity</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The relation string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.get_seed_vector">
+<code class="descname">get_seed_vector</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.get_seed_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.get_seed_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the root entities where the graph build should start</p>
+<p>This should return a list with elements to start seeking its childs
+and start building a dataset graph from this root elements.</p>
+<p><strong>MUST</strong> be implemented through a child object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">An entities list</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#list" title="(in Python v2.7)">list</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.get_status">
+<code class="descname">get_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.get_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.get_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a formated string with current progress</p>
+<p>This is a helper method and should not be called from
+other method distinct than <a class="reference external" href="#kgeserver.dataset.Dataset.load_dataset_recurrently">dataset.load_dataset_recurrently</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Current download progress</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)">string</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.improved_split">
+<code class="descname">improved_split</code><span class="sig-paren">(</span><em>ratio=0.8</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.improved_split"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.improved_split" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split made with sklearn library, with different split for each label</p>
+<p>This split function makes different splits for each label which is
+present on the dataset. This helps to distribute better all the
+splits.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ratio</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The ratio of all triplets required for <em>train_subs</em></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A dictionary with splited subs</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)">dict</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.load_dataset_from_csv">
+<code class="descname">load_dataset_from_csv</code><span class="sig-paren">(</span><em>file_readable</em>, <em>separator_char='</em>, <em>'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.load_dataset_from_csv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.load_dataset_from_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a csv file, loads into the dataset</p>
+<p>This method will not open or close any file, and should be provided
+only a iterable object which each iteration should provide only
+one line. Also, if the csv does not use commas, you also should
+provide the separator char. The code will try to split the line
+with that separator char.
+It also will use only the first three columns, being the order:
+(object, predicate, subject)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>file_readable</strong> (<em>Iterable</em>) &#8211; An iterator object</li>
+<li><strong>separator_char</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; the separator string used in each line</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">If the process ends correctly</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">boolean</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.load_dataset_from_json">
+<code class="descname">load_dataset_from_json</code><span class="sig-paren">(</span><em>json</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.load_dataset_from_json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.load_dataset_from_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the dataset object with a JSON</p>
+<p>The JSON structure required is:
+{&#8216;object&#8217;: {}, &#8216;subject&#8217;: {}, &#8216;predicate&#8217;: {}}</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>json</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#list" title="(in Python v2.7)"><em>list</em></a>) &#8211; A list of dictionary parsed from JSON</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">If operation was successful</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.load_dataset_from_nlevels">
+<code class="descname">load_dataset_from_nlevels</code><span class="sig-paren">(</span><em>nlevels</em>, <em>extra_params=''</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.load_dataset_from_nlevels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.load_dataset_from_nlevels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds a nlevels query, executes, and loads data on object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Deprecated:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>nlevels</strong> (<em>integer</em>) &#8211; Deep of the search on wikidata graph</li>
+<li><strong>extra_params</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Extra SPARQL instructions for the query</li>
+<li><strong>only_uri</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Allow load objects distincts than URI&#8217;s</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.load_dataset_from_query">
+<code class="descname">load_dataset_from_query</code><span class="sig-paren">(</span><em>query</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.load_dataset_from_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.load_dataset_from_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>Receives a Sparql query and fills dataset object with the response</p>
+<p>The method will execute the query itself and will call to other method
+to fill in the dataset object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>query</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; A valid SPARQL query</li>
+<li><strong>only_uri</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Allow load objects distincts than URI&#8217;s</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.load_dataset_recurrently">
+<code class="descname">load_dataset_recurrently</code><span class="sig-paren">(</span><em>levels</em>, <em>seed_vector</em>, <em>verbose=1</em>, <em>limit_ent=None</em>, <em>ext_callback=&lt;function Dataset.&lt;lambda&gt;&gt;</em>, <em>**keyword_args</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.load_dataset_recurrently"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.load_dataset_recurrently" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads to dataset all entities with BNE ID and their relations</p>
+<p>Due to Wikidata endpoint cann&#8217;t execute queries that take long time
+to complete, it is necessary to consruct the dataset entity by entity,
+without using SPARQL CONSTRUCT. This method will start concurrently
+some threads to make several SPARQL SELECT queries.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>seed_vector</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#list" title="(in Python v2.7)"><em>list</em></a>) &#8211; A vector of entities to start with</li>
+<li><strong>levels</strong> (<em>integer</em>) &#8211; The depth to get triplets</li>
+<li><strong>verbose</strong> (<em>integer</em>) &#8211; The level of verbosity. 0 is low, and 2 is high</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">True if operation was successful</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)">bool</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.load_entire_dataset">
+<code class="descname">load_entire_dataset</code><span class="sig-paren">(</span><em>levels</em>, <em>where=''</em>, <em>batch=100000</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.load_entire_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.load_entire_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the dataset by quering to Wikidata on the desired levels</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Deprecated:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>levels</strong> (<em>integer</em>) &#8211; Deep of the search</li>
+<li><strong>where</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Extra where statements for SPARQL query</li>
+<li><strong>batch</strong> (<em>integer</em>) &#8211; Number of elements returned each query</li>
+<li><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; True for showing all steps the method do</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">True if operation was successful</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)">bool</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.load_from_binary">
+<code class="descname">load_from_binary</code><span class="sig-paren">(</span><em>filepath</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.load_from_binary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.load_from_binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads the dataset object from the disk</p>
+<p>Loads this dataset object with the binary file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filepath</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The path of the binary file</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if operation was successful</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.process_entity">
+<code class="descname">process_entity</code><span class="sig-paren">(</span><em>entity</em>, <em>append_queue=&lt;function Dataset.&lt;lambda&gt;&gt;</em>, <em>max_tries=10</em>, <em>callback=&lt;function Dataset.&lt;lambda&gt;&gt;</em>, <em>verbose=0</em>, <em>_times=0</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.process_entity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.process_entity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for child method <a class="reference external" href="#kgeserver.dataset.Dataset._process_entity">dataset._process_entity</a></p>
+<p>Will call self method <a class="reference external" href="#kgeserver.dataset.Dataset._process_entity">dataset._process_entity</a> and examine the return
+value: should return a list of elements to be queried again or None.</p>
+<p>This method will run in a single thread</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>element</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The URI of element to be scanned</li>
+<li><strong>append_queue</strong> (<em>function</em>) &#8211; A function that receives the subject of
+a triplet as an argument</li>
+<li><strong>verbose</strong> (<em>integer</em>) &#8211; The level of verbosity. 0 is low, and 2 is high</li>
+<li><strong>callback</strong> (<em>function</em>) &#8211; The callback function. Default is return</li>
+<li><strong>max_tries</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; If an exception is raised, max number of attempts</li>
+<li><strong>_times</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Reserved for recursive calls. Don&#8217;t use</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">If operation was successful</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">boolean</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.save_to_binary">
+<code class="descname">save_to_binary</code><span class="sig-paren">(</span><em>filepath</em>, <em>improved_split=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.save_to_binary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.save_to_binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the dataset object on the disk</p>
+<p>The dataset will be saved with the required format for reading
+from the original library, and is prepared to be trained.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filepath</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The path of the file where should be saved</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if operation was successful</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)">bool</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.show">
+<code class="descname">show</code><span class="sig-paren">(</span><em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.show"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show all elements of the dataset</p>
+<p>By default prints only one line with the number of entities, relations
+and triplets. If verbose, prints every list. Use wisely</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If true prints every item of all lists</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dataset.Dataset.train_split">
+<code class="descname">train_split</code><span class="sig-paren">(</span><em>ratio=0.8</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.train_split"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.train_split" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split subs into three lists: train, valid and test</p>
+<p>The triplets should have a specific name and size to be compatible
+with the original library. Splits the original triplets (self.subs) in
+three different lists: <em>train_subs</em>, <em>valid_subs</em> and <em>test_subs</em>.
+The &#8216;ratio&#8217; param will leave that quantity for train_subs, and the
+rest will be a half for valid and the other half for test</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ratio</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The ratio of all triplets required for <em>train_subs</em></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A dictionary with splited subs</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)">dict</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-kgeserver.wikidata_dataset">
+<span id="wikidatadataset"></span><h2>WikidataDataset<a class="headerlink" href="#module-kgeserver.wikidata_dataset" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="kgeserver.wikidata_dataset.WikidataDataset">
+<em class="property">class </em><code class="descclassname">kgeserver.wikidata_dataset.</code><code class="descname">WikidataDataset</code><span class="sig-paren">(</span><em>sparql_endpoint=None</em>, <em>thread_limiter=32</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/wikidata_dataset.html#WikidataDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.wikidata_dataset.WikidataDataset" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="kgeserver.wikidata_dataset.WikidataDataset.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>sparql_endpoint=None</em>, <em>thread_limiter=32</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/wikidata_dataset.html#WikidataDataset.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.wikidata_dataset.WikidataDataset.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates WikidataDataset class</p>
+<p>The default endpoint is the original from wikidata.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>new_endpoint</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The URI of the SPARQL endpoint</li>
+<li><strong>thread_limiter</strong> (<em>integer</em>) &#8211; The number of concurrent HTTP queries</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.wikidata_dataset.WikidataDataset._process_entity">
+<code class="descname">_process_entity</code><span class="sig-paren">(</span><em>entity</em>, <em>verbose=0</em>, <em>graph_pattern='{0} ?predicate ?object . ?predicate a owl:ObjectProperty . FILTER NOT EXISTS {{ ?object a wikibase:BestRank }}'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/wikidata_dataset.html#WikidataDataset._process_entity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.wikidata_dataset.WikidataDataset._process_entity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take entity and explore all relations and entities related to it</p>
+<p>This will execute the SPARQL query with the params passed to
+build a dataset with the <em>object</em> elements on triples retrieved
+from the server.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A list with new entities to be scanned</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.wikidata_dataset.WikidataDataset.check_entity">
+<code class="descname">check_entity</code><span class="sig-paren">(</span><em>entity</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/wikidata_dataset.html#WikidataDataset.check_entity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.wikidata_dataset.WikidataDataset.check_entity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check the entity given and return a valid representation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entity</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The input entity representation</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A valid representation or None</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)">string</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.wikidata_dataset.WikidataDataset.check_relation">
+<code class="descname">check_relation</code><span class="sig-paren">(</span><em>relation</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/wikidata_dataset.html#WikidataDataset.check_relation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.wikidata_dataset.WikidataDataset.check_relation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check the relation given and return a valid representation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>relation</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The input relation representation</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A valid representation or None</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)">string</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.wikidata_dataset.WikidataDataset.extract_entity">
+<code class="descname">extract_entity</code><span class="sig-paren">(</span><em>entity</em>, <em>filters={'literal': False</em>, <em>'wdt-prop': True</em>, <em>'bnode': False</em>, <em>'wdt-reference': False</em>, <em>'wdt-entity': True</em>, <em>'wdt-statement': False}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/wikidata_dataset.html#WikidataDataset.extract_entity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.wikidata_dataset.WikidataDataset.extract_entity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an entity, returns the valid representation, ready to be saved</p>
+<p>The filter argument allows to avoid adding elements into lists that
+will not be used. It is a dictionary with the shape: {&#8216;filter&#8217;: bool}.
+The valid filters (and default) are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><em>wdt-entity</em> - True</li>
+<li><em>wdt-reference</em> - False</li>
+<li><em>wdt-statement</em> - True</li>
+<li><em>wdt-prop</em> - True</li>
+<li><em>literal</em> - False</li>
+<li><em>bnode</em> - False</li>
+</ul>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Deprecated:</th><td class="field-body"><p class="first">-&gt; Must be implemented in child class</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>entity</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; The entity to be analyzed</li>
+<li><strong>filters</strong> (<a class="reference external" href="https://docs.python.org/2/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; A dictionary to allow filter entities</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The entity itself or False</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.wikidata_dataset.WikidataDataset.extract_from_statement">
+<code class="descname">extract_from_statement</code><span class="sig-paren">(</span><em>entity</em>, <em>uri</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/wikidata_dataset.html#WikidataDataset.extract_from_statement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.wikidata_dataset.WikidataDataset.extract_from_statement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract triplets from a statement</p>
+<p>Should receive the entity which is the subject of the triple and
+the uri of the statement</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>entity</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The entity whic statement is related</li>
+<li><strong>uri</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The uri of the statement</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The entities statement is related</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/2/library/functions.html#list" title="(in Python v2.7)">list</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.wikidata_dataset.WikidataDataset.get_entity">
+<code class="descname">get_entity</code><span class="sig-paren">(</span><em>id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/wikidata_dataset.html#WikidataDataset.get_entity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.wikidata_dataset.WikidataDataset.get_entity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the entity URI given an id</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>id</strong> (<em>integer</em>) &#8211; The id to find</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.wikidata_dataset.WikidataDataset.get_entity_id">
+<code class="descname">get_entity_id</code><span class="sig-paren">(</span><em>entity</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/wikidata_dataset.html#WikidataDataset.get_entity_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.wikidata_dataset.WikidataDataset.get_entity_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the id given an entity</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entity</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The entity string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.wikidata_dataset.WikidataDataset.get_relation">
+<code class="descname">get_relation</code><span class="sig-paren">(</span><em>id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/wikidata_dataset.html#WikidataDataset.get_relation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.wikidata_dataset.WikidataDataset.get_relation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the relation URI given an id</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The relation identifier to find</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.wikidata_dataset.WikidataDataset.get_relation_id">
+<code class="descname">get_relation_id</code><span class="sig-paren">(</span><em>relation</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/wikidata_dataset.html#WikidataDataset.get_relation_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.wikidata_dataset.WikidataDataset.get_relation_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the id given an relation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>entity</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The relation string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.wikidata_dataset.WikidataDataset.get_seed_vector">
+<code class="descname">get_seed_vector</code><span class="sig-paren">(</span><em>verbose=0</em>, <em>where='?subject wdt:P950 ?bne .'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/wikidata_dataset.html#WikidataDataset.get_seed_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.wikidata_dataset.WikidataDataset.get_seed_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Auxiliar method that outputs a list of seed elements</p>
+<p>This seed vector will be the &#8216;root nodes&#8217; of a tree with the
+desired depth on parent class (<cite>load_dataset_recurrently</cite>)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>verbose</strong> &#8211; The desired level of verbosity</li>
+<li><strong>where</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; SPARQL where to construct query</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A list of entities</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/2/library/functions.html#list" title="(in Python v2.7)">list</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.wikidata_dataset.WikidataDataset.is_statement">
+<code class="descname">is_statement</code><span class="sig-paren">(</span><em>uri</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/wikidata_dataset.html#WikidataDataset.is_statement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.wikidata_dataset.WikidataDataset.is_statement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if an URI is a wikidata statement</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>uri</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The uri to test</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">If it is an uri or not</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">boolean</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.wikidata_dataset.WikidataDataset.load_from_graph_pattern">
+<code class="descname">load_from_graph_pattern</code><span class="sig-paren">(</span><em>verbose=0</em>, <em>where=''</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/wikidata_dataset.html#WikidataDataset.load_from_graph_pattern"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.wikidata_dataset.WikidataDataset.load_from_graph_pattern" title="Permalink to this definition">¶</a></dt>
+<dd><p>Auxiliar method that outputs a list of seed elements</p>
+<p>This seed vector will be the &#8216;root nodes&#8217; of a tree with the
+desired depth on parent class (<cite>load_dataset_recurrently</cite>)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>verbose</strong> &#8211; The desired level of verbosity</li>
+<li><strong>where</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; SPARQL where to construct query</li>
+<li><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The size of batches queried each time</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A list of entities</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/2/library/functions.html#list" title="(in Python v2.7)">list</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="algorithm.html" class="btn btn-neutral float-right" title="Algorithm module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="modules.html" class="btn btn-neutral" title="Modules" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Víctor Fernández Rico.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

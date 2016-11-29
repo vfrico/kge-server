@@ -1,0 +1,312 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Algorithm module &mdash; Knowledge Graph Embedding Server 1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Knowledge Graph Embedding Server 1 documentation" href="../index.html"/>
+        <link rel="up" title="Modules" href="modules.html"/>
+        <link rel="next" title="REST Service" href="restservice.html"/>
+        <link rel="prev" title="Dataset module" href="dataset.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Knowledge Graph Embedding Server
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Modules</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dataset.html">Dataset module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Algorithm module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#methods">Methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#experiment-class">Experiment class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id1">Methods</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="restservice.html">REST Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Service Architecture</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Knowledge Graph Embedding Server</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+        <li><a href="modules.html">Modules</a> &raquo;</li>
+      
+    <li>Algorithm module</li>
+    <li class="wy-breadcrumbs-aside">
+      
+          
+          <a href="../_sources/modules/algorithm.rst.txt" rel="nofollow"> View page source</a>
+        
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="algorithm-module">
+<span id="algorithm"></span><h1>Algorithm module<a class="headerlink" href="#algorithm-module" title="Permalink to this headline">¶</a></h1>
+<p>This module contains several Class. The main purpose of the module is to
+provide a clear training interface. It will train several models with
+several distinct configs and choose the best one. After this, it will
+create a ModelTrainer class ready to train the entire model.</p>
+<div class="section" id="methods">
+<h2>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h2>
+<p>Here is shown all the different methods to use with dataset class</p>
+<span class="target" id="module-kgeserver.algorithm"></span><dl class="class">
+<dt id="kgeserver.algorithm.ModelTrainer">
+<em class="property">class </em><code class="descclassname">kgeserver.algorithm.</code><code class="descname">ModelTrainer</code><span class="sig-paren">(</span><em>dataset</em>, <em>ncomp=150</em>, <em>afs='sigmoid'</em>, <em>trainer_type=&lt;class 'skge.base.PairwiseStochasticTrainer'&gt;</em>, <em>model_type=&lt;class 'skge.transe.TransE'&gt;</em>, <em>eval_type=&lt;class 'kgeserver.algorithm.TransEEval'&gt;</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/algorithm.html#ModelTrainer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.algorithm.ModelTrainer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a Model from a dataset and trains it</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="kgeserver.algorithm.Algorithm">
+<em class="property">class </em><code class="descclassname">kgeserver.algorithm.</code><code class="descname">Algorithm</code><span class="sig-paren">(</span><em>dataset</em>, <em>thread_limiter=4</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/algorithm.html#Algorithm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.algorithm.Algorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate several models to test and choose the right one</p>
+<dl class="method">
+<dt id="kgeserver.algorithm.Algorithm.find_best">
+<code class="descname">find_best</code><span class="sig-paren">(</span><em>margins=[0.2, 2.0], ncomps=range(50, 100, 20), model_types=[&lt;class 'skge.hole.HolE'&gt;, &lt;class 'skge.transe.TransE'&gt;], **kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/algorithm.html#Algorithm.find_best"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.algorithm.Algorithm.find_best" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the best training params for a given dataset</p>
+<p>This method makes several trains with different models and
+parameters, and returns a ModelTrainer Instance.
+:param list margins: A list of all margins to try
+:param list ncomps: A list of latent components
+:param list model_types: A list of models</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="experiment-class">
+<h2>Experiment class<a class="headerlink" href="#experiment-class" title="Permalink to this headline">¶</a></h2>
+<p>This class is a modified version of the file which can be found on
+<a class="reference external" href="https://github.com/mnick/holographic-embeddings/tree/master/kg/base.py">https://github.com/mnick/holographic-embeddings/tree/master/kg/base.py</a>,
+and was created by Maximilian Nickel <a class="reference external" href="mailto:mnick&#37;&#52;&#48;mit&#46;edu">mnick<span>&#64;</span>mit<span>&#46;</span>edu</a>.</p>
+<div class="section" id="id1">
+<h3>Methods<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p>Here is shown all the different methods to use with experiment class</p>
+<span class="target" id="module-kgeserver.experiment"></span><dl class="class">
+<dt id="kgeserver.experiment.Experiment">
+<em class="property">class </em><code class="descclassname">kgeserver.experiment.</code><code class="descname">Experiment</code><span class="sig-paren">(</span><em>dataset</em>, <em>th_num=0</em>, <em>train_all=False</em>, <em>margin=2.0</em>, <em>init='nunif'</em>, <em>lr=0.1</em>, <em>max_epochs=500</em>, <em>ne=1</em>, <em>nbatches=100</em>, <em>fout=None</em>, <em>fin=None</em>, <em>test_all=50</em>, <em>no_pairwise=False</em>, <em>mode='rank'</em>, <em>sampler='random-mode'</em>, <em>**k</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/experiment.html#Experiment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.experiment.Experiment" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="kgeserver.experiment.Experiment.ranking_callback">
+<code class="descname">ranking_callback</code><span class="sig-paren">(</span><em>trn</em>, <em>with_eval=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/experiment.html#Experiment.ranking_callback"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.experiment.Experiment.ranking_callback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print basic info</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.experiment.Experiment.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/experiment.html#Experiment.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.experiment.Experiment.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configure ModelTrainer and start the trainer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The trained model</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">skge.Model</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.experiment.Experiment.save_trained_model">
+<code class="descname">save_trained_model</code><span class="sig-paren">(</span><em>filepath</em>, <em>model</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/experiment.html#Experiment.save_trained_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.experiment.Experiment.save_trained_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a model and a filepath, save it to disk</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.experiment.Experiment.thread_start">
+<code class="descname">thread_start</code><span class="sig-paren">(</span><em>callback</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/experiment.html#Experiment.thread_start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.experiment.Experiment.thread_start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used when threads are created</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.experiment.Experiment.train">
+<code class="descname">train</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/experiment.html#Experiment.train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.experiment.Experiment.train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Train the model</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="restservice.html" class="btn btn-neutral float-right" title="REST Service" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dataset.html" class="btn btn-neutral" title="Dataset module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Víctor Fernández Rico.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

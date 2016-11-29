@@ -1,0 +1,622 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>kgeserver.experiment &mdash; Knowledge Graph Embedding Server 1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="Knowledge Graph Embedding Server 1 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Knowledge Graph Embedding Server
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/modules.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/restservice.html">REST Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Service Architecture</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">Knowledge Graph Embedding Server</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+        <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>kgeserver.experiment</li>
+    <li class="wy-breadcrumbs-aside">
+      
+          
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for kgeserver.experiment</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># coding:utf-8</span>
+<span class="c1">#</span>
+<span class="c1"># Experiment class: create and train a model</span>
+<span class="c1"># Copyright (C) 2016 Víctor Fernández Rico &lt;vfrico@gmail.com&gt;</span>
+<span class="c1"># Copyright (C) 2016 Maximilian Nickel &lt;mnick@mit.edu&gt;</span>
+<span class="c1">#</span>
+<span class="c1">#   The original file can be found on</span>
+<span class="c1">#   &lt;https://github.com/mnick/holographic-embeddings/tree/master/kg/base.py&gt;</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU Lesser General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU Lesser General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU Lesser General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">argsort</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span> <span class="k">as</span> <span class="n">ddict</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">timeit</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="k">import</span> <span class="n">precision_recall_curve</span><span class="p">,</span> <span class="n">auc</span><span class="p">,</span> <span class="n">roc_auc_score</span>
+
+<span class="kn">from</span> <span class="nn">skge</span> <span class="k">import</span> <span class="n">sample</span>
+<span class="kn">from</span> <span class="nn">skge.util</span> <span class="k">import</span> <span class="n">to_tensor</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;EX-KG&#39;</span><span class="p">)</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">137</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Experiment"><a class="viewcode-back" href="../../modules/algorithm.html#kgeserver.experiment.Experiment">[docs]</a><span class="k">class</span> <span class="nc">Experiment</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">th_num</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">train_all</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">margin</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="s1">&#39;nunif&#39;</span><span class="p">,</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">max_epochs</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+                 <span class="n">ne</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">nbatches</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">fout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">test_all</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+                 <span class="n">no_pairwise</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;rank&#39;</span><span class="p">,</span> <span class="n">sampler</span><span class="o">=</span><span class="s1">&#39;random-mode&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">k</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param Dataset dataset: The dataset to train</span>
+<span class="sd">        :param float margin: Margin for loss function</span>
+<span class="sd">        :param string init: Initialization method</span>
+<span class="sd">        :param float lr: Learning rate</span>
+<span class="sd">        :param integer max_epochs: Maximum number of epochs</span>
+<span class="sd">        :param integer ne: Number of negative examples</span>
+<span class="sd">        :param integer nbatches: Number of batches</span>
+<span class="sd">        :param string fout: Path to store model and results TODO-&gt;CHANGE</span>
+<span class="sd">        :param string fin: Path to imput data TODO-&gt;CHANGE</span>
+<span class="sd">        :param integer test_all: Evaluate the modell after x epochs</span>
+<span class="sd">        :param bool no_pairwise: If true, trainer used is no pairwise</span>
+<span class="sd">        :param string mode:</span>
+<span class="sd">        :param string sampler:</span>
+<span class="sd">        :param bool train_all: Train with all triplets or use only train subs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">margin</span> <span class="o">=</span> <span class="n">margin</span>        <span class="c1"># Margin for loss function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init</span> <span class="o">=</span> <span class="n">init</span>            <span class="c1"># Initialization method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lr</span> <span class="o">=</span> <span class="n">lr</span>                <span class="c1"># Learning rate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">me</span> <span class="o">=</span> <span class="n">max_epochs</span>        <span class="c1"># Maximum number of iterations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ne</span> <span class="o">=</span> <span class="n">ne</span>                <span class="c1"># Negative examples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nb</span> <span class="o">=</span> <span class="n">nbatches</span>          <span class="c1"># Number of batches</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fout</span> <span class="o">=</span> <span class="n">fout</span>            <span class="c1"># Path to store model</span>
+        <span class="c1"># self.fin = fin            # Path to imput data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_all</span> <span class="o">=</span> <span class="n">test_all</span>    <span class="c1"># Evaluate the model each x epochs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">no_pairwise</span> <span class="o">=</span> <span class="n">no_pairwise</span>  <span class="c1"># True if trainer is no pairwise</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span> <span class="o">=</span> <span class="n">sampler</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_all</span> <span class="o">=</span> <span class="n">train_all</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">neval</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_valid_score</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exectimes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Store the score and epochs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">violations</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_epoch</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">th_num</span> <span class="o">=</span> <span class="n">th_num</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">external_callback</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;external_callback&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">external_callback</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Experiment.run"><a class="viewcode-back" href="../../modules/algorithm.html#kgeserver.experiment.Experiment.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Configure ModelTrainer and start the trainer.</span>
+
+<span class="sd">        :return: The trained model</span>
+<span class="sd">        :rtype: skge.Model</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;rank&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">callback</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ranking_callback</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;lp&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">callback</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lp_callback</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span> <span class="o">=</span> <span class="n">LinkPredictionEval</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown experiment mode (</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span>
+        <span class="n">trainer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">trainer</span><span class="o">.</span><span class="n">model</span></div>
+
+<div class="viewcode-block" id="Experiment.save_trained_model"><a class="viewcode-back" href="../../modules/algorithm.html#kgeserver.experiment.Experiment.save_trained_model">[docs]</a>    <span class="k">def</span> <span class="nf">save_trained_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Given a model and a filepath, save it to disk&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">bin_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;wb+&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Failed when loading file&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">bin_file</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Experiment.thread_start"><a class="viewcode-back" href="../../modules/algorithm.html#kgeserver.experiment.Experiment.thread_start">[docs]</a>    <span class="k">def</span> <span class="nf">thread_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Used when threads are created&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+        <span class="n">callback</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Experiment.ranking_callback"><a class="viewcode-back" href="../../modules/algorithm.html#kgeserver.experiment.Experiment.ranking_callback">[docs]</a>    <span class="k">def</span> <span class="nf">ranking_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trn</span><span class="p">,</span> <span class="n">with_eval</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Print basic info&quot;&quot;&quot;</span>
+        <span class="c1"># print basic info</span>
+        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span> <span class="o">-</span> <span class="n">trn</span><span class="o">.</span><span class="n">epoch_start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exectimes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">elapsed</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_pairwise</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%d</span><span class="s2">][</span><span class="si">%3d</span><span class="s2">] time = </span><span class="si">%d</span><span class="s2">s, loss = </span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span>
+                  <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">th_num</span><span class="p">,</span> <span class="n">trn</span><span class="o">.</span><span class="n">epoch</span><span class="p">,</span> <span class="n">elapsed</span><span class="p">,</span> <span class="n">trn</span><span class="o">.</span><span class="n">loss</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%d</span><span class="s2">][</span><span class="si">%3d</span><span class="s2">] time = </span><span class="si">%d</span><span class="s2">s, violations = </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span>
+                  <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">th_num</span><span class="p">,</span> <span class="n">trn</span><span class="o">.</span><span class="n">epoch</span><span class="p">,</span> <span class="n">elapsed</span><span class="p">,</span> <span class="n">trn</span><span class="o">.</span><span class="n">nviolations</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">violations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">trn</span><span class="o">.</span><span class="n">nviolations</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_all</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="n">trn</span><span class="o">.</span><span class="n">epoch</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_all</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">with_eval</span><span class="p">)</span>\
+                <span class="ow">and</span> <span class="ow">not</span> <span class="n">trn</span><span class="o">.</span><span class="n">stop_training</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%d</span><span class="s2">] before eval&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_num</span><span class="p">)</span>
+            <span class="n">pos_v</span><span class="p">,</span> <span class="n">fpos_v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_valid</span><span class="o">.</span><span class="n">positions</span><span class="p">(</span><span class="n">trn</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%d</span><span class="s2">] after eval, </span><span class="si">{}</span><span class="s2"> before ranking&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_num</span><span class="p">)</span>
+            <span class="n">fmrr_valid</span> <span class="o">=</span> <span class="n">ranking_scores</span><span class="p">(</span><span class="n">pos_v</span><span class="p">,</span> <span class="n">fpos_v</span><span class="p">,</span> <span class="n">trn</span><span class="o">.</span><span class="n">epoch</span><span class="p">,</span> <span class="s1">&#39;VALID&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%d</span><span class="s2">] after ranking&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">th_num</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%d</span><span class="s2">] FMRR valid = </span><span class="si">%f</span><span class="s2">, best = </span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span>
+                  <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">th_num</span><span class="p">,</span> <span class="n">fmrr_valid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_valid_score</span><span class="p">))</span>
+
+            <span class="c1"># Store fmrr_valid score with params.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="n">fmrr_valid</span><span class="p">,</span>
+                                <span class="s1">&#39;epoch&#39;</span><span class="p">:</span> <span class="n">trn</span><span class="o">.</span><span class="n">epoch</span><span class="p">,</span>
+                                <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s2">&quot;FMRR&quot;</span><span class="p">})</span>
+
+            <span class="c1"># If scores are too low, is better to stop the trainer</span>
+            <span class="k">if</span> <span class="n">fmrr_valid</span> <span class="o">&lt;</span> <span class="mf">0.1</span><span class="p">:</span>
+                <span class="n">trn</span><span class="o">.</span><span class="n">stop_training</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="c1"># If violations to the trainer are the same, stop the trainer</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">violations</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">violations</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">trn</span><span class="o">.</span><span class="n">stop_training</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="c1"># if improved the validation error, store model and calc test error</span>
+            <span class="k">if</span> <span class="n">fmrr_valid</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_valid_score</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">best_valid_score</span> <span class="o">=</span> <span class="n">fmrr_valid</span>
+                <span class="n">pos_t</span><span class="p">,</span> <span class="n">fpos_t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_test</span><span class="o">.</span><span class="n">positions</span><span class="p">(</span><span class="n">trn</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+                <span class="n">ranking_scores</span><span class="p">(</span><span class="n">pos_t</span><span class="p">,</span> <span class="n">fpos_t</span><span class="p">,</span> <span class="n">trn</span><span class="o">.</span><span class="n">epoch</span><span class="p">,</span> <span class="s1">&#39;TEST&#39;</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">st</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="n">trn</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                        <span class="s1">&#39;pos test&#39;</span><span class="p">:</span> <span class="n">pos_t</span><span class="p">,</span>
+                        <span class="s1">&#39;fpos test&#39;</span><span class="p">:</span> <span class="n">fpos_t</span><span class="p">,</span>
+                        <span class="s1">&#39;pos valid&#39;</span><span class="p">:</span> <span class="n">pos_v</span><span class="p">,</span>
+                        <span class="s1">&#39;fpos valid&#39;</span><span class="p">:</span> <span class="n">fpos_v</span><span class="p">,</span>
+                        <span class="s1">&#39;exectimes&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">exectimes</span>
+                    <span class="p">}</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fout</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fout</span><span class="p">:</span>
+                        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">fout</span><span class="p">,</span> <span class="n">protocol</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">external_callback</span><span class="p">(</span><span class="n">trn</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="c1"># Callback is not present</span>
+            <span class="k">pass</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+    <span class="k">def</span> <span class="nf">lp_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">with_eval</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="c1"># print basic info</span>
+        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span> <span class="o">-</span> <span class="n">m</span><span class="o">.</span><span class="n">epoch_start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exectimes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">elapsed</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">no_pairwise</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%d</span><span class="s2">][</span><span class="si">%3d</span><span class="s2">] time = </span><span class="si">%d</span><span class="s2">s, loss = </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span>
+                  <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">th_num</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">epoch</span><span class="p">,</span> <span class="n">elapsed</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">loss</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%d</span><span class="s2">][</span><span class="si">%3d</span><span class="s2">] time = </span><span class="si">%d</span><span class="s2">s, violations = </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span>
+                  <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">th_num</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">epoch</span><span class="p">,</span> <span class="n">elapsed</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">nviolations</span><span class="p">))</span>
+
+        <span class="c1"># if we improved the validation error, store model and calc test error</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_all</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">epoch</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_all</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">with_eval</span><span class="p">):</span>
+            <span class="n">auc_valid</span><span class="p">,</span> <span class="n">roc_valid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_valid</span><span class="o">.</span><span class="n">scores</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%d</span><span class="s2">] AUC PR valid = </span><span class="si">%f</span><span class="s2">, best = </span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span>
+                  <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">th_num</span><span class="p">,</span> <span class="n">auc_valid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_valid_score</span><span class="p">))</span>
+
+            <span class="c1"># Store fmrr_valid score with params.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="n">auc_valid</span><span class="p">,</span>
+                                <span class="s1">&#39;epoch&#39;</span><span class="p">:</span> <span class="n">trn</span><span class="o">.</span><span class="n">epoch</span><span class="p">,</span>
+                                <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s2">&quot;AUC_PR&quot;</span><span class="p">})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="n">roc_valid</span><span class="p">,</span>
+                                <span class="s1">&#39;epoch&#39;</span><span class="p">:</span> <span class="n">trn</span><span class="o">.</span><span class="n">epoch</span><span class="p">,</span>
+                                <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s2">&quot;AUC_ROC&quot;</span><span class="p">})</span>
+
+            <span class="k">if</span> <span class="n">auc_valid</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_valid_score</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">best_valid_score</span> <span class="o">=</span> <span class="n">auc_valid</span>
+                <span class="n">auc_test</span><span class="p">,</span> <span class="n">roc_test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev_test</span><span class="o">.</span><span class="n">scores</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[</span><span class="si">%d</span><span class="s2">] AUC PR test = </span><span class="si">%f</span><span class="s2">, AUC ROC test = </span><span class="si">%f</span><span class="s2">&quot;</span> <span class="o">%</span>
+                      <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">th_num</span><span class="p">,</span> <span class="n">auc_test</span><span class="p">,</span> <span class="n">roc_test</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">st</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="n">m</span><span class="p">,</span>
+                        <span class="s1">&#39;auc pr test&#39;</span><span class="p">:</span> <span class="n">auc_test</span><span class="p">,</span>
+                        <span class="s1">&#39;auc pr valid&#39;</span><span class="p">:</span> <span class="n">auc_valid</span><span class="p">,</span>
+                        <span class="s1">&#39;auc roc test&#39;</span><span class="p">:</span> <span class="n">roc_test</span><span class="p">,</span>
+                        <span class="s1">&#39;auc roc valid&#39;</span><span class="p">:</span> <span class="n">roc_valid</span><span class="p">,</span>
+                        <span class="s1">&#39;exectimes&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">exectimes</span>
+                    <span class="p">}</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fout</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fout</span><span class="p">:</span>
+                        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">fout</span><span class="p">,</span> <span class="n">protocol</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="Experiment.train"><a class="viewcode-back" href="../../modules/algorithm.html#kgeserver.experiment.Experiment.train">[docs]</a>    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Train the model&quot;&quot;&quot;</span>
+        <span class="c1"># Compute training vector size</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">entities</span><span class="p">)</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">relations</span><span class="p">)</span>
+        <span class="n">sz</span> <span class="o">=</span> <span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">)</span>
+
+        <span class="c1"># Extract triples from dataset</span>
+        <span class="n">subs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">train_split</span><span class="p">()</span>
+        <span class="n">true_triples</span> <span class="o">=</span> <span class="n">subs</span><span class="p">[</span><span class="s1">&#39;train_subs&#39;</span><span class="p">]</span> <span class="o">+</span> \
+            <span class="n">subs</span><span class="p">[</span><span class="s1">&#39;test_subs&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">subs</span><span class="p">[</span><span class="s1">&#39;valid_subs&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_all</span><span class="p">:</span>
+            <span class="n">xs</span> <span class="o">=</span> <span class="n">true_triples</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xs</span> <span class="o">=</span> <span class="n">subs</span><span class="p">[</span><span class="s1">&#39;train_subs&#39;</span><span class="p">]</span>
+        <span class="n">ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">))</span>
+
+        <span class="c1"># Instantiate the evaluator</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;rank&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ev_test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="p">(</span><span class="n">subs</span><span class="p">[</span><span class="s1">&#39;test_subs&#39;</span><span class="p">],</span> <span class="n">true_triples</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">neval</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ev_valid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="p">(</span><span class="n">subs</span><span class="p">[</span><span class="s1">&#39;valid_subs&#39;</span><span class="p">],</span> <span class="n">true_triples</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">neval</span><span class="p">)</span>
+        <span class="c1"># ¹Assuming labels are if triple is either true or false:</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;lp&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ev_test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="p">(</span><span class="n">subs</span><span class="p">[</span><span class="s1">&#39;test_subs&#39;</span><span class="p">],</span>
+                                          <span class="c1"># subs[&#39;test_labels&#39;])</span>
+                                          <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">subs</span><span class="p">[</span><span class="s1">&#39;test_subs&#39;</span><span class="p">])))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ev_valid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluator</span><span class="p">(</span><span class="n">subs</span><span class="p">[</span><span class="s1">&#39;valid_subs&#39;</span><span class="p">],</span>
+                                           <span class="c1"># subs[&#39;valid_labels&#39;])</span>
+                                           <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">subs</span><span class="p">[</span><span class="s1">&#39;valid_subs&#39;</span><span class="p">])))</span>
+
+        <span class="c1"># create sampling objects</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span> <span class="o">==</span> <span class="s1">&#39;corrupted&#39;</span><span class="p">:</span>
+            <span class="c1"># create type index, here it is ok to use the whole data</span>
+            <span class="n">sampler</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">CorruptedSampler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ne</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">ti</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span> <span class="o">==</span> <span class="s1">&#39;random-mode&#39;</span><span class="p">:</span>
+            <span class="n">sampler</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">RandomModeSampler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ne</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">xs</span><span class="p">,</span> <span class="n">sz</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span> <span class="o">==</span> <span class="s1">&#39;lcwa&#39;</span><span class="p">:</span>
+            <span class="n">sampler</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">LCWASampler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ne</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">xs</span><span class="p">,</span> <span class="n">sz</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unknown sampler (</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span><span class="p">)</span>
+
+        <span class="c1"># Instantiate trainer</span>
+        <span class="n">trn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">setup_trainer</span><span class="p">(</span><span class="n">sz</span><span class="p">,</span> <span class="n">sampler</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Fitting model </span><span class="si">%s</span><span class="s2"> with trainer </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="n">trn</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
+            <span class="n">trn</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="c1"># Start trainer</span>
+        <span class="n">trn</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="n">trn</span><span class="p">,</span> <span class="n">with_eval</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">trn</span></div></div>
+
+
+<span class="k">class</span> <span class="nc">FilteredRankingEval</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">true_triples</span><span class="p">,</span> <span class="n">neval</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">ddict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="c1"># tt stands for true triples</span>
+        <span class="n">tt</span> <span class="o">=</span> <span class="n">ddict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;ss&#39;</span><span class="p">:</span> <span class="n">ddict</span><span class="p">(</span><span class="nb">list</span><span class="p">),</span> <span class="s1">&#39;os&#39;</span><span class="p">:</span> <span class="n">ddict</span><span class="p">(</span><span class="nb">list</span><span class="p">)})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">neval</span> <span class="o">=</span> <span class="n">neval</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sz</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">o</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">xs</span><span class="p">:</span>
+            <span class="n">idx</span><span class="p">[</span><span class="n">p</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">s</span><span class="p">,</span> <span class="n">o</span><span class="p">))</span>
+
+        <span class="c1"># For each predicate (tt[p]):</span>
+        <span class="c1">#    ss is: subjects related to object</span>
+        <span class="c1">#    os is: objects related to subject</span>
+        <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">o</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">true_triples</span><span class="p">:</span>
+            <span class="n">tt</span><span class="p">[</span><span class="n">p</span><span class="p">][</span><span class="s1">&#39;os&#39;</span><span class="p">][</span><span class="n">s</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+            <span class="n">tt</span><span class="p">[</span><span class="n">p</span><span class="p">][</span><span class="s1">&#39;ss&#39;</span><span class="p">][</span><span class="n">o</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+        <span class="c1"># Unpack dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">idx</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tt</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">tt</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">neval</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">sos</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">neval</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">neval</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">neval</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">neval</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">sos</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">positions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mdl</span><span class="p">):</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">fpos</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare_global&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prepare_global</span><span class="p">(</span><span class="n">mdl</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">sos</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">ppos</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;head&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;tail&#39;</span><span class="p">:</span> <span class="p">[]}</span>
+            <span class="n">pfpos</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;head&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;tail&#39;</span><span class="p">:</span> <span class="p">[]}</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;prepare&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">mdl</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">sos</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">neval</span><span class="p">[</span><span class="n">p</span><span class="p">]]:</span>
+                <span class="n">scores_o</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scores_o</span><span class="p">(</span><span class="n">mdl</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+                <span class="n">sortidx_o</span> <span class="o">=</span> <span class="n">argsort</span><span class="p">(</span><span class="n">scores_o</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">ppos</span><span class="p">[</span><span class="s1">&#39;tail&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">sortidx_o</span> <span class="o">==</span> <span class="n">o</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+                <span class="n">rm_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tt</span><span class="p">[</span><span class="n">p</span><span class="p">][</span><span class="s1">&#39;os&#39;</span><span class="p">][</span><span class="n">s</span><span class="p">]</span>
+                <span class="n">rm_idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">rm_idx</span> <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">o</span><span class="p">]</span>
+                <span class="n">scores_o</span><span class="p">[</span><span class="n">rm_idx</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">Inf</span>
+                <span class="n">sortidx_o</span> <span class="o">=</span> <span class="n">argsort</span><span class="p">(</span><span class="n">scores_o</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">pfpos</span><span class="p">[</span><span class="s1">&#39;tail&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">sortidx_o</span> <span class="o">==</span> <span class="n">o</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+                <span class="n">scores_s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scores_s</span><span class="p">(</span><span class="n">mdl</span><span class="p">,</span> <span class="n">o</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+                <span class="n">sortidx_s</span> <span class="o">=</span> <span class="n">argsort</span><span class="p">(</span><span class="n">scores_s</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">ppos</span><span class="p">[</span><span class="s1">&#39;head&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">sortidx_s</span> <span class="o">==</span> <span class="n">s</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+                <span class="n">rm_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tt</span><span class="p">[</span><span class="n">p</span><span class="p">][</span><span class="s1">&#39;ss&#39;</span><span class="p">][</span><span class="n">o</span><span class="p">]</span>
+                <span class="n">rm_idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">rm_idx</span> <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">s</span><span class="p">]</span>
+                <span class="n">scores_s</span><span class="p">[</span><span class="n">rm_idx</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">Inf</span>
+                <span class="n">sortidx_s</span> <span class="o">=</span> <span class="n">argsort</span><span class="p">(</span><span class="n">scores_s</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">pfpos</span><span class="p">[</span><span class="s1">&#39;head&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">sortidx_s</span> <span class="o">==</span> <span class="n">s</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">pos</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">ppos</span>
+            <span class="n">fpos</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">pfpos</span>
+
+        <span class="k">return</span> <span class="n">pos</span><span class="p">,</span> <span class="n">fpos</span>
+
+
+<span class="k">class</span> <span class="nc">LinkPredictionEval</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">):</span>
+        <span class="n">ss</span><span class="p">,</span> <span class="n">os</span><span class="p">,</span> <span class="n">ps</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">xs</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ss</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ss</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ps</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ps</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">os</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">os</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ys</span> <span class="o">=</span> <span class="n">ys</span>
+
+    <span class="k">def</span> <span class="nf">scores</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mdl</span><span class="p">):</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">mdl</span><span class="o">.</span><span class="n">_scores</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ss</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">os</span><span class="p">)</span>
+        <span class="n">pr</span><span class="p">,</span> <span class="n">rc</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">precision_recall_curve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ys</span><span class="p">,</span> <span class="n">scores</span><span class="p">)</span>
+        <span class="n">roc</span> <span class="o">=</span> <span class="n">roc_auc_score</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ys</span><span class="p">,</span> <span class="n">scores</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">auc</span><span class="p">(</span><span class="n">rc</span><span class="p">,</span> <span class="n">pr</span><span class="p">),</span> <span class="n">roc</span>
+
+
+<span class="k">def</span> <span class="nf">ranking_scores</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">fpos</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">txt</span><span class="p">):</span>
+    <span class="n">hpos</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">pos</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pos</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s1">&#39;head&#39;</span><span class="p">]]</span>
+    <span class="n">tpos</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">pos</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pos</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s1">&#39;tail&#39;</span><span class="p">]]</span>
+    <span class="n">fhpos</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">fpos</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">fpos</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s1">&#39;head&#39;</span><span class="p">]]</span>
+    <span class="n">ftpos</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">fpos</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">fpos</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s1">&#39;tail&#39;</span><span class="p">]]</span>
+    <span class="n">fmrr</span> <span class="o">=</span> <span class="n">_print_pos</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">hpos</span> <span class="o">+</span> <span class="n">tpos</span><span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">fhpos</span> <span class="o">+</span> <span class="n">ftpos</span><span class="p">),</span>
+        <span class="n">epoch</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">fmrr</span>
+
+
+<span class="k">def</span> <span class="nf">_print_pos</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">fpos</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">txt</span><span class="p">):</span>
+    <span class="n">mrr</span><span class="p">,</span> <span class="n">mean_pos</span><span class="p">,</span> <span class="n">hits</span> <span class="o">=</span> <span class="n">compute_scores</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+    <span class="n">fmrr</span><span class="p">,</span> <span class="n">fmean_pos</span><span class="p">,</span> <span class="n">fhits</span> <span class="o">=</span> <span class="n">compute_scores</span><span class="p">(</span><span class="n">fpos</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">((</span><span class="s2">&quot;[</span><span class="si">%3d</span><span class="s2">] </span><span class="si">%s</span><span class="s2">: MRR = </span><span class="si">%.2f</span><span class="s2">/</span><span class="si">%.2f</span><span class="s2">, &quot;</span>
+          <span class="s2">&quot;Mean Rank = </span><span class="si">%.2f</span><span class="s2">/</span><span class="si">%.2f</span><span class="s2">, Hits@10 = </span><span class="si">%.2f</span><span class="s2">/</span><span class="si">%.2f</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">%</span>
+          <span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">txt</span><span class="p">,</span> <span class="n">mrr</span><span class="p">,</span> <span class="n">fmrr</span><span class="p">,</span> <span class="n">mean_pos</span><span class="p">,</span> <span class="n">fmean_pos</span><span class="p">,</span> <span class="n">hits</span><span class="p">,</span> <span class="n">fhits</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">fmrr</span>
+
+
+<span class="k">def</span> <span class="nf">compute_scores</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">hits</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="n">mrr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">pos</span><span class="p">)</span>
+    <span class="n">mean_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+    <span class="n">hits</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">pos</span> <span class="o">&lt;=</span> <span class="n">hits</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">*</span> <span class="mi">100</span>
+    <span class="k">return</span> <span class="n">mrr</span><span class="p">,</span> <span class="n">mean_pos</span><span class="p">,</span> <span class="n">hits</span>
+
+
+<span class="k">def</span> <span class="nf">cardinalities</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">sz</span><span class="p">):</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">to_tensor</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">sz</span><span class="p">)</span>
+    <span class="n">c_head</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">c_tail</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">Ti</span> <span class="ow">in</span> <span class="n">T</span><span class="p">:</span>
+        <span class="n">sh</span> <span class="o">=</span> <span class="n">Ti</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">Ti</span><span class="o">.</span><span class="n">tocsc</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">c_head</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sh</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">sh</span><span class="p">)]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+        <span class="n">c_tail</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">st</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">st</span><span class="p">)]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+
+    <span class="n">cards</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;1-1&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;1-N&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;M-1&#39;</span><span class="p">:</span> <span class="p">[],</span> <span class="s1">&#39;M-N&#39;</span><span class="p">:</span> <span class="p">[]}</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">sz</span><span class="p">[</span><span class="mi">2</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">c_head</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">1.5</span> <span class="ow">and</span> <span class="n">c_tail</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">1.5</span><span class="p">:</span>
+            <span class="n">cards</span><span class="p">[</span><span class="s1">&#39;1-1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">c_head</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">1.5</span><span class="p">:</span>
+            <span class="n">cards</span><span class="p">[</span><span class="s1">&#39;1-N&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">c_tail</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">1.5</span><span class="p">:</span>
+            <span class="n">cards</span><span class="p">[</span><span class="s1">&#39;M-1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cards</span><span class="p">[</span><span class="s1">&#39;M-N&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cards</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Víctor Fernández Rico.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
