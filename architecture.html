@@ -88,14 +88,11 @@
 <li class="toctree-l1"><a class="reference internal" href="modules/modules.html">Modules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules/restservice.html">REST Service</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Service Architecture</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#server-deployment-v2">Server deployment v2</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#server-deployment">Server deployment</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#images-used">Images used</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#filesystem-permissions">Filesystem permissions</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#server-deployment-deprecated">Server Deployment (deprecated)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#getting-all-needed-images">Getting all needed images</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#running-the-environment">Running the environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ports">Ports</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#how-to-build-documentation">How to build documentation</a></li>
 </ul>
 </li>
 </ul>
@@ -154,15 +151,15 @@
 three different containers:</p>
 <ul class="simple">
 <li><strong>Web container</strong>: This container exposes the only open port of all system.
-Provides a web server (<em>gunicorn</em>) that accepts HTTP requests to the REST API
-and responds to them</li>
-<li><strong>celery</strong>: This container is running on the background waiting for a task on
-its queue. It contains all library code and celery.</li>
+Provides a <code class="docutils literal"><span class="pre">gunicorn</span></code> web server that accepts HTTP requests to the REST API
+and responds to them.</li>
+<li><strong>Celery Container</strong>: This container is running on the background waiting for a task on
+its queue. It contains all library code and <code class="docutils literal"><span class="pre">celery</span></code>.</li>
 <li><strong>Redis container</strong>: The redis key-value storage is a dependency from Celery.
 It also stores all the progress of the tasks running on Celery queue.</li>
 </ul>
-<div class="section" id="server-deployment-v2">
-<h2>Server deployment v2<a class="headerlink" href="#server-deployment-v2" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="server-deployment">
+<h2>Server deployment<a class="headerlink" href="#server-deployment" title="Permalink to this headline">¶</a></h2>
 <p>The old version of this repository didn&#8217;t had any Dockerfile or image available
 to run the code. This has changed, and two containers has been created to hold
 both web server and asyncronous task daemon (celery).</p>
@@ -198,79 +195,28 @@ that can create some <code class="docutils literal"><span class="pre">Permission
 write permissions for users group. You are also
 <strong>free to modify the Dockerfile to solve the UID issues</strong> you could have
 inside your system.</p>
+<p>The <code class="docutils literal"><span class="pre">docker-compose</span></code> command will create inside both celery and web containers
+a data volume which is mounted on the root of the github repository.</p>
 </div>
+<div class="section" id="ports">
+<h3>Ports<a class="headerlink" href="#ports" title="Permalink to this headline">¶</a></h3>
+<p>Currently, while development is taking place, the port which is being used is
+<strong>6789</strong>, but you can change this easily on the <code class="docutils literal"><span class="pre">docker_compose.yml</span></code> file.</p>
 </div>
-<div class="section" id="server-deployment-deprecated">
-<h2>Server Deployment (deprecated)<a class="headerlink" href="#server-deployment-deprecated" title="Permalink to this headline">¶</a></h2>
-<p><strong>NOTE</strong>: It is highly recommended to use the new server deployment method using
-docker compose. The images generated are smaller and faster to build.</p>
-<p>To configure the service we will need to install docker in our machine. After
-that we will start pulling containers or creating images, so you need a good
-internet connection and at least ~6 GB of free disk space</p>
-<div class="section" id="getting-all-needed-images">
-<h3>Getting all needed images<a class="headerlink" href="#getting-all-needed-images" title="Permalink to this headline">¶</a></h3>
-<p>We need first to create the image for the service container. Until the container
-is uploaded somewhere you can download it, you can use the following Dockerfile.
-Copy it into a new folder and call it <code class="docutils literal"><span class="pre">Dockerfile</span></code></p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">FROM</span> <span class="n">jupyter</span><span class="o">/</span><span class="n">scipy</span><span class="o">-</span><span class="n">notebook</span>
-
-<span class="n">MAINTAINER</span> <span class="n">Víctor</span> <span class="n">Fernández</span> <span class="o">&lt;</span><span class="n">vfrico</span><span class="nd">@gmail</span><span class="o">.</span><span class="n">com</span><span class="o">&gt;</span>
-
-<span class="n">USER</span> <span class="n">root</span>
-
-<span class="c1"># install scikit-kge from github</span>
-<span class="n">RUN</span> <span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">vfrico</span><span class="o">/</span><span class="n">kge</span><span class="o">-</span><span class="n">server</span><span class="o">.</span><span class="n">git</span>
-<span class="n">RUN</span> <span class="n">pip3</span> <span class="n">install</span> <span class="n">requests</span> <span class="o">--</span><span class="n">upgrade</span>
-<span class="n">RUN</span> <span class="n">pip3</span> <span class="n">install</span> <span class="n">setuptools</span>
-<span class="n">RUN</span> <span class="n">pip3</span> <span class="n">install</span> <span class="n">nose</span>
-<span class="n">RUN</span> <span class="n">cd</span> <span class="n">kge</span><span class="o">-</span><span class="n">server</span><span class="o">/</span> <span class="o">&amp;&amp;</span> <span class="n">python3</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
-<span class="n">RUN</span> <span class="n">rm</span> <span class="o">-</span><span class="n">rf</span> <span class="n">kge</span><span class="o">-</span><span class="n">server</span><span class="o">/</span>
-<span class="n">RUN</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">update</span> <span class="o">&amp;&amp;</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="o">-</span><span class="n">y</span> <span class="n">redis</span><span class="o">-</span><span class="n">server</span>
-<span class="n">RUN</span> <span class="n">service</span> <span class="n">redis</span><span class="o">-</span><span class="n">server</span> <span class="n">stop</span>
+<div class="section" id="how-to-build-documentation">
+<h3>How to build documentation<a class="headerlink" href="#how-to-build-documentation" title="Permalink to this headline">¶</a></h3>
+<p>This documentation page is built using sphinx framework, and is written in
+reStructuredText. To build some documentation strings, it needs to have
+some <code class="docutils literal"><span class="pre">python</span></code> libraries installed like <code class="docutils literal"><span class="pre">numpy</span></code> or <code class="docutils literal"><span class="pre">scikit-learn</span></code>. It
+exists one image to build this docs automatically, just running a docker container</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>cd images/sphinx-doc
+docker build -t sphinx-doc .
+docker run -rm -v $PWD/../..:/home/kgeserver/kge-server sphinx-doc html
 </pre></div>
 </div>
-<p>Now to build the image, change to the directory where you saved your Dockerfile
-and execute the following command. You can tweak the :v1 version to whatever you
-want.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">build</span> <span class="o">-</span><span class="n">t</span> <span class="n">kgeservice</span><span class="p">:</span><span class="n">v1</span> <span class="o">.</span>
-</pre></div>
-</div>
-<p>The second image we need to use is Redis. Fortunately the public docker registry
-already has this image, so we will use it:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">pull</span> <span class="n">redis</span>
-</pre></div>
-</div>
-<p>Once we have all needed images we need to run them</p>
-</div>
-<div class="section" id="running-the-environment">
-<h3>Running the environment<a class="headerlink" href="#running-the-environment" title="Permalink to this headline">¶</a></h3>
-<p>The redis container acts like a dependency for our service container, so we
-will launch it before. With the following command we start running a container
-called <code class="docutils literal"><span class="pre">myredis</span></code>.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="o">--</span><span class="n">name</span> <span class="n">myredis</span> <span class="o">-</span><span class="n">d</span> <span class="n">redis</span>
-</pre></div>
-</div>
-<p>After this, we will run the service container. This container still has several
-packages installed on it, like jupyter notebook. It has many parameters you can
-tweak as you want.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>docker run -d -p 14397:8888 -p 6789:8000 -e PASSWORD=&quot;password&quot;\
---link myredis:redis --name serviciokge\
--v $PWD/kge-server:/home/jovyan/work\
-kgeservice:v1
-</pre></div>
-</div>
-<p>If everythin went ok, we can see all running containers. We must see at least our
-two containers, called <code class="docutils literal"><span class="pre">myredis</span></code> and <code class="docutils literal"><span class="pre">serviciokge</span></code></p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">ps</span>
-</pre></div>
-</div>
-<p>Now we enter into our container:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">exec</span> <span class="o">-</span><span class="n">it</span> <span class="n">serviciokge</span> <span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">bash</span>
-</pre></div>
-</div>
-<p>and we have to run <cite>~/work/rest-service/servicestart.sh</cite> to run gunicorn and
-<cite>~/work/rest-service/celerystart.sh</cite> to run celery.</p>
-<p>After this you will be able to access the http rest service through the port :6789</p>
+<p>You may noticed the last argument called <code class="docutils literal"><span class="pre">html</span></code>. It is the argument that will
+be passed to the make argument. In this case, calling to html will lead to a
+new <code class="docutils literal"><span class="pre">doc/build/html</span></code> folder with all new generated docs.</p>
 </div>
 </div>
 </div>

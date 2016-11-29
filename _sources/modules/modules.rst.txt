@@ -8,4 +8,4 @@ Modules
 
    dataset.rst
    algorithm.rst
-   experiment.rst
+   server.rst

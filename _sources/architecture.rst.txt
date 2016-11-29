@@ -9,18 +9,18 @@ three different containers:
 
 
 - **Web container**: This container exposes the only open port of all system.
-  Provides a web server (*gunicorn*) that accepts HTTP requests to the REST API
-  and responds to them
+  Provides a ``gunicorn`` web server that accepts HTTP requests to the REST API
+  and responds to them.
 
-- **celery**: This container is running on the background waiting for a task on
-  its queue. It contains all library code and celery.
+- **Celery Container**: This container is running on the background waiting for a task on
+  its queue. It contains all library code and ``celery``.
 
 - **Redis container**: The redis key-value storage is a dependency from Celery.
   It also stores all the progress of the tasks running on Celery queue.
 
 
-Server deployment v2
---------------------
+Server deployment
+-----------------
 
 The old version of this repository didn't had any Dockerfile or image available
 to run the code. This has changed, and two containers has been created to hold
@@ -66,97 +66,28 @@ write permissions for users group. You are also
 **free to modify the Dockerfile to solve the UID issues** you could have
 inside your system.
 
+The ``docker-compose`` command will create inside both celery and web containers
+a data volume which is mounted on the root of the github repository.
 
-Server Deployment (deprecated)
-------------------------------
-
-**NOTE**: It is highly recommended to use the new server deployment method using
-docker compose. The images generated are smaller and faster to build.
-
-To configure the service we will need to install docker in our machine. After
-that we will start pulling containers or creating images, so you need a good
-internet connection and at least ~6 GB of free disk space
-
-Getting all needed images
-`````````````````````````
-We need first to create the image for the service container. Until the container
-is uploaded somewhere you can download it, you can use the following Dockerfile.
-Copy it into a new folder and call it ``Dockerfile``
-
-::
-
-    FROM jupyter/scipy-notebook
-
-    MAINTAINER Víctor Fernández <vfrico@gmail.com>
-
-    USER root
-
-    # install scikit-kge from github
-    RUN git clone https://github.com/vfrico/kge-server.git
-    RUN pip3 install requests --upgrade
-    RUN pip3 install setuptools
-    RUN pip3 install nose
-    RUN cd kge-server/ && python3 setup.py install
-    RUN rm -rf kge-server/
-    RUN apt-get update && apt-get install -y redis-server
-    RUN service redis-server stop
+Ports
+`````
+Currently, while development is taking place, the port which is being used is
+**6789**, but you can change this easily on the ``docker_compose.yml`` file.
 
 
-Now to build the image, change to the directory where you saved your Dockerfile
-and execute the following command. You can tweak the :v1 version to whatever you
-want.
+How to build documentation
+``````````````````````````
+This documentation page is built using sphinx framework, and is written in
+reStructuredText. To build some documentation strings, it needs to have
+some ``python`` libraries installed like ``numpy`` or ``scikit-learn``. It
+exists one image to build this docs automatically, just running a docker container
 
 ::
 
-    docker build -t kgeservice:v1 .
+    cd images/sphinx-doc
+    docker build -t sphinx-doc .
+    docker run -rm -v $PWD/../..:/home/kgeserver/kge-server sphinx-doc html
 
-
-The second image we need to use is Redis. Fortunately the public docker registry
-already has this image, so we will use it:
-
-::
-
-    docker pull redis
-
-
-Once we have all needed images we need to run them
-
-Running the environment
-```````````````````````
-
-The redis container acts like a dependency for our service container, so we
-will launch it before. With the following command we start running a container
-called ``myredis``.
-
-::
-
-    docker run --name myredis -d redis
-
-After this, we will run the service container. This container still has several
-packages installed on it, like jupyter notebook. It has many parameters you can
-tweak as you want.
-
-::
-
-    docker run -d -p 14397:8888 -p 6789:8000 -e PASSWORD="password"\
-    --link myredis:redis --name serviciokge\
-    -v $PWD/kge-server:/home/jovyan/work\
-    kgeservice:v1
-
-If everythin went ok, we can see all running containers. We must see at least our
-two containers, called ``myredis`` and ``serviciokge``
-
-::
-
-    docker ps
-
-Now we enter into our container:
-
-::
-
-    docker exec -it serviciokge /bin/bash
-
-and we have to run `~/work/rest-service/servicestart.sh` to run gunicorn and
-`~/work/rest-service/celerystart.sh` to run celery.
-
-After this you will be able to access the http rest service through the port :6789
+You may noticed the last argument called ``html``. It is the argument that will
+be passed to the make argument. In this case, calling to html will lead to a
+new ``doc/build/html`` folder with all new generated docs.
