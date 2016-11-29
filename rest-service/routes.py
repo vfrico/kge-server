@@ -26,15 +26,16 @@ import async_server.tasks as async_tasks
 import async_server.celery as celery_server
 
 
+def read_body_params(req, resp, resource, params):
+    pass
+
+
 class DatasetResource(object):
 
     def on_get(self, req, resp, dataset_id):
         """Return a HTTP response with all information about one dataset
         """
-        if str(req.get_param("use_cache")).upper == "FALSE":
-            cache = False
-        else:
-            cache = True
+        cache = req.get_param_as_bool("use_cache", blank_as_true=True)
 
         dataset = data_access.DatasetDAO()
         resource, err = dataset.get_dataset_by_id(dataset_id, use_cache=cache)
@@ -109,10 +110,7 @@ class DatasetFactory(object):
 
     def on_get(self, req, resp):
         """Return all datasets"""
-        try:
-            cache = req.get_param("use_cache")
-        except LookupError:
-            cache = True
+        cache = req.get_param_as_bool("use_cache", blank_as_true=True)
 
         dao = data_access.DatasetDAO()
 
@@ -126,11 +124,17 @@ class DatasetFactory(object):
         resp.content_type = 'application/json'
         resp.status = falcon.HTTP_200
 
-    def on_post(self, req, resp):
+    @falcon.before(read_body_params)
+    def on_post(self, req, resp, **kwargs):
         """Makes HTTP response to receive POST /datasets requests
 
         This method will create a new empty dataset, and returns a 201 CREATED
         with Location header filled with the URI of the dataset.
+
+        :kwarg str name: The dataset name (optional)
+        :kwarg str description: The dataset description (optional)
+        :param int dataset_type: The dataset type (optional)
+        :returns: The new dataset created (and its path location)
         """
         dataset_name = None
         dataset_description = None
@@ -145,11 +149,7 @@ class DatasetFactory(object):
 
         dao = data_access.DatasetDAO()
         # Get dataset type
-        try:
-            dts_type = int(req.get_param("dataset_type"))
-        except Exception:
-            # Fallback when type not present: WikidataDataset
-            dts_type = 1
+        dts_type = req.get_param_as_int("dataset_type")
 
         dataset_type = dao.get_dataset_types()[dts_type]["class"]
         id_dts, err = dao.insert_empty_dataset(
@@ -222,16 +222,15 @@ class PredictSimilarEntitiesResource(object):
         search_server = server.Server(search_index)
 
         # Dig for the limit param on Query Params
-        limit = req.get_param('limit')
+        limit = req.get_param_as_int('limit')
         if limit is None:
             limit = 10  # Default value
         # Needed because server returns also the identical triple
         limit = int(limit) + 1
 
         # Dig for the search_k param on Query Params
-        try:
-            search_k = int(req.get_param('search_k'))
-        except Exception:
+        search_k = req.get_param_as_int('search_k')
+        if search_k is None:
             search_k = -1
 
         # If looking for similar_entities given an embedding vector
@@ -478,10 +477,7 @@ class DatasetIndex():
                                       description=msg.format(dataset_status))
 
         # Dig for the param on Query Params
-        try:
-            n_trees = int(req.get_param('n_trees'))
-        except ValueError:
-            n_trees = None
+        n_trees = req.get_param_as_int('n_trees')
 
         # Call to the task
         task = async_tasks.build_search_index.delay(dataset_id, n_trees)
@@ -521,11 +517,8 @@ class DatasetTrain():
         if dataset_dto is None:
             raise falcon.HTTPNotFound(description=str(err))
 
-        force_train = req.get_param("force_train")
-        if force_train and force_train.upper() == "TRUE":
-            force_train = True
-        else:
-            force_train = False
+        force_train = req.get_param_as_bool("force_train")
+
         # Check if dataset can be trained
         if not dataset_dto.is_untrained() and not force_train:
             dataset_status = dataset_dto.status
@@ -535,9 +528,7 @@ class DatasetTrain():
                                       description=msg.format(dataset_status))
 
         # Dig for the limit param on Query Params
-        algorithm_id = req.get_param('algorithm_id')
-        if algorithm_id is None:
-            raise falcon.HTTPMissingParam("algorithm_id")
+        algorithm_id = req.get_param('algorithm_id', required=True)
 
         # Obtain the algorithm
         algorithm_dao = data_access.AlgorithmDAO()
@@ -587,7 +578,7 @@ class TasksResource():
         task["id"] = task_obj["id"]
 
         try:
-            if req.get_param('get_debug_info') == "true":
+            if req.get_param_as_bool('get_debug_info'):
                 task["debug"] = task_obj
         except Exception:
             pass
@@ -597,7 +588,7 @@ class TasksResource():
             if "next" in task_obj and task_obj["next"] is not None:
                 print("This task has next {}".format(task_obj["next"]))
                 try:
-                    if req.get_param('no_redirect') == "true":
+                    if req.get_param_as_bool('no_redirect'):
                         resp.status = falcon.HTTP_200
                     else:
                         resp.status = falcon.HTTP_303
