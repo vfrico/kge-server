@@ -11,7 +11,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Add user for run server
-ENV CONDA_USER_UID 900
+ENV CONDA_USER_UID 1001
 ENV CONDA_USER kgeserver
 RUN useradd -m -s /bin/bash -N -u $CONDA_USER_UID $CONDA_USER && \
     chown $CONDA_USER_UID:users -R /opt/conda
