@@ -90,6 +90,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">REST Service</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#endpoints">Endpoints</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#datasets-management">Datasets management</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#algorithms">Algorithms</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#tasks">Tasks</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#triples-prediction">Triples prediction</a></li>
 </ul>
@@ -276,6 +277,13 @@ been created. See Location header to get more information.</li>
 <p>You also must provide <code class="docutils literal"><span class="pre">dataset_type</span></code> query param. This method will create
 a WikidataDataset (id: 1) by default, but you also can create different
 datasets providing a different dataset_type.</p>
+<p>Inside the body of the request you can provide a name for the dataset. For
+example:</p>
+<p><strong>Sample request</strong></p>
+<p><code class="xref http http-post docutils literal"><span class="pre">POST</span> <span class="pre">/datasets</span></code></p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;peliculas&quot;</span><span class="p">}</span>
+</pre></div>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -290,7 +298,7 @@ Dataset and 1 is for WikidataDataset (default).</li>
 <tr class="field-even field"><th class="field-name">Status Codes:</th><td class="field-body"><ul class="first last simple">
 <li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.2">201 Created</a> &#8211; A new dataset has been created successfuly. See <code class="docutils literal"><span class="pre">Location:</span></code>
 header to get the id and the new resource path.</li>
-<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a> &#8211; The given <em>dataset_type</em> does not exist.</li>
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.10">409 Conflict</a> &#8211; The given name already exists on the server.</li>
 </ul>
 </td>
 </tr>
@@ -459,6 +467,63 @@ similar entities given a different embedding vector.</p>
 <li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> &#8211; Operation was successful</li>
 <li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a> &#8211; The dataset ID does not exist</li>
 <li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.10">409 Conflict</a> &#8211; The dataset is not on a correct status</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="algorithms">
+<h3>Algorithms<a class="headerlink" href="#algorithms" title="Permalink to this headline">¶</a></h3>
+<p>The algorithm collection is used mainly to create and see the different algorithms
+created on the server.</p>
+<p>The hyperparameters that are allowed currently to tweak are:
+- <cite>embedding_size</cite>: The size of the embeddigs the trainer will use
+- <code class="docutils literal"><span class="pre">margin</span></code>: The margin used on the trainer
+- <code class="docutils literal"><span class="pre">max_epochs</span></code>: The maximum number of iterations of the algorithm</p>
+<dl class="get">
+<dt id="get--algorithms-">
+<code class="descname">GET </code><code class="descname">/algorithms/</code><a class="headerlink" href="#get--algorithms-" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets a list with all the algorithms created on the service.</p>
+</dd></dl>
+
+<dl class="get">
+<dt id="get--algorithms-(int-algorithm_id)">
+<code class="descname">GET </code><code class="descname">/algorithms/</code><span class="sig-paren">(</span><em class="property">int: </em><em>algorithm_id</em><span class="sig-paren">)</span><a class="headerlink" href="#get--algorithms-(int-algorithm_id)" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets only one algorithm</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>algorithm_id</strong> (<em>int</em>) &#8211; The algorithm unique identifier</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="post">
+<dt id="post--algorithms-">
+<code class="descname">POST </code><code class="descname">/algorithms/</code><a class="headerlink" href="#post--algorithms-" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create one algorithm on the service. On success, this method will return
+a 201 CREATED status code and the header parameter <cite>Location:</cite> filled with
+the relative path to the created resource.</p>
+<p>The body of the request must contain all parameters for the new algorithm.
+See the example below:</p>
+<p><strong>Sample request</strong></p>
+<p><code class="xref http http-post docutils literal"><span class="pre">POST</span> <span class="pre">/algorithms</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Status Codes:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.2">201 Created</a> &#8211; The request has been processed successfuly and a new
+resource has been created. See <code class="docutils literal"><span class="pre">Location:</span></code> header
+to get the new path.</li>
 </ul>
 </td>
 </tr>

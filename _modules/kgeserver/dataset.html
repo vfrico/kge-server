@@ -351,7 +351,6 @@
         <span class="n">subject</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_entity</span><span class="p">(</span><span class="n">subject</span><span class="p">)</span>
         <span class="n">pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_relation</span><span class="p">(</span><span class="n">pred</span><span class="p">)</span>
         <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_entity</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
-
         <span class="k">if</span> <span class="n">pred</span> <span class="ow">and</span> <span class="n">obj</span> <span class="ow">and</span> <span class="n">subject</span><span class="p">:</span>
             <span class="c1"># Add relation</span>
             <span class="n">id_subj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_entity</span><span class="p">(</span><span class="n">subject</span><span class="p">)</span>
@@ -560,7 +559,7 @@
                                   <span class="s2">&quot;implemented through a child object&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Dataset.process_entity"><a class="viewcode-back" href="../../modules/dataset.html#kgeserver.dataset.Dataset.process_entity">[docs]</a>    <span class="k">def</span> <span class="nf">process_entity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">,</span> <span class="n">append_queue</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_tries</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
-                       <span class="n">callback</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">_times</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                       <span class="n">callback</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">_times</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Wrapper for child method `dataset._process_entity`_</span>
 
 <span class="sd">        Will call self method `dataset._process_entity`_ and examine the return</span>
@@ -618,7 +617,7 @@
                                   <span class="s2">&quot;implemented through a child object&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Dataset.load_dataset_recurrently"><a class="viewcode-back" href="../../modules/dataset.html#kgeserver.dataset.Dataset.load_dataset_recurrently">[docs]</a>    <span class="k">def</span> <span class="nf">load_dataset_recurrently</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">levels</span><span class="p">,</span> <span class="n">seed_vector</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                                 <span class="n">limit_ent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ext_callback</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                                 <span class="n">limit_ent</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ext_callback</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
                                  <span class="o">**</span><span class="n">keyword_args</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Loads to dataset all entities with BNE ID and their relations</span>
 

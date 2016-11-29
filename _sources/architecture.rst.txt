@@ -32,7 +32,7 @@ a docker-compose.yml that allows to build instantly the two images and connect
 the containers. To run them you only have to clone the entire repository and
 execute those commands:
 
-.. sourcecode:: bash
+::
 
     cd images/
     docker-compose build
@@ -40,6 +40,7 @@ execute those commands:
 
 The previous method is still available if you can't use docker-compose on your
 machine
+
 
 Images used
 ```````````
@@ -54,6 +55,17 @@ package on python path, to get latest developement version running, and then
 will launch the service itself: gunicorn or celery worker.
 
 Standalone containers to use in production are not still available.
+
+Filesystem permissions
+``````````````````````
+The images used creates a new user called `kgeserver` with 1001 as its UID and
+owns to the users group. This is helpful for a user running in development
+environment. But the docker-compose file mounts some folders from host machine
+that can create some ``PermissionError`` exceptions. To avoid them, always use
+write permissions for users group. You are also
+**free to modify the Dockerfile to solve the UID issues** you could have
+inside your system.
+
 
 Server Deployment (deprecated)
 ------------------------------

@@ -90,6 +90,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Service Architecture</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#server-deployment-v2">Server deployment v2</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#images-used">Images used</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#filesystem-permissions">Filesystem permissions</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#server-deployment-deprecated">Server Deployment (deprecated)</a><ul>
@@ -170,9 +171,9 @@ see all the information inside images/ folder. It contains two Dockerfiles and
 a docker-compose.yml that allows to build instantly the two images and connect
 the containers. To run them you only have to clone the entire repository and
 execute those commands:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span><span class="nb">cd</span> images/
-docker-compose build
-docker-compose up
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">images</span><span class="o">/</span>
+<span class="n">docker</span><span class="o">-</span><span class="n">compose</span> <span class="n">build</span>
+<span class="n">docker</span><span class="o">-</span><span class="n">compose</span> <span class="n">up</span>
 </pre></div>
 </div>
 <p>The previous method is still available if you can&#8217;t use docker-compose on your
@@ -187,6 +188,16 @@ only the required packages, minimizing the overall size of the container.</p>
 package on python path, to get latest developement version running, and then
 will launch the service itself: gunicorn or celery worker.</p>
 <p>Standalone containers to use in production are not still available.</p>
+</div>
+<div class="section" id="filesystem-permissions">
+<h3>Filesystem permissions<a class="headerlink" href="#filesystem-permissions" title="Permalink to this headline">¶</a></h3>
+<p>The images used creates a new user called <cite>kgeserver</cite> with 1001 as its UID and
+owns to the users group. This is helpful for a user running in development
+environment. But the docker-compose file mounts some folders from host machine
+that can create some <code class="docutils literal"><span class="pre">PermissionError</span></code> exceptions. To avoid them, always use
+write permissions for users group. You are also
+<strong>free to modify the Dockerfile to solve the UID issues</strong> you could have
+inside your system.</p>
 </div>
 </div>
 <div class="section" id="server-deployment-deprecated">
