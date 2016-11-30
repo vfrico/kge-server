@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Dataset module &mdash; Knowledge Graph Embedding Server 1 documentation</title>
+  <title>Dataset module &mdash; Knowledge Graph Embedding Server 1.0-beta documentation</title>
   
 
   
@@ -33,7 +33,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="Knowledge Graph Embedding Server 1 documentation" href="../index.html"/>
+    <link rel="top" title="Knowledge Graph Embedding Server 1.0-beta documentation" href="../index.html"/>
         <link rel="up" title="Modules" href="modules.html"/>
         <link rel="next" title="Algorithm module" href="algorithm.html"/>
         <link rel="prev" title="Modules" href="modules.html"/> 
@@ -89,8 +89,22 @@
                 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">Modules</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Dataset module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#methods">Methods</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-kgeserver.wikidata_dataset">WikidataDataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#introduction">Introduction</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#binary-dataset">Binary Dataset</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#dataset-class">Dataset Class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#methods">Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#id1">WikidataDataset</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id2">Methods</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#esdbpediadataset">ESDBpediaDataset</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id4">Methods</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="algorithm.html">Algorithm module</a></li>
@@ -151,17 +165,70 @@
             
   <div class="section" id="dataset-module">
 <span id="dataset"></span><h1>Dataset module<a class="headerlink" href="#dataset-module" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
 <p>The dataset class is used to create a valid object with the main idea
 to be used within the Experiment class. This approach allow us to
 create easily different models to be trained, leaving the complexity
 to the class itself.</p>
-<p>The main entry point is &#8216;load_dataset_recurrently&#8217;. This will make several
-HTTP requests to obtain all the dataset given a list of Wikidata ID&#8217;s. At this
-moment, it only uses the Wikidata Elements which are related with a BNE ID.</p>
-<p>To save the dataset into a binary format, you should use the &#8216;save_to_binary&#8217;
-method. This will allow to open the dataset later without executing any query.</p>
+<p>You have different types of datasets. The main class of datasets is
+<a class="reference external" href="#kgeserver.dataset.Dataset">kgeserver.dataset.Dataset</a>, but this will allow to create basic datasets from
+a csv or JSON file, without any restriction of triples or relations that may not
+be useful for the dataset and makes the binary file very big.</p>
+<p>You have several Datasets that work with some of the most well known and free
+knowledge graphs on Internet. Those are:</p>
+<ul class="simple">
+<li><a class="reference external" href="#kgeserver.wikidata_dataset.WikidataDataset">WikidataDataset</a>:
+This class can manage all queries from the Wikidata portal,
+including wikidata id&#8217;s prepended with Q, like in <code class="docutils literal"><span class="pre">Q1492</span></code>.
+It is fully ready to perform any you need with really good results.</li>
+<li><a class="reference internal" href="#esdbpediadataset">ESDBpediaDataset</a>:
+This class is not as well ready as Wikidata, but is able to perform
+SPARQL Queries to get entities and relations on the Spanish DBpedia.</li>
+</ul>
+<p>The most interesting feature that those Dataset class provides is to build a
+local dataset with making multiple parallel queries to the SPARQL endpoints
+to retrieve all information about a given topic. You can start by getting
+a <em>seed_vector</em> of the entities you want to focus on and then build a
+n levels graph by quering each entity to its relations with other new entities.</p>
+<p>The seed vector can be obtained through the <a class="reference external" href="#kgeserver.dataset.Dataset.load_from_graph_pattern">load_from_graph_pattern</a> method.
+After that, you should save it on a variable and pass it as an argument to
+the <a class="reference external" href="#kgeserver.dataset.Dataset.load_dataset_recurrently">load_dataset_recurrently</a> method. This is the function that will make
+several queries to fill the dataset with the desried levels of depth.</p>
+<p>To save the dataset into a binary format, you should use the <a class="reference external" href="#kgeserver.dataset.Dataset.save_to_binary">save_to_binary</a>
+method. This will allow to <a class="reference external" href="#kgeserver.dataset.Dataset.load_from_binary">open</a> the dataset later without executing any query.</p>
+<div class="section" id="binary-dataset">
+<h3>Binary Dataset<a class="headerlink" href="#binary-dataset" title="Permalink to this headline">¶</a></h3>
+<p>The binary file of datasets are created using Pickle. It basicaly
+stores all the entities, all the relations and all the triples. It also
+stores some extra information to be able to <em>rebuild</em> the dataset later. The
+binary file is stored like a python dictionary which contains the following
+keys: <code class="docutils literal"><span class="pre">__class__</span></code>, <code class="docutils literal"><span class="pre">relations</span></code>, <code class="docutils literal"><span class="pre">test_subs</span></code>, <code class="docutils literal"><span class="pre">valid_subs</span></code>, <code class="docutils literal"><span class="pre">train_subs</span></code>
+and <code class="docutils literal"><span class="pre">entities</span></code>.</p>
+<p>The <code class="docutils literal"><span class="pre">relations</span></code> and <code class="docutils literal"><span class="pre">entities</span></code> entries are lists, and it&#8217;s length indicates
+us the number of relations or entities the dataset has. The <code class="docutils literal"><span class="pre">__class__</span></code> entry
+is for internal use of the class kgeserver.dataset. The triples are stored
+in three different entries, called <code class="docutils literal"><span class="pre">test_subs</span></code>, <code class="docutils literal"><span class="pre">valid_subs</span></code> and
+<code class="docutils literal"><span class="pre">train_subs</span></code>. Those subsets are created to be used for the next module, the
+algorithm module, wich will evaluate the dataset. This is a common practice
+when machine learning algorithms are used. If you need all the triples, they can
+be joined easily in python by adding the three lists between them:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">triples</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;test_subs&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;valid_subs&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;train_subs&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The split ratio commonly used is to use the 80% of the triples to train and the
+rest of triples are divided equally between <em>test</em> and <em>valid</em> triples. You can
+create a different split providing a value to <a class="reference external" href="#kgeserver.dataset.Dataset.train_split">dataset.train_split</a>.
+It also exists an <a class="reference external" href="#kgeserver.dataset.Dataset.improved_split">dataset.improved_split</a> method wich takes a bit longer to create,
+but it is better to test the dataset.</p>
+</div>
+</div>
+<div class="section" id="dataset-class">
+<h2>Dataset Class<a class="headerlink" href="#dataset-class" title="Permalink to this headline">¶</a></h2>
+<p>This class is used to create basic datasets. They can be filled with csv
+files, JSON files or even simple sparql queries.</p>
 <div class="section" id="methods">
-<h2>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h2>
+<h3>Methods<a class="headerlink" href="#methods" title="Permalink to this headline">¶</a></h3>
 <p>Here is shown all the different methods to use with dataset class</p>
 <span class="target" id="module-kgeserver.dataset"></span><dl class="class">
 <dt id="kgeserver.dataset.Dataset">
@@ -475,25 +542,6 @@ distinct than &#8216;load_dataset_recurrently&#8217;</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="kgeserver.dataset.Dataset.get_seed_vector">
-<code class="descname">get_seed_vector</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.get_seed_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.get_seed_vector" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the root entities where the graph build should start</p>
-<p>This should return a list with elements to start seeking its childs
-and start building a dataset graph from this root elements.</p>
-<p><strong>MUST</strong> be implemented through a child object</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">An entities list</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#list" title="(in Python v2.7)">list</a></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
 <dt id="kgeserver.dataset.Dataset.get_status">
 <code class="descname">get_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.get_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.get_status" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a formated string with current progress</p>
@@ -701,6 +749,26 @@ some threads to make several SPARQL SELECT queries.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="kgeserver.dataset.Dataset.load_from_graph_pattern">
+<code class="descname">load_from_graph_pattern</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.load_from_graph_pattern"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.load_from_graph_pattern" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the root entities where the graph build should start</p>
+<p>This should return a list with elements to start seeking its childs
+and start building a dataset graph from this root elements.
+This method will return <em>all</em> the entities on the dataset.</p>
+<p><strong>MUST</strong> be implemented through a child object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">An entities list</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/2/library/functions.html#list" title="(in Python v2.7)">list</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="kgeserver.dataset.Dataset.process_entity">
 <code class="descname">process_entity</code><span class="sig-paren">(</span><em>entity</em>, <em>append_queue=&lt;function Dataset.&lt;lambda&gt;&gt;</em>, <em>max_tries=10</em>, <em>callback=&lt;function Dataset.&lt;lambda&gt;&gt;</em>, <em>verbose=0</em>, <em>_times=0</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dataset.html#Dataset.process_entity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dataset.Dataset.process_entity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper for child method <a class="reference external" href="#kgeserver.dataset.Dataset._process_entity">dataset._process_entity</a></p>
@@ -794,9 +862,22 @@ rest will be a half for valid and the other half for test</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-kgeserver.wikidata_dataset">
-<span id="wikidatadataset"></span><h2>WikidataDataset<a class="headerlink" href="#module-kgeserver.wikidata_dataset" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+</div>
+<div class="section" id="id1">
+<h2>WikidataDataset<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>This class will enable you to generate a dataset from the information present in
+Wikidata Knowledge base. This class only needs to get a simple graph pattern to
+get started to build a dataset. An example of graph pattern that should be passed
+to <a class="reference external" href="#kgeserver.wikidata_dataset.WikidataDataset.load_from_graph_pattern">WikidataDataset.load_from_graph_pattern</a> method:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="s2">&quot;{ ?subject wdt:P950 ?bne . ?subject ?predicate ?object }&quot;</span>
+</pre></div>
+</div>
+<p>It is required to bind at least three variables, because they will be used in
+the next queries. Those variables should be called &#8221;?subject&#8221;,
+&#8221;?predicate&#8221; and &#8221;?object&#8221;.</p>
+<div class="section" id="id2">
+<h3>Methods<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-kgeserver.wikidata_dataset"></span><dl class="class">
 <dt id="kgeserver.wikidata_dataset.WikidataDataset">
 <em class="property">class </em><code class="descclassname">kgeserver.wikidata_dataset.</code><code class="descname">WikidataDataset</code><span class="sig-paren">(</span><em>sparql_endpoint=None</em>, <em>thread_limiter=32</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/wikidata_dataset.html#WikidataDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.wikidata_dataset.WikidataDataset" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="method">
@@ -873,7 +954,7 @@ from the server.</p>
 
 <dl class="method">
 <dt id="kgeserver.wikidata_dataset.WikidataDataset.extract_entity">
-<code class="descname">extract_entity</code><span class="sig-paren">(</span><em>entity</em>, <em>filters={'literal': False</em>, <em>'wdt-entity': True</em>, <em>'wdt-prop': True</em>, <em>'wdt-statement': False</em>, <em>'wdt-reference': False</em>, <em>'bnode': False}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/wikidata_dataset.html#WikidataDataset.extract_entity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.wikidata_dataset.WikidataDataset.extract_entity" title="Permalink to this definition">¶</a></dt>
+<code class="descname">extract_entity</code><span class="sig-paren">(</span><em>entity</em>, <em>filters={'wdt-reference': False</em>, <em>'bnode': False</em>, <em>'wdt-entity': True</em>, <em>'wdt-prop': True</em>, <em>'wdt-statement': False</em>, <em>'literal': False}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/wikidata_dataset.html#WikidataDataset.extract_entity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.wikidata_dataset.WikidataDataset.extract_entity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given an entity, returns the valid representation, ready to be saved</p>
 <p>The filter argument allows to avoid adding elements into lists that
 will not be used. It is a dictionary with the shape: {&#8216;filter&#8217;: bool}.
@@ -1065,6 +1146,89 @@ desired depth on parent class (<cite>load_dataset_recurrently</cite>)</p>
 
 </div>
 </div>
+<div class="section" id="esdbpediadataset">
+<h2>ESDBpediaDataset<a class="headerlink" href="#esdbpediadataset" title="Permalink to this headline">¶</a></h2>
+<p>In a similar way that it occurs with <a class="reference external" href="#kgeserver.wikidata_dataset.WikidataDataset">WikidataDataset</a>, this class will allow
+to you to create datasets from the spanish DBpedia. The graph pattern you
+should pass to <a class="reference external" href="#kgeserver.dbpedia_dataset.ESDBpediaDataset.load_from_graph_pattern">ESDBpediaDataset.load_from_graph_pattern</a> method looks like this:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>{ ?subject dcterms:subject &lt;http://es.dbpedia.org/resource/Categoría:Trenes_de_alta_velocidad&gt; . ?subject ?predicate ?object&quot; }
+</pre></div>
+</div>
+<p>As for <a class="reference external" href="#kgeserver.wikidata_dataset.WikidataDataset">WikidataDataset</a>, you need to bind the same three variables: &#8221;?subject&#8221;,
+&#8221;?predicate&#8221; and &#8221;?object&#8221;.</p>
+<div class="section" id="id4">
+<h3>Methods<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<span class="target" id="module-kgeserver.dbpedia_dataset"></span><dl class="class">
+<dt id="kgeserver.dbpedia_dataset.ESDBpediaDataset">
+<em class="property">class </em><code class="descclassname">kgeserver.dbpedia_dataset.</code><code class="descname">ESDBpediaDataset</code><span class="sig-paren">(</span><em>thread_limiter=32</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dbpedia_dataset.html#ESDBpediaDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dbpedia_dataset.ESDBpediaDataset" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="kgeserver.dbpedia_dataset.ESDBpediaDataset.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>thread_limiter=32</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dbpedia_dataset.html#ESDBpediaDataset.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dbpedia_dataset.ESDBpediaDataset.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates WikidataDataset class</p>
+<p>The default endpoint is the original from wikidata.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>new_endpoint</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The URI of the SPARQL endpoint</li>
+<li><strong>thread_limiter</strong> (<em>integer</em>) &#8211; The number of concurrent HTTP queries</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dbpedia_dataset.ESDBpediaDataset._process_entity">
+<code class="descname">_process_entity</code><span class="sig-paren">(</span><em>entity</em>, <em>verbose=0</em>, <em>graph_pattern='{0} ?predicate ?object . '</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dbpedia_dataset.html#ESDBpediaDataset._process_entity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dbpedia_dataset.ESDBpediaDataset._process_entity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take entity and explore all relations and entities related to it</p>
+<p>This will execute the SPARQL query with the params passed to
+build a dataset with the <em>object</em> elements on triples retrieved
+from the server.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">A list with new entities to be scanned</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.dbpedia_dataset.ESDBpediaDataset.load_from_graph_pattern">
+<code class="descname">load_from_graph_pattern</code><span class="sig-paren">(</span><em>verbose=0</em>, <em>where=''</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/dbpedia_dataset.html#ESDBpediaDataset.load_from_graph_pattern"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.dbpedia_dataset.ESDBpediaDataset.load_from_graph_pattern" title="Permalink to this definition">¶</a></dt>
+<dd><p>Auxiliar method that outputs a list of seed elements</p>
+<p>This seed vector will be the &#8216;root nodes&#8217; of a tree with the
+desired depth on parent class (<cite>load_dataset_recurrently</cite>)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>verbose</strong> &#8211; The desired level of verbosity</li>
+<li><strong>where</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; SPARQL where to construct query</li>
+<li><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The size of batches queried each time</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A list of entities</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/2/library/functions.html#list" title="(in Python v2.7)">list</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
 
 
            </div>
@@ -1107,7 +1271,7 @@ desired depth on parent class (<cite>load_dataset_recurrently</cite>)</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1',
+            VERSION:'1.0-beta',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

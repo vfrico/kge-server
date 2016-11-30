@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; Knowledge Graph Embedding Server 1 documentation</title>
+  <title>Index &mdash; Knowledge Graph Embedding Server 1.0-beta documentation</title>
   
 
   
@@ -34,7 +34,7 @@
         <link rel="index" title="Index"
               href="#"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="Knowledge Graph Embedding Server 1 documentation" href="index.html"/> 
+    <link rel="top" title="Knowledge Graph Embedding Server 1.0-beta documentation" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -163,6 +163,8 @@
       <li><a href="modules/dataset.html#kgeserver.dataset.Dataset.__init__">__init__() (kgeserver.dataset.Dataset method)</a>
 
       <ul>
+        <li><a href="modules/dataset.html#kgeserver.dbpedia_dataset.ESDBpediaDataset.__init__">(kgeserver.dbpedia_dataset.ESDBpediaDataset method)</a>
+</li>
         <li><a href="modules/dataset.html#kgeserver.wikidata_dataset.WikidataDataset.__init__">(kgeserver.wikidata_dataset.WikidataDataset method)</a>
 </li>
       </ul></li>
@@ -175,6 +177,8 @@
       <li><a href="modules/dataset.html#kgeserver.dataset.Dataset._process_entity">_process_entity() (kgeserver.dataset.Dataset method)</a>
 
       <ul>
+        <li><a href="modules/dataset.html#kgeserver.dbpedia_dataset.ESDBpediaDataset._process_entity">(kgeserver.dbpedia_dataset.ESDBpediaDataset method)</a>
+</li>
         <li><a href="modules/dataset.html#kgeserver.wikidata_dataset.WikidataDataset._process_entity">(kgeserver.wikidata_dataset.WikidataDataset method)</a>
 </li>
       </ul></li>
@@ -246,6 +250,8 @@
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/dataset.html#kgeserver.dbpedia_dataset.ESDBpediaDataset">ESDBpediaDataset (class in kgeserver.dbpedia_dataset)</a>
+</li>
       <li><a href="modules/dataset.html#kgeserver.dataset.Dataset.execute_query">execute_query() (kgeserver.dataset.Dataset method)</a>
 </li>
       <li><a href="modules/dataset.html#kgeserver.dataset.Dataset.exist_element">exist_element() (kgeserver.dataset.Dataset method)</a>
@@ -298,12 +304,8 @@
         <li><a href="modules/dataset.html#kgeserver.wikidata_dataset.WikidataDataset.get_relation_id">(kgeserver.wikidata_dataset.WikidataDataset method)</a>
 </li>
       </ul></li>
-      <li><a href="modules/dataset.html#kgeserver.dataset.Dataset.get_seed_vector">get_seed_vector() (kgeserver.dataset.Dataset method)</a>
-
-      <ul>
-        <li><a href="modules/dataset.html#kgeserver.wikidata_dataset.WikidataDataset.get_seed_vector">(kgeserver.wikidata_dataset.WikidataDataset method)</a>
+      <li><a href="modules/dataset.html#kgeserver.wikidata_dataset.WikidataDataset.get_seed_vector">get_seed_vector() (kgeserver.wikidata_dataset.WikidataDataset method)</a>
 </li>
-      </ul></li>
       <li><a href="modules/dataset.html#kgeserver.dataset.Dataset.get_status">get_status() (kgeserver.dataset.Dataset method)</a>
 </li>
   </ul></td>
@@ -328,6 +330,8 @@
 </li>
       <li><a href="modules/dataset.html#module-kgeserver.dataset">kgeserver.dataset (module)</a>
 </li>
+      <li><a href="modules/dataset.html#module-kgeserver.dbpedia_dataset">kgeserver.dbpedia_dataset (module)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modules/algorithm.html#module-kgeserver.experiment">kgeserver.experiment (module)</a>
@@ -350,18 +354,24 @@
 </li>
       <li><a href="modules/dataset.html#kgeserver.dataset.Dataset.load_dataset_from_query">load_dataset_from_query() (kgeserver.dataset.Dataset method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modules/dataset.html#kgeserver.dataset.Dataset.load_dataset_recurrently">load_dataset_recurrently() (kgeserver.dataset.Dataset method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modules/dataset.html#kgeserver.dataset.Dataset.load_entire_dataset">load_entire_dataset() (kgeserver.dataset.Dataset method)</a>
 </li>
       <li><a href="modules/dataset.html#kgeserver.dataset.Dataset.load_from_binary">load_from_binary() (kgeserver.dataset.Dataset method)</a>
 </li>
       <li><a href="modules/server.html#kgeserver.server.SearchIndex.load_from_file">load_from_file() (kgeserver.server.SearchIndex method)</a>
 </li>
-      <li><a href="modules/dataset.html#kgeserver.wikidata_dataset.WikidataDataset.load_from_graph_pattern">load_from_graph_pattern() (kgeserver.wikidata_dataset.WikidataDataset method)</a>
+      <li><a href="modules/dataset.html#kgeserver.dataset.Dataset.load_from_graph_pattern">load_from_graph_pattern() (kgeserver.dataset.Dataset method)</a>
+
+      <ul>
+        <li><a href="modules/dataset.html#kgeserver.dbpedia_dataset.ESDBpediaDataset.load_from_graph_pattern">(kgeserver.dbpedia_dataset.ESDBpediaDataset method)</a>
 </li>
+        <li><a href="modules/dataset.html#kgeserver.wikidata_dataset.WikidataDataset.load_from_graph_pattern">(kgeserver.wikidata_dataset.WikidataDataset method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -476,7 +486,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1',
+            VERSION:'1.0-beta',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

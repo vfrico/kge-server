@@ -1,0 +1,415 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>kgeserver.dbpedia_dataset &mdash; Knowledge Graph Embedding Server 1.0-beta documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="Knowledge Graph Embedding Server 1.0-beta documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> Knowledge Graph Embedding Server
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/modules.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/restservice.html">REST Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Service Architecture</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">Knowledge Graph Embedding Server</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+        <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>kgeserver.dbpedia_dataset</li>
+    <li class="wy-breadcrumbs-aside">
+      
+          
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for kgeserver.dbpedia_dataset</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># coding:utf-8</span>
+<span class="c1">#</span>
+<span class="c1"># WikidataDataset Class: Creates a data set from Wikidata</span>
+<span class="c1"># Copyright (C) 2016  Víctor Fernández Rico &lt;vfrico@gmail.com&gt;</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU Lesser General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU Lesser General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU Lesser General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="kn">import</span> <span class="nn">kgeserver</span>
+<span class="kn">import</span> <span class="nn">kgeserver.dataset</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+
+<div class="viewcode-block" id="ESDBpediaDataset"><a class="viewcode-back" href="../../modules/dataset.html#kgeserver.dbpedia_dataset.ESDBpediaDataset">[docs]</a><span class="k">class</span> <span class="nc">ESDBpediaDataset</span><span class="p">(</span><span class="n">kgeserver</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
+<div class="viewcode-block" id="ESDBpediaDataset.__init__"><a class="viewcode-back" href="../../modules/dataset.html#kgeserver.dbpedia_dataset.ESDBpediaDataset.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thread_limiter</span><span class="o">=</span><span class="mi">32</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates WikidataDataset class</span>
+
+<span class="sd">        The default endpoint is the original from wikidata.</span>
+
+<span class="sd">        :param string new_endpoint: The URI of the SPARQL endpoint</span>
+<span class="sd">        :param integer thread_limiter: The number of concurrent HTTP queries</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sparql_endpoint</span> <span class="o">=</span> <span class="s2">&quot;http://es.dbpedia.org/sparql?query=&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ESDBpediaDataset</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">sparql_endpoint</span><span class="o">=</span><span class="n">sparql_endpoint</span><span class="p">,</span>
+                                               <span class="n">thread_limiter</span><span class="o">=</span><span class="n">thread_limiter</span><span class="p">)</span>
+
+        <span class="c1"># Save all entities already explored by process_entity (saves time)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">entities_explored</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+    <span class="k">def</span> <span class="nf">check_entity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">):</span>
+        <span class="c1"># Example http://es.dbpedia.org/resource/Siemens_Velaro</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">entity_uri</span> <span class="o">=</span> <span class="n">entity</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+            <span class="n">dbpedia_id</span> <span class="o">=</span> <span class="n">entity_uri</span>  <span class="c1"># Returns the entire URI</span>
+
+            <span class="c1"># The last uri number should start with Q and has entity keyword</span>
+            <span class="c1"># Number after Q must be a valid integer</span>
+            <span class="k">if</span> <span class="n">entity_uri</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;resource&#39;</span> <span class="ow">and</span>\
+               <span class="n">entity_uri</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;es.dbpedia.org&#39;</span><span class="p">:</span>
+                <span class="c1"># print(&quot;Entity&quot;, entity, True)</span>
+                <span class="k">return</span> <span class="n">entity</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># print(&quot;Entity&quot;, entity, False)</span>
+                <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
+            <span class="c1"># print(&quot;Entity&quot;, entity, False)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="c1"># print(&quot;Entity&quot;, entity, False)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">check_relation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">relation</span><span class="p">):</span>
+        <span class="c1"># Example http://es.dbpedia.org/property/vmax</span>
+        <span class="c1"># http://es.dbpedia.org/ontology/wikiPageRedirects</span>
+        <span class="c1"># http://xmlns.com/foaf/0.1/isPrimaryTopicOf</span>
+        <span class="c1"># http://www.w3.org/2002/07/owl#sameAs</span>
+        <span class="c1"># http://www.w3.org/2000/01/rdf-schema#label</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">entity_uri</span> <span class="o">=</span> <span class="n">relation</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+            <span class="n">dbpedia_id</span> <span class="o">=</span> <span class="n">entity_uri</span>
+
+            <span class="c1"># The last uri number should start with Q and has entity keyword</span>
+            <span class="c1"># Number after Q must be a valid integer</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">entity_uri</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;property&#39;</span> <span class="ow">and</span>
+               <span class="n">entity_uri</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;wikiPageWikiLink&quot;</span><span class="p">)</span> <span class="ow">or</span>\
+               <span class="p">(</span><span class="n">entity_uri</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ontology&#39;</span> <span class="ow">and</span>
+               <span class="n">entity_uri</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;wikiPageWikiLink&quot;</span><span class="p">)</span> <span class="ow">or</span>\
+               <span class="n">entity_uri</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;xmlns.com&#39;</span> <span class="ow">or</span>\
+               <span class="n">entity_uri</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;www.w3.org&#39;</span><span class="p">:</span>
+                <span class="c1"># print(&quot;relation:&quot;, relation, True)</span>
+                <span class="k">return</span> <span class="n">relation</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># print(&quot;relation1:&quot;, relation, False)</span>
+                <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
+            <span class="c1"># print(&quot;relation2:&quot;, relation, False)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="c1"># print(&quot;relation3:&quot;, relation, False)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="ESDBpediaDataset.load_from_graph_pattern"><a class="viewcode-back" href="../../modules/dataset.html#kgeserver.dbpedia_dataset.ESDBpediaDataset.load_from_graph_pattern">[docs]</a>    <span class="k">def</span> <span class="nf">load_from_graph_pattern</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Auxiliar method that outputs a list of seed elements</span>
+
+<span class="sd">        This seed vector will be the &#39;root nodes&#39; of a tree with the</span>
+<span class="sd">        desired depth on parent class (`load_dataset_recurrently`)</span>
+
+<span class="sd">        :param verbose: The desired level of verbosity</span>
+<span class="sd">        :param string where: SPARQL where to construct query</span>
+<span class="sd">        :param int batch_size: The size of batches queried each time</span>
+<span class="sd">        :return: A list of entities</span>
+<span class="sd">        :rtype: list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Count all Wikidata elements</span>
+        <span class="n">count_query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            PREFIX dcterms: &lt;http://purl.org/dc/terms/&gt;</span>
+<span class="s2">            SELECT (count(*) as ?count)</span>
+<span class="s2">            WHERE {{</span>
+<span class="s2">                </span><span class="si">{0}</span><span class="s2"></span>
+<span class="s2">            }}&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">where</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The count query is: </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">count_query</span><span class="p">)</span>
+        <span class="n">sts</span><span class="p">,</span> <span class="n">count_json</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">count_query</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">sts</span><span class="p">,</span> <span class="n">count_json</span><span class="p">)</span>
+
+        <span class="c1"># The number of elements</span>
+        <span class="n">entities_number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">count_json</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;count&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Found </span><span class="si">{}</span><span class="s2"> entities&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">entities_number</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="s1">&#39;batch_size&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">limit</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;batch_size&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">limit</span> <span class="o">=</span> <span class="mi">100000</span>
+
+        <span class="n">seed_vector</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">rounds_number</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">entities_number</span> <span class="o">/</span> <span class="n">limit</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Hay </span><span class="si">{}</span><span class="s2"> tripletas, se van a hacer </span><span class="si">{}</span><span class="s2"> consultas&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">entities_number</span><span class="p">,</span> <span class="n">rounds_number</span><span class="p">))</span>
+        <span class="k">if</span> <span class="s1">&#39;start_callback&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;start_callback&#39;</span><span class="p">](</span><span class="n">rounds_number</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">rounds_number</span><span class="p">):</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">q</span> <span class="o">*</span> <span class="n">limit</span>
+            <span class="n">first_query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                PREFIX dcterms: &lt;http://purl.org/dc/terms/&gt;</span>
+<span class="s2">                SELECT ?subject ?object ?predicate</span>
+<span class="s2">                WHERE {{</span>
+<span class="s2">                    </span><span class="si">{2}</span><span class="s2"></span>
+<span class="s2">                }} LIMIT </span><span class="si">{0}</span><span class="s2"> OFFSET </span><span class="si">{1}</span><span class="s2"></span>
+<span class="s2">                &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">limit</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">where</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The query is: </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">first_query</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_dataset_from_query</span><span class="p">(</span><span class="n">first_query</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s1">&#39;callback&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;callback&#39;</span><span class="p">]()</span>
+            <span class="c1"># sts, first_json = self.execute_query(first_query)</span>
+            <span class="c1"># if verbose &gt; 2:</span>
+            <span class="c1">#     print(sts, len(first_json))</span>
+            <span class="c1"># seed_vector += [entity[&#39;subject&#39;][&#39;value&#39;]</span>
+            <span class="c1">#                 for entity in first_json]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">entities</span></div>
+
+<div class="viewcode-block" id="ESDBpediaDataset._process_entity"><a class="viewcode-back" href="../../modules/dataset.html#kgeserver.dbpedia_dataset.ESDBpediaDataset._process_entity">[docs]</a>    <span class="k">def</span> <span class="nf">_process_entity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                        <span class="n">graph_pattern</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> ?predicate ?object . &quot;</span><span class="p">)):</span>
+        <span class="sd">&quot;&quot;&quot;Take entity and explore all relations and entities related to it</span>
+
+<span class="sd">        This will execute the SPARQL query with the params passed to</span>
+<span class="sd">        build a dataset with the *object* elements on triples retrieved</span>
+<span class="sd">        from the server.</span>
+
+<span class="sd">        :return: A list with new entities to be scanned</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check first if entity has been already explored</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exist_element</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">check_entity</span><span class="p">(</span><span class="n">entity</span><span class="p">),</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">entities_explored</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">wdt_entity</span> <span class="o">=</span> <span class="s2">&quot;&lt;</span><span class="si">{0}</span><span class="s2">&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
+        <span class="n">el_query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;SELECT (</span><span class="si">{1}</span><span class="s2"> as ?subject) ?predicate ?object</span>
+<span class="s2">            WHERE {{</span>
+<span class="s2">              </span><span class="si">{0}</span><span class="s2"></span>
+<span class="s2">            }}&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">graph_pattern</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">wdt_entity</span><span class="p">),</span>
+                         <span class="n">wdt_entity</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The element query is: </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">el_query</span><span class="p">)</span>
+        <span class="c1"># Get all related elements</span>
+        <span class="n">sts</span><span class="p">,</span> <span class="n">el_json</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">el_query</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;HTTP&quot;</span><span class="p">,</span> <span class="n">sts</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">el_json</span><span class="p">))</span>
+
+        <span class="c1"># Check future errors</span>
+        <span class="k">if</span> <span class="n">sts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Mark entity as already explored</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">entities_explored</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">check_entity</span><span class="p">(</span><span class="n">entity</span><span class="p">)]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Entities to be explored next level</span>
+        <span class="n">to_queue</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># For related elements, get all relations and objects</span>
+        <span class="k">for</span> <span class="n">relation</span> <span class="ow">in</span> <span class="n">el_json</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">object_uri</span> <span class="o">=</span> <span class="n">relation</span><span class="p">[</span><span class="s1">&#39;object&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span>
+
+                <span class="c1"># Add the subject scanned only if is valid</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_entity</span><span class="p">(</span><span class="n">object_uri</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">obj</span><span class="p">:</span>
+                    <span class="n">to_queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">object_uri</span><span class="p">)</span>
+
+                <span class="c1"># Add triple will ensure every elements are valid</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_triple</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="n">relation</span><span class="p">[</span><span class="s1">&#39;object&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">],</span>
+                                <span class="n">relation</span><span class="p">[</span><span class="s1">&#39;predicate&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">])</span>
+
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error on relation: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">relation</span><span class="p">))</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="n">to_queue</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Víctor Fernández Rico.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'1.0-beta',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
