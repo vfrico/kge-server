@@ -43,16 +43,21 @@ things you can do [here](https://vfrico.github.io/kge-server/).
 
 This repository provides a setuptools `setup.py` file to install the library
 on your system. It is pretty easy. Simply make `sudo python3 setup.py install` and
-it will install *automagically* all the needed dependencies. It is recommended
-to run into an `anaconda` distribution, in order to have some of great libraries
-like numpy.
+it will install the library. Maybe some extra dependencies are required to run
+into your system, if so, you can execute this to get them all installed:
 
-But the recommended way to get all the things working is to execute into the
+    conda install scikit-learn scipy cython
+
+And if you are using normal python3:
+
+    pip3 install numpy scipy pandas sympy nose scikit-learn
+
+But the recommended way to getthe REST service working is to execute into the
 docker environment. You only need to have installed `docker` and `docker-compose`
 in your system.
 
-Go to images folder, execute `docker-compose up` and you will have a server
-on the port `localhost:6789` ready to listen HTTP requests.
+To run the service, go to images folder, execute `docker-compose up` and you
+will have a server on the port `localhost:6789` ready to listen HTTP requests.
 
     cd images/
     docker-compose up -d
