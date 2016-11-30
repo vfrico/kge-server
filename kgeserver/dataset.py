@@ -463,19 +463,20 @@ class Dataset():
                       "Exiting".format(times_new, exc, max_tries))
                 return False
 
-    def get_seed_vector(self):
+    def load_from_graph_pattern(self):
         """Get the root entities where the graph build should start
 
         This should return a list with elements to start seeking its childs
         and start building a dataset graph from this root elements.
+        This method will return *all* the entities on the dataset.
 
         **MUST** be implemented through a child object
 
         :return: An entities list
         :rtype: list
         """
-        raise NotImplementedError("The method `get_seed_vector` should be "
-                                  "implemented through a child object")
+        raise NotImplementedError("The method `load_from_graph_pattern` should"
+                                  " be implemented through a child object")
 
     def load_dataset_recurrently(self, levels, seed_vector, verbose=1,
                                  limit_ent=None, ext_callback=lambda x: None,
