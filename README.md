@@ -23,7 +23,7 @@ similar entities. With some embeddings models you can also do some simple
 algebraic operations with those arrays like adding them or substract and predict
 new entities.
 
-## What is this server
+## What is this server?
 
 This server provides a vertical solution on the machine learning area. This
 goes from the creation of datasets wich represents those knowledge graphs
@@ -39,11 +39,51 @@ web service using **docker** that will do any of those operations through a
 HTTP client. You can take a look to the documentation and discover all the
 things you can do [here](https://vfrico.github.io/kge-server/).
 
+# Installation
 
-# Credits
-* Copyright (C) 2016 Maximilian Nickel <mnick@mit.edu>
-  * **Knowledge Graphs Embeddings** <https://github.com/mnick/scikit-kge>.
+This repository provides a setuptools `setup.py` file to install the library
+on your system. It is pretty easy. Simply make `sudo python3 setup.py install` and
+it will install *automagically* all the needed dependencies. It is recommended
+to run into an `anaconda` distribution, in order to have some of great libraries
+like numpy.
+
+But the recommended way to get all the things working is to execute into the
+docker environment. You only need to have installed `docker` and `docker-compose`
+in your system.
+
+Go to images folder, execute `docker-compose up` and you will have a server
+on the port `localhost:6789` ready to listen HTTP requests.
+
+    cd images/
+    docker-compose up -d
+    curl http://localhost:6789/datasets
+
+After this you will have an HTTP REST server listening to the API. but if you
+want to run the python library alone, you can connect to any of the docker
+containers created:
+
+    docker exec -it images_web_1 /bin/bash
+
+If you are experiencing troubles when executing the docker image, check your
+user UID and change the user UID in **all** `Dockerfiles` inside `images/` folder.
+Then rebuild the images with: `docker-compose build --no-cache`
+
+See more instructions about deployment at the
+[docs](https://vfrico.github.io/kge-server/architecture.html#server-deployment).
+
+# External Libraries
+
+Some of this work couldn't be possible without some of these libraries
+
+* Maximilian Nickel [mnick@mit.edu](mailto:mnick@mit.edu)
+  * [**Knowledge Graphs Embeddings**](https://github.com/mnick/scikit-kge).
     Scikit-kge is a Python library to compute embeddings of knowledge graphs. Published under MIT License
 
-  * **Holographic embeddings of Knowledge Graphs** <https://github.com/mnick/holographic-embeddings>.
+  * [**Holographic embeddings of Knowledge Graphs**](https://github.com/mnick/holographic-embeddings).
     Code experiments which uses scikit-kge library.
+
+* [Spotify/Annoy](https://github.com/spotify/annoy)  Approximate Nearest Neighbors in C++/Python optimized for memory usage and loading/saving to disk
+
+* [Celery](https://github.com/celery/celery/) is a Distributed Task Queue for Python.
+
+* [Falcon](https://github.com/falconry/falcon) was used to build the API REST
