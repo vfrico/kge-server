@@ -53,6 +53,8 @@ class Server():
         :returns: A list with k id's, which are the most similar entities
         :rtype: list of pairs
         """
+        if id is None:
+            return None
         sim = self.index.get_nns_by_item(
                 id, k, include_distances=True, search_k=search_k)
         return [(sim[0][i], sim[1][i]) for i in range(0, len(sim[0]))]

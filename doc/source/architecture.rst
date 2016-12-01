@@ -12,8 +12,8 @@ three different containers:
   Provides a ``gunicorn`` web server that accepts HTTP requests to the REST API
   and responds to them.
 
-- **Celery Container**: This container is running on the background waiting for a task on
-  its queue. It contains all library code and ``celery``.
+- **Celery Container**: This container is running on the background waiting for
+  a task on its queue. It contains all library code and ``celery``.
 
 - **Redis container**: The redis key-value storage is a dependency from Celery.
   It also stores all the progress of the tasks running on Celery queue.

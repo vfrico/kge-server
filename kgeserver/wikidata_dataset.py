@@ -120,7 +120,7 @@ class WikidataDataset(kgeserver.dataset.Dataset):
             entity = self.check_entity(entity)
             return self.entities_dict[entity]
         except (KeyError, ValueError):
-            return -1
+            return None
 
     def get_entity(self, id):
         """Gets the entity URI given an id
@@ -151,7 +151,7 @@ class WikidataDataset(kgeserver.dataset.Dataset):
             relation = self.check_relation(relation)
             return self.relations_dict[relation]
         except (KeyError, ValueError):
-            return -1
+            return None
 
     def extract_entity(self, entity,
                        filters={'wdt-entity': True, 'wdt-reference': False,

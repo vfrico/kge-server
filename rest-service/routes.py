@@ -248,6 +248,10 @@ class PredictSimilarEntitiesResource(object):
         # If looking for similar_entities given an entity
         else:
             entity_id = dataset.get_entity_id(entity)
+            if entity_id is None:
+                raise falcon.HTTPNotFound(
+                    description="The {} entity can't be found inside dataset."
+                    .format(entity))
             sim_entities = search_server.similarity_by_id(
                 entity_id, limit, search_k=search_k)
             similar_entities = [{"entity": dataset.get_entity(e_id),
