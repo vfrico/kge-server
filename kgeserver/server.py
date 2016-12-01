@@ -93,6 +93,8 @@ class Server():
         :returns: The distance between two elements
         :rtype: float
         """
+        if entity_x is None or entity_y is None:
+            return None
         return self.index.get_distance(entity_x, entity_y)
 
 

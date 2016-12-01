@@ -294,7 +294,7 @@ def find_embeddings_on_model(dataset_id, entities):
     return_list = []
     for entity in entities:
         position = dtset.get_entity_id(entity)
-        if position < 0:
+        if position is None or position < 0:
             continue
         else:
             embedding = model.E[position]

@@ -366,6 +366,11 @@ class DistanceTriples():
 
         id_x = dataset.get_entity_id(entity_x)
         id_y = dataset.get_entity_id(entity_y)
+        if id_x is None or id_y is None:
+            raise falcon.HTTPNotFound(
+                description=("The {} id from entity {} or the {} id from {} "
+                             "entity can't be found on the dataset")
+                .format(id_x, entity_x, id_y, entity_y))
 
         dist = search_server.distance_between_entities(id_x, id_y)
 
