@@ -62,7 +62,7 @@ class DatasetDAO(data_access_base.MainDAO):
         self.binary_model = None
         self.binary_index = None
 
-    def get_dataset_by_id(self, dataset_id, update_cache=True, use_cache=True):
+    def get_dataset_by_id(self, dataset_id, use_cache=True):
         """Returns a dataset information given its id
 
         :return: A dataset dictionary or none
@@ -79,7 +79,7 @@ class DatasetDAO(data_access_base.MainDAO):
             dataset_dto = DatasetDTO()
             dataset_dto.from_dict(res[0], use_cache=use_cache)
             # Update cache
-            if update_cache:
+            if not use_cache:
                 self.update_dataset_stats(dataset_dto.id, dataset_dto.triples,
                                           dataset_dto.entities,
                                           dataset_dto.relations)
@@ -89,7 +89,7 @@ class DatasetDAO(data_access_base.MainDAO):
 
         return (dataset_dto, None)
 
-    def get_all_datasets(self, update_cache=True, use_cache=True):
+    def get_all_datasets(self, use_cache=True):
         """Queries the DB to retrieve all datasets
 
         :returns: A list of datasets objects
@@ -106,7 +106,7 @@ class DatasetDAO(data_access_base.MainDAO):
             try:
                 dataset_dto = DatasetDTO()
                 dataset_dto.from_dict(result, use_cache=use_cache)
-                if update_cache:
+                if not use_cache:
                     self.update_dataset_stats(dataset_dto.id,
                                               dataset_dto.triples,
                                               dataset_dto.entities,

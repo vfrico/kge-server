@@ -33,7 +33,7 @@ sys.path.insert(0, '..')
 try:
     import data_access
 except ImportError:
-    pass
+    raise
 
 
 @app.task(bind=True)
