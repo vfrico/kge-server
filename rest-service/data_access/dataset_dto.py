@@ -18,6 +18,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
+import copy
 import data_access.data_access_base as data_access_base
 import kgeserver.dataset as dataset
 from data_access.algorithm_dao import AlgorithmDAO
@@ -34,6 +35,7 @@ class DatasetDTO(data_access_base.DTOClass):
     name = None
     description = None
     dataset_type = None
+    error = None
 
     _binary_dataset = None
     _binary_model = None
@@ -71,7 +73,11 @@ class DatasetDTO(data_access_base.DTOClass):
             print("Without cache")
             dtst = dataset.Dataset()
             dtst_path = os.path.join(self._base, self._binary_dataset)
-            dtst.load_from_binary(dtst_path)
+            try:
+                dtst.load_from_binary(dtst_path)
+            except OSError as err:
+                self.error = "Dataset not found: "+str(err)
+                self.is_error_dto()
             self.triples = len(dtst.subs)
             self.entities = len(dtst.entities)
             self.relations = len(dtst.relations)
@@ -83,6 +89,12 @@ class DatasetDTO(data_access_base.DTOClass):
         self.algorithm = algorithm
 
         return None
+
+    def is_error_dto(self):
+        for key in copy.copy(self.__dict__):
+            if key != "id":
+                self.key = None
+        return
 
     def is_untrained(self):
         """Check if dataset is in untrained state
