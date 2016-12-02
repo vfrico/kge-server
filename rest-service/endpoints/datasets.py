@@ -46,14 +46,43 @@ def read_http_dataset_dto(req, resp, resource, params):
             params["dataset"].description = body["description"]
     except json.decoder.JSONDecodeError as err:
         print(err)
+        raise falcon.HTTPBadRequest(
+            title="Couldn't read body correctly from HTTP request",
+            description=str(err))
+    except KeyError as err:
+        raise falcon.HTTPBadRequest(
+            title="Invalid params",
+            description="Some of the required params are not present")
+
+
+def read_triples_from_body(req, resp, resource, params):
+    try:
+        extra = "Couldn't decode the input stream (body)."
+        body = json.loads(req.stream.read().decode('utf-8'))
+        params["triples_list"] = []
+        for triple in body:
+            new_triple = {"subject": {"value": triple["subject"]},
+                          "predicate": {"value": triple["predicate"]},
+                          "object": {"value": triple["object"]}}
+            params["triples_list"].append(new_triple)
+
+    except (json.decoder.JSONDecodeError, KeyError,
+            ValueError, TypeError) as err:
+        msg = ("Couldn't read body correctly from HTTP request. "
+               "Please, read the documentation carefully and try again. "
+               "Extra info: " + extra)
+        raise falcon.HTTPBadRequest(
+            title="Couldn't read body correctly from HTTP request",
+            description=str(msg))
 
 
 def check_dataset_exsistence(req, resp, resource, params):
     """Will check if input dataset exists
     """
     dataset_dao = data_access.DatasetDAO()
+    cache = req.get_param_as_bool("use_cache", blank_as_true=True)
     params["dataset_dto"], err = dataset_dao.get_dataset_by_id(
-        params['dataset_id'], use_cache=True)
+        params['dataset_id'], use_cache=cache)
     if params["dataset_dto"] is None:
         raise falcon.HTTPNotFound(
                 title="Dataset {} not found".format(params['dataset_id']),
@@ -256,48 +285,26 @@ class TriplesResource():
     """Receives HTTP Request to manage triples on dataset
 
     This will expect an input on the body similar to This
-        {"triples": [
-                {
-                    "subject": {"value": "Q1492"},
-                    "predicate": {"value": "P17"},
-                    "object": {"value": "Q29"}
-                }
-            ] }
+        [
+            {   "subject": "Q1492",
+                "predicate": "P17",
+                "object": "Q29" },
+            {   "subject": "Q90",
+                "predicate": "P17",
+                "object": "Q142"},
+            {   "subject": "Q2807",
+                "predicate": "P17",
+                "object": "Q29"}
+        ]
     """
+
     @falcon.before(check_dataset_exsistence)
-    def on_post(self, req, resp, dataset_id, dataset_dto):
-        try:
-            extra = "Couldn't decode the input stream (body)."
-            body = json.loads(req.stream.read().decode('utf-8'))
-
-            if "triples" not in body:
-                extra = "It was expected a JSON object with a 'triples' param"
-                raise KeyError
-            if not isinstance(body["triples"], list):
-                extra = "The 'triples' param is expected to contain a list"
-                raise ValueError
-
-            for triple in body["triples"]:
-                if "subject" not in triple or "predicate" not in triple\
-                   or "object" not in triple:
-                    extra = ("Error on '{}': All the triples must contain "
-                             "'subject', 'predicate' and 'object'").format(
-                        triple)
-                    raise ValueError
-
-        except (json.decoder.JSONDecodeError, KeyError,
-                ValueError, TypeError) as err:
-            msg = ("Couldn't read body correctly from HTTP request. "
-                   "Please, read the documentation carefully and try again. "
-                   "Extra info: " + extra)
-            resp.body = json.dumps({"status": 400, "message": msg})
-            resp.content_type = 'application/json'
-            resp.status = falcon.HTTP_400
-            return
+    @falcon.before(read_triples_from_body)
+    def on_post(self, req, resp, dataset_id, dataset_dto, triples_list):
 
         dataset_dao = data_access.DatasetDAO()
 
-        res, err = dataset_dao.insert_triples(dataset_dto, body['triples'])
+        res, err = dataset_dao.insert_triples(dataset_dto, triples_list)
         if res is None:
             raise falcon.HTTPBadRequest(description=str(err))
 
