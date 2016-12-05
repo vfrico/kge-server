@@ -33,9 +33,24 @@ except ImportError:
     raise
 
 
-class GenerateTriplesResource():
+def read_body_generate_triples(req, resp, resource, params):
+    try:
+        body = common_hooks.read_body_as_json(req)
 
-    def on_post(self, req, resp, dataset_id):
+        json_rpc = body['generate_triples']
+        if "levels" not in json_rpc:
+            msg = ("The 'generate_triples' JSON object must contain"
+                   "level attribute")
+            raise falcon.HTTPInvalidParam(msg, "levels")
+    except KeyError as err:
+        raise falcon.HTTPMissingParam(err(str))
+
+
+class GenerateTriplesResource():
+    @falcon.before(read_body_generate_triples)
+    @falcon.before(common_hooks.dataset_untrained_status)
+    @falcon.before(common_hooks.check_dataset_exsistence)
+    def on_post(self, req, resp, dataset_id, dataset_dto, json_rpc):
         """Generates a task to insert triples on dataset. Async petition.
 
         Reads from body the parameters such as SPARQL queries
@@ -49,45 +64,9 @@ class GenerateTriplesResource():
         }
 
         :param id dataset_id: The dataset to insert triples into
+        :param DTO dataset_dto: The Dataset DTO from dataset_id (from hook)
+        :param dict json_rpc: Params to call generate_triples func (from hook)
         """
-        try:
-            extra = "Couldn't decode the input stream (body)."
-            body = json.loads(req.stream.read().decode('utf-8'))
-
-            if "generate_triples" not in body:
-                extra = ("It was expected a JSON object with a "
-                         "'generate_triples' param")
-                raise KeyError
-            json_rpc = body['generate_triples']
-            if "levels" not in json_rpc:
-                extra = ("The 'generate_triples' JSON object must contain"
-                         "level attribute")
-                raise KeyError
-        except (json.decoder.JSONDecodeError, KeyError,
-                ValueError, TypeError) as err:
-            msg = ("Couldn't read body correctly from HTTP request. "
-                   "Please, read the documentation carefully and try again. "
-                   "Extra info: " + extra)
-            resp.body = json.dumps({"status": 400, "message": msg})
-            resp.content_type = 'application/json'
-            resp.status = falcon.HTTP_400
-            return
-
-        dataset_dao = data_access.DatasetDAO()
-        dataset_dto, err = dataset_dao.get_dataset_by_id(dataset_id)
-        if dataset_dto is None:
-            raise falcon.HTTPNotFound(description=str(err))
-
-        if dataset_dto.status != 0:
-            raise falcon.HTTPConflict(
-                title="The dataset is not in a correct state",
-                description=("The dataset {id} has an status {status}, which "
-                             "is not valid to insert triples. Required is 0 "
-                             ).format(**dataset_dto.to_dict()))
-
-        # Generate the filepath to the dataset
-        # dtset_path = dataset_dto.get_binary_dataset()
-
         # Read arguments from body
         graph_pattern = json_rpc.pop("graph_pattern")
         levels = json_rpc.pop("levels")
@@ -118,26 +97,17 @@ class GenerateTriplesResource():
 
 class DatasetIndex():
     # TODO: Save anywhere the number of trees used
-
-    def on_post(self, req, resp, dataset_id):
+    @falcon.before(common_hooks.dataset_trained_status)
+    @falcon.before(common_hooks.check_dataset_exsistence)
+    def on_post(self, req, resp, dataset_id, dataset_dto):
         """Generates a search index to perform data lookups operations.
 
         This task may take long time to complete, so it uses tasks.
 
         :query int n_trees: The number of trees generated
+        :param id dataset_id: The dataset to insert triples into
+        :param DTO dataset_dto: The Dataset DTO from dataset_id (from hook)
         """
-        dataset_dao = data_access.DatasetDAO()
-        dataset_dto, err = dataset_dao.get_dataset_by_id(dataset_id)
-        if dataset_dto is None:
-            raise falcon.HTTPNotFound(description=str(err))
-
-        # Check actual status of the dataset
-        if not dataset_dto.is_trained():
-            dataset_status = dataset_dto.status
-            err_title = "The dataset is not in correct state"
-            msg = "The dataset has {} status and is not ready to be indexed"
-            raise falcon.HTTPConflict(title=err_title,
-                                      description=msg.format(dataset_status))
 
         # Dig for the param on Query Params
         n_trees = req.get_param_as_int('n_trees')
@@ -164,7 +134,9 @@ class DatasetIndex():
 class DatasetTrain():
     # TODO: Test if works well
 
-    def on_post(self, req, resp, dataset_id):
+    @falcon.before(common_hooks.dataset_untrained_status)
+    @falcon.before(common_hooks.check_dataset_exsistence)
+    def on_post(self, req, resp, dataset_id, dataset_dto):
         """Generates a model that fits the dataset and trains it
 
         It usually takes several hours for big datasets
@@ -173,22 +145,10 @@ class DatasetTrain():
         dataset cannot be modified, this parameter will be set to a negative
         value.
 
+        :param id dataset_id: The dataset to insert triples into
+        :param DTO dataset_dto: The Dataset DTO from dataset_id (from hook)
         :query int algorithm_id: The algorithm used to train the dataset
         """
-        dataset_dao = data_access.DatasetDAO()
-        dataset_dto, err = dataset_dao.get_dataset_by_id(dataset_id)
-        if dataset_dto is None:
-            raise falcon.HTTPNotFound(description=str(err))
-
-        force_train = req.get_param_as_bool("force_train")
-
-        # Check if dataset can be trained
-        if not dataset_dto.is_untrained() and not force_train:
-            dataset_status = dataset_dto.status
-            err_title = "The dataset is not in correct state"
-            msg = "The dataset has {} status and is not ready to be trained"
-            raise falcon.HTTPConflict(title=err_title,
-                                      description=msg.format(dataset_status))
 
         # Dig for the limit param on Query Params
         algorithm_id = req.get_param('algorithm_id', required=True)

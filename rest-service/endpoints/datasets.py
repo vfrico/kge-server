@@ -22,6 +22,7 @@ import json
 import copy
 import falcon
 import kgeserver.server as server
+import common_hooks
 
 # Import parent directory (data_access)
 import sys
@@ -37,28 +38,24 @@ def read_http_dataset_dto(req, resp, resource, params):
     """Returns a HTTPUserDatasetDTO
     """
     try:
-        body = json.loads(req.stream.read().decode('utf-8'))
-        params["dataset"] = HTTPUserDatasetDTO()
+        body = common_hooks.read_body_as_json(req)
+        params["dataset_info"] = HTTPUserDatasetDTO()
 
         if "name" in body:
-            params["dataset"].name = body["name"]
+            params["dataset_info"].name = body["name"]
         if "description" in body:
-            params["dataset"].description = body["description"]
-    except json.decoder.JSONDecodeError as err:
-        print(err)
-        raise falcon.HTTPBadRequest(
-            title="Couldn't read body correctly from HTTP request",
-            description=str(err))
+            params["dataset_info"].description = body["description"]
     except KeyError as err:
         raise falcon.HTTPBadRequest(
             title="Invalid params",
-            description="Some of the required params are not present")
+            description=("Some of the required params ({}) "
+                         "are not present").format(str(err)))
 
 
 def read_triples_from_body(req, resp, resource, params):
+    """Reads a list of triples"""
     try:
-        extra = "Couldn't decode the input stream (body)."
-        body = json.loads(req.stream.read().decode('utf-8'))
+        body = common_hooks.read_body_as_json(req)
         params["triples_list"] = []
         for triple in body:
             new_triple = {"subject": {"value": triple["subject"]},
@@ -66,29 +63,27 @@ def read_triples_from_body(req, resp, resource, params):
                           "object": {"value": triple["object"]}}
             params["triples_list"].append(new_triple)
 
-    except (json.decoder.JSONDecodeError, KeyError,
-            ValueError, TypeError) as err:
-        msg = ("Couldn't read body correctly from HTTP request. "
-               "Please, read the documentation carefully and try again. "
-               "Extra info: " + extra)
-        raise falcon.HTTPBadRequest(
-            title="Couldn't read body correctly from HTTP request",
-            description=str(msg))
+    except KeyError as err:
+        raise falcon.HTTPInvalidParam(
+            msg="Invalid body params"
+            param_name=str(err))
 
 
-def check_dataset_exsistence(req, resp, resource, params):
-    """Will check if input dataset exists
+def read_vector_from_body(req, resp, resource, params):
+    """This returns a list of entities
     """
-    dataset_dao = data_access.DatasetDAO()
-    cache = req.get_param_as_bool("use_cache", blank_as_true=True)
-    params["dataset_dto"], err = dataset_dao.get_dataset_by_id(
-        params['dataset_id'], use_cache=cache)
-    if params["dataset_dto"] is None:
-        raise falcon.HTTPNotFound(
-                title="Dataset {} not found".format(params['dataset_id']),
-                description="The dataset does not exists. " + str(err))
-    else:
-        return True
+    try:
+        body = common_hooks.read_body_as_json(req)
+
+        if not isinstance(body["entities"], list):
+            raise falcon.HTTPInvalidParam(
+                "The param 'distance' must contain a list", "entities")
+
+        # Redefine variables
+        params["entities"] = body["entities"]
+
+    except KeyError as err:
+        raise falcon.HTTPMissingParam(str(err))
 
 
 class HTTPUserDatasetDTO(object):
@@ -109,7 +104,7 @@ class HTTPUserTripleDTO(object):
 
 
 class DatasetResource(object):
-    @falcon.before(check_dataset_exsistence)
+    @falcon.before(common_hooks.check_dataset_exsistence)
     def on_get(self, req, resp, dataset_id, dataset_dto):
         """Return a HTTP response with all information about one dataset
         """
@@ -120,21 +115,16 @@ class DatasetResource(object):
         resp.content_type = 'application/json'
         resp.status = falcon.HTTP_200
 
-    @falcon.before(check_dataset_exsistence)
+    @falcon.before(common_hooks.check_dataset_exsistence)
     @falcon.before(read_http_dataset_dto)
     def on_put(self, req, resp, dataset_id, **kwargs):
         """Change trivial data like dataset name
         """
         dataset_info = HTTPUserDatasetDTO()
         try:
-            dataset_info.load(kwargs["dataset"])
+            dataset_info.load(kwargs["dataset_info"])
         except KeyError:
             pass
-
-        dataset_dao = data_access.DatasetDAO()
-        resource, err = dataset_dao.get_dataset_by_id(dataset_id)
-        if resource is None:
-            raise falcon.HTTPNotFound(description=str(err))
 
         if dataset_info.description is not None:
             res, err = dataset_dao.set_description(
@@ -152,7 +142,7 @@ class DatasetResource(object):
         resp.content_type = 'application/json'
         resp.status = falcon.HTTP_200
 
-    @falcon.before(check_dataset_exsistence)
+    @falcon.before(common_hooks.check_dataset_exsistence)
     def on_delete(self, req, resp, dataset_id, **kwargs):
         """This method will delete the entry from the datbase and will also
         delete the entire datasets generated by them.
@@ -199,7 +189,7 @@ class DatasetFactory(object):
         """
         dataset_info = HTTPUserDatasetDTO()
         try:
-            dataset_info.load(kwargs["dataset"])
+            dataset_info.load(kwargs["dataset_info"])
         except KeyError:
             pass
 
@@ -226,39 +216,19 @@ class DatasetFactory(object):
 
 class EmbeddingResource():
 
-    @falcon.before(check_dataset_exsistence)
-    def on_post(self, req, resp, dataset_id, dataset_dto):
+    @falcon.before(read_vector_from_body)
+    @falcon.before(common_hooks.check_dataset_exsistence)
+    def on_post(self, req, resp, dataset_id, dataset_dto, entities):
         """Get the embedding given an entity or a list of entities (URI)
 
         {"entities": ["Q1492", "Q2807", "Q1"]}
 
-        :query JSON embeddings: List of embeddings
+        :param integer dataset_id: Unique ID of dataset
+        :param integer dataset_dto: Dataset DTO (from hook)
+        :param list entities: List of entities to get embeddings (from hook)
         :returns: A list of list with entities and its embeddings
         :rtype: list
         """
-        # Read body
-        try:
-            extra = "Couldn't decode the input stream (body)."
-            body = json.loads(req.stream.read().decode('utf-8'))
-
-            if "entities" not in body:
-                raise falcon.HTTPMissingParam("entities")
-
-            if not isinstance(body["entities"], list):
-                msg = ("The param 'distance' must contain a list")
-                raise falcon.HTTPInvalidParam(msg, "entities")
-
-            # Redefine variables
-            entities = body["entities"]
-
-        except (json.decoder.JSONDecodeError, KeyError,
-                ValueError, TypeError) as err:
-            print(err)
-            err_title = "HTTP Body request not loaded correctly"
-            msg = ("The body couldn't be correctly loaded from HTTP request. "
-                   "Please, read the documentation carefully and try again. "
-                   "Extra info: " + extra)
-            raise falcon.HTTPBadRequest(title=err_title, description=msg)
 
         istrained = dataset_dto.is_trained()
         if istrained is None or not istrained:
@@ -298,7 +268,7 @@ class TriplesResource():
         ]
     """
 
-    @falcon.before(check_dataset_exsistence)
+    @falcon.before(common_hooks.check_dataset_exsistence)
     @falcon.before(read_triples_from_body)
     def on_post(self, req, resp, dataset_id, dataset_dto, triples_list):
 
