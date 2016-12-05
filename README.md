@@ -2,15 +2,15 @@
 
 ## What are Knowledge Graphs?
 
-There exists many knowledge databases nowadays, and they are growing very
-quickly. Some of them are open and has a very broad domain, like [DBpedia](http://es.dbpedia.org/) or
-[Wikidata](http://wikidata.org/), both based on the data present in the well known Wikipedia. Some
-of them are based on very specific domains, like [datos.bne.es](http://datos.bne.es/), which stores
+There are many knowledge databases nowadays, and they are growing very
+quickly. Some of them are open and have a very broad domain, like [DBpedia](http://es.dbpedia.org/) or
+[Wikidata](http://wikidata.org/), both based in existent data on Wikipedia. Other knowledge databases
+are based on very specific domains, like [datos.bne.es](http://datos.bne.es/), which stores
 the information from Spanish National Library (*Biblioteca Nacional de España*)
-in an open way.
+in an open, machine readable, way.
 
-Most of those knowledge databases can be seen as knowledge graphs, where facts
-is stored as triples: *head*, *label* and *tail*. This information is usually
+Most of those knowledge databases can be seen as **knowledge graphs**, where facts
+can be seen as triples: *head*, *label* and *tail*. This information is usually
 stored using semantic web tools, like RDF and can be queried through some
 languages like SPARQL.
 
@@ -25,21 +25,26 @@ new entities.
 
 ## What is this server?
 
-This server provides a vertical solution on the machine learning area. This
-goes from the creation of datasets wich represents those knowledge graphs
+This server provides a vertical solution on the machine learning area,
+going from the creation of datasets wich represents those knowledge graphs,
 to methods to perform queries such as look for similar entities given another.
-In the middle, the libary provides training and indexing methods that allows
+In the middle, the server provides training and indexing models that allows
 the query operations shown above.
 
-## Extra features
+## What is included here?
 
 The *vertical solution* depicted above is available as a Python library, so
-you can do a `setup.py install` and that's all. But you can also deploy a
-web service using **docker** that will do any of those operations through a
-HTTP client. You can take a look to the documentation and discover all the
+you can do a `python3 setup.py install` and that's all. But you can also deploy a
+web service using **docker** that is able to do almost every of those operations
+through a HTTP client. You can take a look to the documentation and discover all the
 things you can do [here](https://vfrico.github.io/kge-server/).
 
-# Installation
+# Installing / Executing
+
+You can use the Python library as is, or you can start a server, and use all
+the endpoints available.
+
+# Installing the library
 
 This repository provides a setuptools `setup.py` file to install the library
 on your system. It is pretty easy. Simply make `sudo python3 setup.py install` and
@@ -55,6 +60,8 @@ And if you are using normal python3:
 But the recommended way to getthe REST service working is to execute into the
 docker environment. You only need to have installed `docker` and `docker-compose`
 in your system.
+
+# Executing the service
 
 To run the service, go to images folder, execute `docker-compose up` and you
 will have a server on the port `localhost:6789` ready to listen HTTP requests.
@@ -75,6 +82,12 @@ Then rebuild the images with: `docker-compose build --no-cache`
 
 See more instructions about deployment at the
 [docs](https://vfrico.github.io/kge-server/architecture.html#server-deployment).
+
+## Supported environment
+
+The whole project has been built using Python 3.5 distributed by Anaconda,
+inside a docker image. If you want to run the development environment, just
+use this image `recognai/jupyter-scipy-kge`.
 
 # External Libraries
 
