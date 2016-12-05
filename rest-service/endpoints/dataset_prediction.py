@@ -22,6 +22,7 @@ import json
 import copy
 import falcon
 import kgeserver.server as server
+import endpoints.common_hooks as common_hooks
 
 # Import parent directory (data_access)
 import sys
@@ -121,7 +122,8 @@ class PredictSimilarEntitiesResource(object):
         resp.content_type = 'application/json'
         resp.status = falcon.HTTP_200
 
-    def on_post(self, req, resp, dataset_id):
+    @falcon.before(common_hooks.check_dataset_exsistence)
+    def on_post(self, req, resp, dataset_id, dataset_dto):
         """Reads the body of request and looks for similar entities
 
         It is needed a body when asking for similar entities due to an URI
@@ -135,6 +137,7 @@ class PredictSimilarEntitiesResource(object):
         }
 
         :param int dataset_id: The dataset identifier on database
+        :param DTO dataset_dto: The Dataset DTO from dataset_id (from hook)
         """
         body = json.loads(req.stream.read().decode('utf-8'))
         if 'entity' in body and 'type' in body['entity']:
@@ -159,8 +162,8 @@ class PredictSimilarEntitiesResource(object):
 
 
 class DistanceTriples():
-
-    def on_post(self, req, resp, dataset_id):
+    @falcon.before(common_hooks.check_dataset_exsistence)
+    def on_post(self, req, resp, dataset_id, dataset_dto):
         """This method return the true distance between two entities
 
         {"distance":
@@ -193,12 +196,6 @@ class DistanceTriples():
                    "Please, read the documentation carefully and try again. "
                    "Extra info: " + extra)
             raise falcon.HTTPBadRequest(title=err_title, description=msg)
-
-        # Get dataset
-        dataset_dao = data_access.DatasetDAO()
-        dataset_dto, err = dataset_dao.get_dataset_by_id(dataset_id)
-        if dataset_dto is None:
-            raise falcon.HTTPNotFound(description=str(err))
 
         dataset = dataset_dao.build_dataset_object(dataset_dto)  # TODO: design
 

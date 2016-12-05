@@ -22,7 +22,7 @@ import json
 import copy
 import falcon
 import kgeserver.server as server
-import common_hooks
+import endpoints.common_hooks as common_hooks
 
 # Import parent directory (data_access)
 import sys
@@ -65,7 +65,7 @@ def read_triples_from_body(req, resp, resource, params):
 
     except KeyError as err:
         raise falcon.HTTPInvalidParam(
-            msg="Invalid body params"
+            msg="Invalid body params",
             param_name=str(err))
 
 
@@ -126,6 +126,7 @@ class DatasetResource(object):
         except KeyError:
             pass
 
+        dataset_dao = data_access.DatasetDAO()
         if dataset_info.description is not None:
             res, err = dataset_dao.set_description(
                 dataset_id, dataset_info.description)
@@ -273,7 +274,6 @@ class TriplesResource():
     def on_post(self, req, resp, dataset_id, dataset_dto, triples_list):
 
         dataset_dao = data_access.DatasetDAO()
-
         res, err = dataset_dao.insert_triples(dataset_dto, triples_list)
         if res is None:
             raise falcon.HTTPBadRequest(description=str(err))

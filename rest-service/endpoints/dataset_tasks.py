@@ -22,6 +22,7 @@ import json
 import copy
 import falcon
 import kgeserver.server as server
+import endpoints.common_hooks as common_hooks
 
 # Import parent directory (data_access)
 import sys
