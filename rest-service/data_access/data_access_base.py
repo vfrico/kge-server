@@ -226,4 +226,6 @@ class DTOClass():
         for key in self.__dict__:
             if key[0] == "_":
                 dictionary.pop(key)
+            elif dictionary[key] is None:
+                dictionary.pop(key)
         return dictionary

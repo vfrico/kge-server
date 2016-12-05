@@ -369,7 +369,6 @@ class DatasetDAO(data_access_base.MainDAO):
 
         if description is not None:
             self.set_description(rowid, description)
-
         return rowid, None
 
     def get_dataset_types(self):  # TODO: This should not be here...
