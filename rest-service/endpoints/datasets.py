@@ -177,23 +177,16 @@ class DatasetFactory(object):
         resp.status = falcon.HTTP_200
 
     @falcon.before(read_http_dataset_dto)
-    def on_post(self, req, resp, **kwargs):
-        """Makes HTTP response to receive POST /datasets requests
+    def on_post(self, req, resp, dataset_info, **kwargs):
+        """Create a new dataset on the service
 
         This method will create a new empty dataset, and returns a 201 CREATED
-        with Location header filled with the URI of the dataset.
+        with Location header filled with the URI of new dataset.
 
-        :kwarg HTTPUserDatasetDTO dataset: HTTP Client dataset information
-        :kwarg str description: The dataset description (optional)
-        :param int dataset_type: The dataset type (optional)
-        :returns: The new dataset created (and its path location)
+        :param HTTPUserDatasetDTO dataset_info: HTTP Client dataset information
+        :query int dataset_type: The dataset type (optional)
+        :returns: Location header with new path to dataset object
         """
-        dataset_info = HTTPUserDatasetDTO()
-        try:
-            dataset_info.load(kwargs["dataset_info"])
-        except KeyError:
-            pass
-
         dao = data_access.DatasetDAO()
         # Get dataset type
         dts_type = req.get_param_as_int("dataset_type")

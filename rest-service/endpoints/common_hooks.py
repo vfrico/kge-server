@@ -30,9 +30,19 @@ except ImportError:
 
 
 def read_body_as_json(req):
-    "This function returns a body or throws BadRequest error"
+    """Reads the request body and returns a dict with the content
+
+    If body is empty, returns a void python dictionary
+
+    :return: A dictionary or similar python object (list)
+    :rtype: Object
+    """
     try:
-        body = json.loads(req.stream.read().decode('utf-8'))
+        body_req = req.stream.read().decode('utf-8')
+        if body_req is None or body_req == "":
+            return {}
+        else:
+            return json.loads(body_req)
 
     except (json.decoder.JSONDecodeError) as err:
         msg = ("Please, read the documentation carefully and try again. "
@@ -40,8 +50,6 @@ def read_body_as_json(req):
         raise falcon.HTTPBadRequest(
             title="Couldn't read body correctly from HTTP request",
             description=str(msg))
-    else:
-        return body
 
 
 def check_dataset_exsistence(req, resp, resource, params):
