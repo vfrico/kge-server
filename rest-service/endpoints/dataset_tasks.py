@@ -134,7 +134,6 @@ class DatasetIndex():
 
 class DatasetTrain():
     # TODO: Test if works well
-
     @falcon.before(common_hooks.dataset_untrained_status)
     @falcon.before(common_hooks.check_dataset_exsistence)
     def on_post(self, req, resp, dataset_id, dataset_dto):
@@ -142,15 +141,13 @@ class DatasetTrain():
 
         It usually takes several hours for big datasets
 
-        This changes the dataset status from 0 to 1 once finished. To indicate
-        dataset cannot be modified, this parameter will be set to a negative
-        value.
+        This changes the dataset status from 0 to 1 once finished. While
+        training takes place, the status will be set to a negative value.
 
         :param id dataset_id: The dataset to insert triples into
         :param DTO dataset_dto: The Dataset DTO from dataset_id (from hook)
         :query int algorithm_id: The algorithm used to train the dataset
         """
-
         # Dig for the limit param on Query Params
         algorithm_id = req.get_param('algorithm_id', required=True)
 
@@ -159,10 +156,6 @@ class DatasetTrain():
         algorithm, err = algorithm_dao.get_algorithm_by_id(algorithm_id)
         if algorithm is None:
             raise falcon.HTTPNotFound(message=str(err))
-
-        # If it all goes ok, add id of algorithm to db
-        dataset_dao.set_algorithm(dataset_id, algorithm_id)
-        dataset_dao.set_status(dataset_id, -1)
 
         # Launch async task
         task = async_tasks.train_dataset_from_algorithm.delay(
