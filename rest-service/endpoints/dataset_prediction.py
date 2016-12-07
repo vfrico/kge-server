@@ -34,6 +34,25 @@ except ImportError:
     raise
 
 
+def read_pair_list(req, resp, resource, params):
+    try:
+        body = common_hooks.read_body_as_json(req)
+
+        if "distance" not in body:
+            raise falcon.HTTPMissingParam("distance")
+
+        if not isinstance(body["distance"], list) and\
+           len(body["distance"]) != 2:
+            msg = ("The param 'distance' must contain a list of two"
+                   "entities.")
+            raise falcon.HTTPInvalidParam(msg, "distance")
+
+        params["entities_pair"] = (body["distance"][0], body["distance"][1])
+
+    except KeyError as err:
+        raise falcon.HTTPMissingParam(err(str))
+
+
 class PredictSimilarEntitiesResource(object):
 
     def on_get(self, req, resp, dataset_id, entity, embedding=False):
@@ -162,41 +181,23 @@ class PredictSimilarEntitiesResource(object):
 
 
 class DistanceTriples():
+    @falcon.before(read_pair_list)
     @falcon.before(common_hooks.check_dataset_exsistence)
-    def on_post(self, req, resp, dataset_id, dataset_dto):
+    def on_post(self, req, resp, dataset_id, dataset_dto, entities_pair):
         """This method return the true distance between two entities
 
         {"distance":
             ["http://www.wikidata.org/entity/Q1492",
              "http://www.wikidata.org/entity/Q2807"]
         }
+
+        :param int dataset_id: The dataset identifier on database
+        :param DTO dataset_dto: The Dataset DTO from dataset_id (from hook)
+        :param tuple entities_pair: A pair of entities (from hook)
+        :returns: A distance attribute, float number
+        :rtype: dict
         """
-        try:
-            extra = "Couldn't decode the input stream (body)."
-            body = json.loads(req.stream.read().decode('utf-8'))
-
-            if "distance" not in body:
-                raise falcon.HTTPMissingParam("distance")
-
-            if not isinstance(body["distance"], list) and\
-               len(body["distance"]) != 2:
-                msg = ("The param 'distance' must contain a list of two"
-                       "entities.")
-                raise falcon.HTTPInvalidParam(msg, "distance")
-
-            # Redefine variables
-            entity_x = body["distance"][0]
-            entity_y = body["distance"][1]
-
-        except (json.decoder.JSONDecodeError, KeyError,
-                ValueError, TypeError) as err:
-            print(err)
-            err_title = "HTTP Body request not loaded correctly"
-            msg = ("The body couldn't be correctly loaded from HTTP request. "
-                   "Please, read the documentation carefully and try again. "
-                   "Extra info: " + extra)
-            raise falcon.HTTPBadRequest(title=err_title, description=msg)
-
+        dataset_dao = data_access.DatasetDAO()
         dataset = dataset_dao.build_dataset_object(dataset_dto)  # TODO: design
 
         # Get server to do 'queries'
@@ -206,7 +207,7 @@ class DistanceTriples():
             raise falcon.HTTPConflict(title=msg_title, description=str(err))
         # TODO: Maybe extract server management anywhere to simplify this
         search_server = server.Server(search_index)
-
+        entity_x, entity_y = entities_pair
         id_x = dataset.get_entity_id(entity_x)
         id_y = dataset.get_entity_id(entity_y)
         if id_x is None or id_y is None:

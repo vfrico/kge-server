@@ -38,8 +38,8 @@ def read_body_generate_triples(req, resp, resource, params):
     try:
         body = common_hooks.read_body_as_json(req)
 
-        json_rpc = body['generate_triples']
-        if "levels" not in json_rpc:
+        params['gen_triples_param'] = body['generate_triples']
+        if "levels" not in params['gen_triples_param']:
             msg = ("The 'generate_triples' JSON object must contain"
                    "level attribute")
             raise falcon.HTTPInvalidParam(msg, "levels")
@@ -51,7 +51,7 @@ class GenerateTriplesResource():
     @falcon.before(read_body_generate_triples)
     @falcon.before(common_hooks.dataset_untrained_status)
     @falcon.before(common_hooks.check_dataset_exsistence)
-    def on_post(self, req, resp, dataset_id, dataset_dto, json_rpc):
+    def on_post(self, req, resp, dataset_id, dataset_dto, gen_triples_param):
         """Generates a task to insert triples on dataset. Async petition.
 
         Reads from body the parameters such as SPARQL queries
@@ -66,19 +66,18 @@ class GenerateTriplesResource():
 
         :param id dataset_id: The dataset to insert triples into
         :param DTO dataset_dto: The Dataset DTO from dataset_id (from hook)
-        :param dict json_rpc: Params to call generate_triples func (from hook)
+        :param dict gen_triples_param: Params to call generate_triples function
+                                       (from hook)
         """
-        # Read arguments from body
-        graph_pattern = json_rpc.pop("graph_pattern")
-        levels = json_rpc.pop("levels")
         try:
-            batch_size = json_rpc.pop("batch_size")
+            batch_size = gen_triples_param.pop("batch_size")
         except KeyError:
             batch_size = None
 
         # Launch async task
         task = async_tasks.generate_dataset_from_sparql.delay(
-            dataset_id, graph_pattern, levels, batch_size=batch_size)
+            dataset_id, gen_triples_param.pop("graph_pattern"),
+            gen_triples_param.pop("levels"), batch_size=batch_size)
 
         # Create a new task
         task_dao = data_access.TaskDAO()
