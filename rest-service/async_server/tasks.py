@@ -33,7 +33,7 @@ sys.path.insert(0, '..')
 try:
     import data_access
 except ImportError:
-    pass
+    raise
 
 
 @app.task(bind=True)
@@ -144,6 +144,11 @@ def train_dataset_from_algorithm(self, dataset_id, algorithm_dict):
     """
 
     dataset_dao = data_access.DatasetDAO()
+
+    # If it all goes ok, add id of algorithm to db
+    dataset_dao.set_algorithm(dataset_id, algorithm_dict["id"])
+    dataset_dao.set_status(dataset_id, -1)
+
     dataset_dto, err = dataset_dao.get_dataset_by_id(dataset_id)
     # Generate the filepath to the dataset
     dtset_path = dataset_dto.get_binary_dataset()
