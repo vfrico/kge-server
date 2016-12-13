@@ -54,7 +54,7 @@ def read_pair_list(req, resp, resource, params):
 
 
 class PredictSimilarEntitiesResource(object):
-
+    # TODO: Refactor this class using hooks
     def on_get(self, req, resp, dataset_id, entity, embedding=False):
         """Makes HTTP response for a SimilarEntities search
 
