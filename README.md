@@ -39,12 +39,12 @@ web service using **docker** that is able to do almost every of those operations
 through a HTTP client. You can take a look to the documentation and discover all the
 things you can do [here](https://vfrico.github.io/kge-server/).
 
-# Installing / Executing
+# Installation/Execution
 
 You can use the Python library as is, or you can start a server, and use all
 the endpoints available.
 
-# Installing the library
+# Library installation
 
 This repository provides a setuptools `setup.py` file to install the library
 on your system. It is pretty easy. Simply make `sudo python3 setup.py install` and
@@ -61,7 +61,7 @@ But the recommended way to getthe REST service working is to execute into the
 docker environment. You only need to have installed `docker` and `docker-compose`
 in your system.
 
-# Executing the service
+# Service execution
 
 To run the service, go to images folder, execute `docker-compose up` and you
 will have a server on the port `localhost:6789` ready to listen HTTP requests.
