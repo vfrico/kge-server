@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Welcome to Knowledge Graph Embedding Server’s documentation! &mdash; Knowledge Graph Embedding Server 1.0-beta documentation</title>
+  <title>Knowledge Graph Embedding Server’s documentation &mdash; Knowledge Graph Embedding Server 1.0-beta documentation</title>
   
 
   
@@ -122,7 +122,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="#">Docs</a> &raquo;</li>
       
-    <li>Welcome to Knowledge Graph Embedding Server&#8217;s documentation!</li>
+    <li>Knowledge Graph Embedding Server&#8217;s documentation</li>
     <li class="wy-breadcrumbs-aside">
       
           
@@ -136,9 +136,104 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="welcome-to-knowledge-graph-embedding-server-s-documentation">
-<h1>Welcome to Knowledge Graph Embedding Server&#8217;s documentation!<a class="headerlink" href="#welcome-to-knowledge-graph-embedding-server-s-documentation" title="Permalink to this headline">¶</a></h1>
-<p>Contents:</p>
+  <div class="section" id="knowledge-graph-embedding-server-s-documentation">
+<h1>Knowledge Graph Embedding Server&#8217;s documentation<a class="headerlink" href="#knowledge-graph-embedding-server-s-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>You can skip this introduction if you know all about Knowledge graphs or you don&#8217;t
+want to learn about them. Just go down to check how to install or run the service.</p>
+<div class="section" id="what-are-knowledge-graphs">
+<h3>What are Knowledge Graphs?<a class="headerlink" href="#what-are-knowledge-graphs" title="Permalink to this headline">¶</a></h3>
+<p>There are many knowledge databases nowadays, and they are growing very
+quickly. Some of them are open and have a very broad domain, like [DBpedia](<a class="reference external" href="http://es.dbpedia.org/">http://es.dbpedia.org/</a>) or
+[Wikidata](<a class="reference external" href="http://wikidata.org/">http://wikidata.org/</a>), both based in existent data on Wikipedia. Other knowledge databases
+are based on very specific domains, like [datos.bne.es](<a class="reference external" href="http://datos.bne.es/">http://datos.bne.es/</a>), which stores
+the information from Spanish National Library (<em>Biblioteca Nacional de España</em>)
+in an open, machine readable, way.</p>
+<p>Most of those knowledge databases can be seen as <strong>knowledge graphs</strong>, where facts
+can be seen as triples: <em>head</em>, <em>label</em> and <em>tail</em>. This information is usually
+stored using semantic web tools, like RDF and can be queried through some
+languages like SPARQL.</p>
+</div>
+<div class="section" id="what-are-embeddings">
+<h3>What are Embeddings?<a class="headerlink" href="#what-are-embeddings" title="Permalink to this headline">¶</a></h3>
+<p>Embeddings are a way to represent all the relationships that exists on graphs,
+and they are commonly represented as multidimensional arrays.
+Those are useful to perform some machine learning tasks such as look for
+similar entities. With some embeddings models you can also do some simple
+algebraic operations with those arrays like adding them or substract and predict
+new entities.</p>
+</div>
+<div class="section" id="what-is-this-server">
+<h3>What is this server?<a class="headerlink" href="#what-is-this-server" title="Permalink to this headline">¶</a></h3>
+<p>This server provides a vertical solution on the machine learning area,
+going from the creation of datasets wich represents those knowledge graphs,
+to methods to perform queries such as look for similar entities given another.
+In the middle, the server provides training and indexing models that allows
+the query operations shown above.</p>
+</div>
+<div class="section" id="what-is-included-here">
+<h3>What is included here?<a class="headerlink" href="#what-is-included-here" title="Permalink to this headline">¶</a></h3>
+<p>The <em>vertical solution</em> depicted above is available as a Python library, so
+you can do a <code class="docutils literal"><span class="pre">python3</span> <span class="pre">setup.py</span> <span class="pre">install</span></code> and that&#8217;s all. But you can also deploy a
+web service using <strong>docker</strong> that is able to do almost every of those operations
+through a HTTP client. You can take a look to the documentation and discover all the
+things you can do on the <a class="reference internal" href="#table-of-contents">Table of contents</a>.</p>
+</div>
+</div>
+<div class="section" id="installation-execution">
+<h2>Installation/Execution<a class="headerlink" href="#installation-execution" title="Permalink to this headline">¶</a></h2>
+<p>You can use the Python library as is, or you can start a server, and use all
+the endpoints available.</p>
+<div class="section" id="library-installation">
+<h3>Library installation<a class="headerlink" href="#library-installation" title="Permalink to this headline">¶</a></h3>
+<p>This repository provides a setuptools <code class="docutils literal"><span class="pre">setup.py</span></code> file to install the library
+on your system. It is pretty easy. Simply make <code class="docutils literal"><span class="pre">sudo</span> <span class="pre">python3</span> <span class="pre">setup.py</span> <span class="pre">install</span></code> and
+it will install the library. Maybe some extra dependencies are required to run
+into your system, if so, you can execute this to get them all installed:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="n">scikit</span><span class="o">-</span><span class="n">learn</span> <span class="n">scipy</span> <span class="n">cython</span>
+</pre></div>
+</div>
+<p>And if you are using normal python3:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip3</span> <span class="n">install</span> <span class="n">numpy</span> <span class="n">scipy</span> <span class="n">pandas</span> <span class="n">sympy</span> <span class="n">nose</span> <span class="n">scikit</span><span class="o">-</span><span class="n">learn</span>
+</pre></div>
+</div>
+<p>But the recommended way to getthe REST service working is to execute into the
+docker environment. You only need to have installed <code class="docutils literal"><span class="pre">docker`</span> <span class="pre">and</span> <span class="pre">`docker-compose</span></code>
+in your system.</p>
+</div>
+<div class="section" id="service-execution">
+<h3>Service execution<a class="headerlink" href="#service-execution" title="Permalink to this headline">¶</a></h3>
+<p>To run the service, go to images folder, execute <code class="docutils literal"><span class="pre">docker-compose</span> <span class="pre">up</span></code> and you
+will have a server on the port <code class="docutils literal"><span class="pre">localhost:6789</span></code> ready to listen HTTP requests.</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">images</span><span class="o">/</span>
+<span class="n">docker</span><span class="o">-</span><span class="n">compose</span> <span class="n">up</span> <span class="o">-</span><span class="n">d</span>
+<span class="n">curl</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">localhost</span><span class="p">:</span><span class="mi">6789</span><span class="o">/</span><span class="n">datasets</span>
+</pre></div>
+</div>
+<p>After this you will have an HTTP REST server listening to the API. but if you
+want to run the python library alone, you can connect to any of the docker
+containers created:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">exec</span> <span class="o">-</span><span class="n">it</span> <span class="n">images_web_1</span> <span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">bash</span>
+</pre></div>
+</div>
+<p>If you are experiencing troubles when executing the docker image, check your
+user UID and change the user UID in <strong>all</strong> <code class="docutils literal"><span class="pre">Dockerfiles`</span> <span class="pre">inside</span> <span class="pre">`images/</span></code> folder.
+Then rebuild the images with: <code class="docutils literal"><span class="pre">docker-compose</span> <span class="pre">build</span> <span class="pre">--no-cache</span></code></p>
+<p>See more instructions about deployment at the server-deployment section: <a class="reference internal" href="architecture.html#server-deployment"><span class="std std-ref">Server deployment</span></a>.</p>
+</div>
+<div class="section" id="supported-environment">
+<h3>Supported environment<a class="headerlink" href="#supported-environment" title="Permalink to this headline">¶</a></h3>
+<p>The whole project has been built using Python 3.5 distributed by Anaconda,
+inside a docker image. If you want to run the development environment, just
+use this image <code class="docutils literal"><span class="pre">recognai/jupyter-scipy-kge</span></code>.</p>
+</div>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="table-of-contents">
+<h2>Table of contents<a class="headerlink" href="#table-of-contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="modules/modules.html">Modules</a><ul>
@@ -157,14 +252,12 @@
 </li>
 </ul>
 </div>
-</div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
 <li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
 <li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
 </ul>
+</div>
 </div>
 
 

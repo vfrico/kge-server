@@ -192,6 +192,8 @@
 <span class="sd">        :returns: A list with k id&#39;s, which are the most similar entities</span>
 <span class="sd">        :rtype: list of pairs</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
         <span class="n">sim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_nns_by_item</span><span class="p">(</span>
                 <span class="nb">id</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">include_distances</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">search_k</span><span class="o">=</span><span class="n">search_k</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">[(</span><span class="n">sim</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">sim</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sim</span><span class="p">[</span><span class="mi">0</span><span class="p">]))]</span></div>
@@ -230,6 +232,8 @@
 <span class="sd">        :returns: The distance between two elements</span>
 <span class="sd">        :rtype: float</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">entity_x</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">entity_y</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_distance</span><span class="p">(</span><span class="n">entity_x</span><span class="p">,</span> <span class="n">entity_y</span><span class="p">)</span></div></div>
 
 

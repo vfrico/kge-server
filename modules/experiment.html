@@ -1,0 +1,404 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Server module &mdash; Knowledge Graph Embedding Server 1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Knowledge Graph Embedding Server 1 documentation" href="../index.html"/>
+        <link rel="up" title="Modules" href="modules.html"/>
+        <link rel="next" title="REST Service" href="restservice.html"/>
+        <link rel="prev" title="Algorithm module" href="algorithm.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Knowledge Graph Embedding Server
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Modules</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="dataset.html">Dataset module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="algorithm.html">Algorithm module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Server module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#server-class">Server class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#searchindex-class">SearchIndex Class</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="restservice.html">REST Service</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Knowledge Graph Embedding Server</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+        <li><a href="modules.html">Modules</a> &raquo;</li>
+      
+    <li>Server module</li>
+    <li class="wy-breadcrumbs-aside">
+      
+          
+          <a href="../_sources/modules/experiment.txt" rel="nofollow"> View page source</a>
+        
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="server-module">
+<span id="server"></span><h1>Server module<a class="headerlink" href="#server-module" title="Permalink to this headline">¶</a></h1>
+<p>The server class is used to predict triples or statements, or find similar
+entities on the model.</p>
+<div class="section" id="server-class">
+<h2>Server class<a class="headerlink" href="#server-class" title="Permalink to this headline">¶</a></h2>
+<p>Here is shown all the different methods to use with Server class</p>
+<span class="target" id="module-kgeserver.server"></span><dl class="class">
+<dt id="kgeserver.server.Server">
+<em class="property">class </em><code class="descclassname">kgeserver.server.</code><code class="descname">Server</code><span class="sig-paren">(</span><em>search_index</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/server.html#Server"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.server.Server" title="Permalink to this definition">¶</a></dt>
+<dd><p>The server can perform prediction operations</p>
+<dl class="method">
+<dt id="kgeserver.server.Server.distance_between_entities">
+<code class="descname">distance_between_entities</code><span class="sig-paren">(</span><em>entity_x</em>, <em>entity_y</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/server.html#Server.distance_between_entities"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.server.Server.distance_between_entities" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives the distance between two different elements</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>entity_x</strong> (<em>integer</em>) &#8211; One entity to be compared</li>
+<li><strong>entity_y</strong> (<em>integer</em>) &#8211; Other entity to be compared</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The distance between two elements</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)">float</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.server.Server.similarity_by_embedding">
+<code class="descname">similarity_by_embedding</code><span class="sig-paren">(</span><em>embedd</em>, <em>k</em>, <em>search_k=-1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/server.html#Server.similarity_by_embedding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.server.Server.similarity_by_embedding" title="Permalink to this definition">¶</a></dt>
+<dd><p>For a given embedding, return most similar id&#8217;s</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>embedd</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#list" title="(in Python v2.7)"><em>list</em></a>) &#8211; An embedding vector</li>
+<li><strong>k</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The similar entities shown for each entity</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A list with k id&#8217;s, which are the most similar entities</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/2/library/functions.html#list" title="(in Python v2.7)">list</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.server.Server.similarity_by_id">
+<code class="descname">similarity_by_id</code><span class="sig-paren">(</span><em>id</em>, <em>k</em>, <em>search_k=-1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/server.html#Server.similarity_by_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.server.Server.similarity_by_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given an entity id, return the k&#8217;th most similar entities</p>
+<p>Returns a list of pairs, where the first item is the entity
+and the second item is the distance to entity.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>id</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The entity id</li>
+<li><strong>k</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The entities to show</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A list with k id&#8217;s, which are the most similar entities</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list of pairs</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.server.Server.similarity_by_vector">
+<code class="descname">similarity_by_vector</code><span class="sig-paren">(</span><em>vector</em>, <em>k</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/server.html#Server.similarity_by_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.server.Server.similarity_by_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>For each id in vector, return a list with k similar entities</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>vector</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#list" title="(in Python v2.7)"><em>list</em></a>) &#8211; A list with entity id&#8217;s</li>
+<li><strong>k</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The similar entities shown for each entity</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">a matrix array [][]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/2/library/functions.html#list" title="(in Python v2.7)">list</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="searchindex-class">
+<h2>SearchIndex Class<a class="headerlink" href="#searchindex-class" title="Permalink to this headline">¶</a></h2>
+<p>This class is used to provide an extra layer to the server. Can perform loads
+and savings to disk of the index.</p>
+<p>Here is shown all the different methods to use with SearchIndex class</p>
+<span class="target" id="module-kgeserver.server"></span><dl class="class">
+<dt id="kgeserver.server.SearchIndex">
+<em class="property">class </em><code class="descclassname">kgeserver.server.</code><code class="descname">SearchIndex</code><a class="reference internal" href="../_modules/kgeserver/server.html#SearchIndex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.server.SearchIndex" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="kgeserver.server.SearchIndex.build_from_trained_model">
+<code class="descname">build_from_trained_model</code><span class="sig-paren">(</span><em>trained_model</em>, <em>depth</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/server.html#SearchIndex.build_from_trained_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.server.SearchIndex.build_from_trained_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an index from a trained model</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>trained_model</strong> (<em>TrainedModel</em>) &#8211; The trained model</li>
+<li><strong>depth</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The depth desired to generate the search index</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.server.SearchIndex.load_from_file">
+<code class="descname">load_from_file</code><span class="sig-paren">(</span><em>filepath</em>, <em>emb_size</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/server.html#SearchIndex.load_from_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.server.SearchIndex.load_from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the search tree from a file on disk</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>filepath</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The path where the file will be saved</li>
+<li><strong>emb_size</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The size of embedding vector used</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">If operations had or not errors</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">boolean</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="kgeserver.server.SearchIndex.save_to_binary">
+<code class="descname">save_to_binary</code><span class="sig-paren">(</span><em>filepath</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/server.html#SearchIndex.save_to_binary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.server.SearchIndex.save_to_binary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dump the search tree on a file on disk</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filepath</strong> (<a class="reference external" href="https://docs.python.org/2/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; The path where the file will be saved</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">If operations had or not errors</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">boolean</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="restservice.html" class="btn btn-neutral float-right" title="REST Service" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="algorithm.html" class="btn btn-neutral" title="Algorithm module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Víctor Fernández Rico.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

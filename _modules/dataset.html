@@ -1,0 +1,883 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dataset &mdash; Knowledge Graph Embedding Server 1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="Knowledge Graph Embedding Server 1 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Knowledge Graph Embedding Server
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules/modules.html">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/restservice.html">REST Service</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">Knowledge Graph Embedding Server</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+        <li><a href="index.html">Module code</a> &raquo;</li>
+      
+    <li>dataset</li>
+    <li class="wy-breadcrumbs-aside">
+      
+          
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for dataset</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># coding:utf-8</span>
+<span class="c1">#</span>
+<span class="c1"># Dataset class: create, modify, export and import Datasets from Wikidata</span>
+<span class="c1"># Copyright (C) 2016  Víctor Fernández Rico &lt;vfrico@gmail.com&gt;</span>
+<span class="c1">#</span>
+<span class="c1"># This program is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU Lesser General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># This program is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU Lesser General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU Lesser General Public License</span>
+<span class="c1"># along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+
+<div class="viewcode-block" id="Dataset"><a class="viewcode-back" href="../modules/dataset.html#dataset.Dataset">[docs]</a><span class="k">class</span> <span class="nc">Dataset</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class used to create, modify, export and import Datasets from Wikidata</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">WIKIDATA_ENDPOINT</span> <span class="o">=</span> \
+        <span class="sd">&quot;&quot;&quot;https://query.wikidata.org/bigdata/namespace/wdq/sparql?query=&quot;&quot;&quot;</span>
+    <span class="n">entities</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">entities_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">relations</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">relations_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">subs</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Used to show current status</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;started&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+              <span class="s1">&#39;round_curr&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+              <span class="s1">&#39;round_total&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+              <span class="s1">&#39;it_analyzed&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+              <span class="s1">&#39;it_total&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+              <span class="s1">&#39;active&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_endpoint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">thread_limiter</span><span class="o">=</span><span class="mi">32</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates the dataset class</span>
+
+<span class="sd">        The default endpoint is the original from wikidata.</span>
+
+<span class="sd">        :param string new_endpoint: The URI of the SPARQL endpoint</span>
+<span class="sd">        :param integer thread_limiter: The number of concurrent HTTP queries</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">new_endpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">WIKIDATA_ENDPOINT</span> <span class="o">=</span> <span class="n">new_endpoint</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">th_semaphore</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Semaphore</span><span class="p">(</span><span class="n">thread_limiter</span><span class="p">)</span>
+        <span class="c1"># self.query_sem = threading.Semaphore(thread_limiter)</span>
+
+<div class="viewcode-block" id="Dataset.show"><a class="viewcode-back" href="../modules/dataset.html#dataset.Dataset.show">[docs]</a>    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Show all elements of the dataset</span>
+
+<span class="sd">        By default prints only one line with the number of entities, relations</span>
+<span class="sd">        and triplets. If verbose, prints every list. Use wisely</span>
+
+<span class="sd">        :param bool verbose: If true prints every item of all lists</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> entities, </span><span class="si">%d</span><span class="s2"> relations, </span><span class="si">%d</span><span class="s2"> tripletas&quot;</span> <span class="o">%</span>
+              <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">entities</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">relations</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subs</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Entities (</span><span class="si">%d</span><span class="s2">):&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">entities</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">entities</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Relations (</span><span class="si">%d</span><span class="s2">):&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">relations</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">relation</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">relations</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">relation</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Tripletas (</span><span class="si">%d</span><span class="s2">):&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subs</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">subs</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">sub</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Dataset.add_element"><a class="viewcode-back" href="../modules/dataset.html#dataset.Dataset.add_element">[docs]</a>    <span class="k">def</span> <span class="nf">add_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="n">complete_list</span><span class="p">,</span>
+                    <span class="n">complete_list_dict</span><span class="p">,</span> <span class="n">only_uri</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add element to a list of the dataset. Avoids duplicate elements.</span>
+
+<span class="sd">        :param string element: The element that will be added to list</span>
+<span class="sd">        :param list complete_list: The list in which will be added</span>
+<span class="sd">        :param dict complete_list_dict: The dict which represents the list.</span>
+<span class="sd">        :param bool only_uri: Allow load objects distincts than URI&#39;s</span>
+<span class="sd">        :return: The id on the list of the added element</span>
+<span class="sd">        :rtype: integer</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># An URI is a string type</span>
+        <span class="k">if</span> <span class="n">only_uri</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">elif</span> <span class="n">element</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">complete_list_dict</span><span class="p">:</span>
+            <span class="c1"># Item is on the list, return same id</span>
+            <span class="k">return</span> <span class="n">complete_list_dict</span><span class="p">[</span><span class="n">element</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Item is not on the list, append and return id</span>
+            <span class="n">complete_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+            <span class="n">id_item</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">complete_list</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+            <span class="n">complete_list_dict</span><span class="p">[</span><span class="n">element</span><span class="p">]</span> <span class="o">=</span> <span class="n">id_item</span>
+            <span class="k">return</span> <span class="n">id_item</span></div>
+        <span class="c1"># try:</span>
+        <span class="c1">#     # Item is on the list, return same id</span>
+        <span class="c1">#     return complete_list_dict[element]</span>
+        <span class="c1">#</span>
+        <span class="c1"># except (KeyError, ValueError):</span>
+        <span class="c1">#     # Item is not on the list, append and return id</span>
+        <span class="c1">#     complete_list.append(element)</span>
+        <span class="c1">#     id_item = len(complete_list)-1</span>
+        <span class="c1">#     complete_list_dict[element] = id_item</span>
+        <span class="c1">#     return id_item</span>
+
+<div class="viewcode-block" id="Dataset.exist_element"><a class="viewcode-back" href="../modules/dataset.html#dataset.Dataset.exist_element">[docs]</a>    <span class="k">def</span> <span class="nf">exist_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="n">complete_list_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if element exists on a given list</span>
+
+<span class="sd">        :param string element: The element itself</span>
+<span class="sd">        :param dict complete_list_dict: The dictionary to search in</span>
+<span class="sd">        :return: Wether the item was found or no</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">complete_list_dict</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+        <span class="c1"># try:</span>
+        <span class="c1">#     # Item is on the list, return same id</span>
+        <span class="c1">#     elem_id = complete_list_dict[element]</span>
+        <span class="c1">#     return True</span>
+        <span class="c1">#</span>
+        <span class="c1"># except (KeyError, ValueError):</span>
+        <span class="c1">#     # Item is not on the list</span>
+        <span class="c1">#     return False</span>
+
+<div class="viewcode-block" id="Dataset.extract_entity"><a class="viewcode-back" href="../modules/dataset.html#dataset.Dataset.extract_entity">[docs]</a>    <span class="k">def</span> <span class="nf">extract_entity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">,</span>
+                       <span class="n">filters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;wdt-entity&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;wdt-reference&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                                <span class="s1">&#39;wdt-statement&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;wdt-prop&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                                <span class="s1">&#39;literal&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s1">&#39;bnode&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}):</span>
+        <span class="sd">&quot;&quot;&quot;Given an entity, returns the valid representation, ready to be saved</span>
+
+<span class="sd">        The filter argument allows to avoid adding elements into lists that</span>
+<span class="sd">        will not be used. It is a dictionary with the shape: {&#39;filter&#39;: bool}.</span>
+<span class="sd">        The valid filters (and default) are:</span>
+<span class="sd">            * *wdt-entity* - True</span>
+<span class="sd">            * *wdt-reference* - False</span>
+<span class="sd">            * *wdt-statement* - True</span>
+<span class="sd">            * *wdt-prop* - True</span>
+<span class="sd">            * *literal* - False</span>
+<span class="sd">            * *bnode* - False</span>
+
+<span class="sd">        :param dict entity: The entity to be analyzed</span>
+<span class="sd">        :param dict filters: A dictionary to allow filter entities</span>
+<span class="sd">        :return: The entity itself or False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;uri&quot;</span><span class="p">:</span>
+            <span class="c1"># Not all &#39;uri&#39; values are valid entities</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">uri</span> <span class="o">=</span> <span class="n">entity</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">uri</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;www.wikidata.org&#39;</span> <span class="ow">and</span> \
+                        <span class="p">(</span><span class="n">uri</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;reference&quot;</span> <span class="ow">and</span> <span class="n">filters</span><span class="p">[</span><span class="s1">&#39;wdt-reference&#39;</span><span class="p">]):</span>
+                    <span class="k">return</span> <span class="n">entity</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="n">uri</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;www.wikidata.org&#39;</span> <span class="ow">and</span> \
+                        <span class="p">(</span><span class="n">uri</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;statement&quot;</span> <span class="ow">and</span> <span class="n">filters</span><span class="p">[</span><span class="s1">&#39;wdt-statement&#39;</span><span class="p">]):</span>
+                    <span class="k">return</span> <span class="n">entity</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="n">uri</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;www.wikidata.org&#39;</span> <span class="ow">and</span> \
+                        <span class="p">(</span><span class="n">uri</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;entity&quot;</span> <span class="ow">and</span> <span class="n">filters</span><span class="p">[</span><span class="s1">&#39;wdt-entity&#39;</span><span class="p">]):</span>
+                    <span class="k">return</span> <span class="n">entity</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="n">uri</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;www.wikidata.org&#39;</span> <span class="ow">and</span> \
+                        <span class="p">(</span><span class="n">uri</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;prop&quot;</span> <span class="ow">and</span> <span class="n">filters</span><span class="p">[</span><span class="s1">&#39;wdt-prop&#39;</span><span class="p">]):</span>
+                    <span class="k">return</span> <span class="n">entity</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="n">uri</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;www.wikidata.org&#39;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Only discards certain Wikidata urls, the rest are valid</span>
+                    <span class="k">return</span> <span class="n">entity</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">elif</span> <span class="n">entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;literal&quot;</span> <span class="ow">and</span> <span class="n">filters</span><span class="p">[</span><span class="s1">&#39;literal&#39;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">entity</span>
+        <span class="k">elif</span> <span class="n">entity</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;bnode&quot;</span> <span class="ow">and</span> <span class="n">filters</span><span class="p">[</span><span class="s1">&#39;literal&#39;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">entity</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="Dataset.load_dataset_from_json"><a class="viewcode-back" href="../modules/dataset.html#dataset.Dataset.load_dataset_from_json">[docs]</a>    <span class="k">def</span> <span class="nf">load_dataset_from_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json</span><span class="p">,</span> <span class="n">only_uri</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Loads the dataset object with a JSON</span>
+
+<span class="sd">        The JSON structure required is:</span>
+<span class="sd">        {&#39;object&#39;: {}, &#39;subject&#39;: {}, &#39;predicate&#39;: {}}</span>
+
+<span class="sd">        :param list json: A list of dictionary parsed from JSON</span>
+<span class="sd">        :param bool only_uri: Allow load objects distincts than URI&#39;s</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">tripl</span> <span class="ow">in</span> <span class="n">json</span><span class="p">:</span>
+            <span class="n">id_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_element</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">extract_entity</span><span class="p">(</span><span class="n">tripl</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]),</span>
+                                      <span class="bp">self</span><span class="o">.</span><span class="n">entities</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">entities_dict</span><span class="p">,</span>
+                                      <span class="n">only_uri</span><span class="o">=</span><span class="n">only_uri</span><span class="p">)</span>
+            <span class="n">id_subj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_element</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">extract_entity</span><span class="p">(</span><span class="n">tripl</span><span class="p">[</span><span class="s2">&quot;subject&quot;</span><span class="p">]),</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">entities</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">entities_dict</span><span class="p">,</span> <span class="n">only_uri</span><span class="o">=</span><span class="n">only_uri</span><span class="p">)</span>
+            <span class="n">id_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_element</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">extract_entity</span><span class="p">(</span><span class="n">tripl</span><span class="p">[</span><span class="s2">&quot;predicate&quot;</span><span class="p">]),</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">relations</span><span class="p">,</span>
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">relations_dict</span><span class="p">,</span> <span class="n">only_uri</span><span class="o">=</span><span class="n">only_uri</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">id_obj</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">or</span> <span class="n">id_subj</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">or</span> <span class="n">id_pred</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">subs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">id_obj</span><span class="p">,</span> <span class="n">id_subj</span><span class="p">,</span> <span class="n">id_pred</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Dataset.load_dataset_from_query"><a class="viewcode-back" href="../modules/dataset.html#dataset.Dataset.load_dataset_from_query">[docs]</a>    <span class="k">def</span> <span class="nf">load_dataset_from_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">only_uri</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Receives a Sparql query and fills dataset object with the response</span>
+
+<span class="sd">        The method will execute the query itself and will call to other method</span>
+<span class="sd">        to fill in the dataset object</span>
+
+<span class="sd">        :param string query: A valid SPARQL query</span>
+<span class="sd">        :param bool only_uri: Allow load objects distincts than URI&#39;s</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">result_query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result_query</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Error on endpoint. HTTP status code: &quot;</span> <span class="o">+</span>
+                            <span class="nb">str</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">jsonlist</span> <span class="o">=</span> <span class="n">result_query</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># print(json.dumps(jsonlist, indent=4, sort_keys=True))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_dataset_from_json</span><span class="p">(</span><span class="n">jsonlist</span><span class="p">,</span> <span class="n">only_uri</span><span class="o">=</span><span class="n">only_uri</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Dataset.load_dataset_from_nlevels"><a class="viewcode-back" href="../modules/dataset.html#dataset.Dataset.load_dataset_from_nlevels">[docs]</a>    <span class="k">def</span> <span class="nf">load_dataset_from_nlevels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nlevels</span><span class="p">,</span>
+                                  <span class="n">extra_params</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">only_uri</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Builds a nlevels query, executes, and loads data on object</span>
+
+<span class="sd">        :deprecated:</span>
+<span class="sd">        :param integer nlevels: Deep of the search on wikidata graph</span>
+<span class="sd">        :param string extra_params: Extra SPARQL instructions for the query</span>
+<span class="sd">        :param bool only_uri: Allow load objects distincts than URI&#39;s</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_n_levels_query</span><span class="p">(</span><span class="n">nlevels</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot; &quot;</span><span class="o">+</span><span class="n">extra_params</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_dataset_from_query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">only_uri</span><span class="o">=</span><span class="n">only_uri</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Dataset.build_levels"><a class="viewcode-back" href="../modules/dataset.html#dataset.Dataset.build_levels">[docs]</a>    <span class="k">def</span> <span class="nf">build_levels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_levels</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generates a simple *chain* of triplets for the desired levels</span>
+
+<span class="sd">        :deprecated:</span>
+<span class="sd">        :param integer n_levels: Deep of the search on wikidata graph</span>
+<span class="sd">        :return: A list of chained triplets</span>
+<span class="sd">        :rtype: list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">ob1</span> <span class="o">=</span> <span class="s2">&quot;wikidata&quot;</span>
+        <span class="n">pre</span> <span class="o">=</span> <span class="s2">&quot;predicate&quot;</span>
+        <span class="n">ob2</span> <span class="o">=</span> <span class="s2">&quot;object&quot;</span>
+        <span class="n">pre_base</span> <span class="o">=</span> <span class="n">pre</span>
+        <span class="n">obj_base</span> <span class="o">=</span> <span class="n">ob2</span>
+        <span class="n">predicateCount</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">objectCount</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="n">tripletas</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_levels</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">tripletas</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">ob1</span><span class="p">,</span> <span class="n">pre</span><span class="p">,</span> <span class="n">ob2</span><span class="p">))</span>
+            <span class="n">objectCount</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">predicateCount</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">ob1</span> <span class="o">=</span> <span class="n">ob2</span>
+            <span class="n">ob2</span> <span class="o">=</span> <span class="n">obj_base</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">objectCount</span><span class="p">)</span>
+            <span class="n">pre</span> <span class="o">=</span> <span class="n">pre_base</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">predicateCount</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tripletas</span></div>
+
+<div class="viewcode-block" id="Dataset.build_n_levels_query"><a class="viewcode-back" href="../modules/dataset.html#dataset.Dataset.build_n_levels_query">[docs]</a>    <span class="k">def</span> <span class="nf">build_n_levels_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_levels</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Builds a CONSTRUCT SPARQL query of the desired deep</span>
+
+<span class="sd">        :deprecated:</span>
+<span class="sd">        :param integer n_levels: Deep of the search on wikidata graph</span>
+<span class="sd">        :return: The desired chained query</span>
+<span class="sd">        :rtype: string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_levels</span><span class="p">(</span><span class="n">n_levels</span><span class="p">):</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;?&quot;</span><span class="o">+</span><span class="n">level</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot; ?&quot;</span><span class="o">+</span><span class="n">level</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot; ?&quot;</span><span class="o">+</span><span class="n">level</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;PREFIX wikibase: &lt;http://wikiba.se/ontology&gt;</span>
+<span class="s2">            construct {{ </span><span class="si">{0}</span><span class="s2"> }}</span>
+<span class="s2">            WHERE {{ ?wikidata wdt:P950 ?bne .</span>
+<span class="s2">            </span><span class="si">{1}</span><span class="s2"></span>
+<span class="s2">            }} &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot; . &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">),</span> <span class="s2">&quot; . </span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">query</span></div>
+
+<div class="viewcode-block" id="Dataset.load_entire_dataset"><a class="viewcode-back" href="../modules/dataset.html#dataset.Dataset.load_entire_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">load_entire_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">levels</span><span class="p">,</span>
+                            <span class="n">where</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">batch</span><span class="o">=</span><span class="mi">100000</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Loads the dataset by quering to Wikidata on the desired levels</span>
+
+<span class="sd">        :deprecated:</span>
+<span class="sd">        :param integer levels: Deep of the search</span>
+<span class="sd">        :param string where: Extra where statements for SPARQL query</span>
+<span class="sd">        :param integer batch: Number of elements returned each query</span>
+<span class="sd">        :param bool verbose: True for showing all steps the method do</span>
+<span class="sd">        :return: True if operation was successful</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Generate select query to get entities count</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_levels</span><span class="p">(</span><span class="n">levels</span><span class="p">):</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;?&quot;</span><span class="o">+</span><span class="n">level</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot; ?&quot;</span><span class="o">+</span><span class="n">level</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot; ?&quot;</span><span class="o">+</span><span class="n">level</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">count_query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;PREFIX wikibase: &lt;http://wikiba.se/ontology&gt;</span>
+<span class="s2">            SELECT (count(distinct ?object) as ?count)</span>
+<span class="s2">            WHERE {{ ?wikidata wdt:P950 ?bne .</span>
+<span class="s2">            </span><span class="si">{1}</span><span class="s2"></span>
+<span class="s2">            </span><span class="si">{0}</span><span class="s2"></span>
+<span class="s2">            }} &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot; . </span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">),</span> <span class="n">where</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Query is: &quot;</span><span class="o">+</span><span class="n">count_query</span><span class="p">)</span>
+        <span class="n">code</span><span class="p">,</span> <span class="n">count_json</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">count_query</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">count_json</span><span class="p">)</span>
+        <span class="n">tuples_number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">count_json</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;count&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">])</span>
+
+        <span class="c1"># Generate several LIMIT &amp; OFFSET queries</span>
+        <span class="n">batch</span> <span class="o">=</span> <span class="mi">100000</span>
+        <span class="n">base_query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_n_levels_query</span><span class="p">(</span><span class="n">n_levels</span><span class="o">=</span><span class="n">levels</span><span class="p">)</span>
+        <span class="c1"># Number of queries to do: add one more to last iteration</span>
+        <span class="n">n_queries</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">tuples_number</span> <span class="o">/</span> <span class="n">batch</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">json_total</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">query</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_queries</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">Empieza ronda </span><span class="si">{}</span><span class="s2"> de </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">n_queries</span><span class="p">))</span>
+            <span class="n">limit_string</span> <span class="o">=</span> <span class="s2">&quot; LIMIT </span><span class="si">{}</span><span class="s2"> OFFSET </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="mi">0</span><span class="o">*</span><span class="n">batch</span><span class="p">)</span>
+            <span class="c1"># print(str(query)+&quot;\n\n&quot;+base_query + limit_string)</span>
+            <span class="n">sts</span><span class="p">,</span> <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">base_query</span> <span class="o">+</span> <span class="n">limit_string</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">sts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="mi">200</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">sts</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">resp</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Guardando en el dataset...&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_dataset_from_json</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Guardado!&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Dataset.all_entity_triplet"><a class="viewcode-back" href="../modules/dataset.html#dataset.Dataset.all_entity_triplet">[docs]</a>    <span class="k">def</span> <span class="nf">all_entity_triplet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span>
+                           <span class="n">append_queue</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                           <span class="n">callback</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add to dataset all the relations from an entity</span>
+
+<span class="sd">        This method is runned for one thread. It will check if the Wikidata</span>
+<span class="sd">        entity is valid, make a SPARQL query and save all triplets on the</span>
+<span class="sd">        dataset.</span>
+<span class="sd">        :param string element: The URI of element to be scanned</span>
+<span class="sd">        :param function append_queue: A function that receives the subject of</span>
+<span class="sd">                                      a triplet as an argument</span>
+<span class="sd">        :param integer verbose: The level of verbosity. 0 is low, and 2 is high</span>
+<span class="sd">        :param function callback: The callback function. Default is return</span>
+<span class="sd">        :return: Nothing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Extract correctly the id of the wikidata element.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># If either fails to convert the last Q number into int</span>
+            <span class="c1"># or the URI hasn&#39;t &#39;entity&#39; keyword, returns without doing nothing</span>
+            <span class="n">wikidata_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">element</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="k">assert</span> <span class="n">element</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;entity&#39;</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">callback</span><span class="p">()</span>
+            <span class="k">return</span>
+
+        <span class="n">el_query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;PREFIX wikibase: &lt;http://wikiba.se/ontology&gt;</span>
+<span class="s2">            SELECT ?predicate ?object</span>
+<span class="s2">            WHERE {{</span>
+<span class="s2">                wd:Q</span><span class="si">{0}</span><span class="s2"> ?predicate ?object .</span>
+<span class="s2">            }}</span>
+<span class="s2">            &quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">wikidata_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The element query is: </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">el_query</span><span class="p">)</span>
+        <span class="c1"># Get all related elements</span>
+        <span class="n">sts</span><span class="p">,</span> <span class="n">el_json</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">el_query</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;HTTP&quot;</span><span class="p">,</span> <span class="n">sts</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">el_json</span><span class="p">))</span>
+
+        <span class="c1"># Check future errors</span>
+        <span class="k">if</span> <span class="n">sts</span> <span class="ow">is</span> <span class="ow">not</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="n">callback</span><span class="p">()</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Add element to entities queue</span>
+        <span class="n">id_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_element</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">entities</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">entities_dict</span><span class="p">)</span>
+
+        <span class="c1"># For related elements, get all relations and objects</span>
+        <span class="k">for</span> <span class="n">relation</span> <span class="ow">in</span> <span class="n">el_json</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_entity</span><span class="p">(</span><span class="n">relation</span><span class="p">[</span><span class="s1">&#39;predicate&#39;</span><span class="p">])</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_entity</span><span class="p">(</span><span class="n">relation</span><span class="p">[</span><span class="s1">&#39;object&#39;</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error on relation: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">relation</span><span class="p">))</span>
+                <span class="n">callback</span><span class="p">()</span>
+                <span class="k">return</span>
+
+            <span class="k">if</span> <span class="n">pred</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="c1"># Add to the queue iff the element hasn&#39;t been scanned</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">exist_element</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">entities_dict</span><span class="p">):</span>
+                    <span class="n">append_queue</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+
+                <span class="c1"># Add relation</span>
+                <span class="n">id_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_element</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">relations</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">relations_dict</span><span class="p">)</span>
+                <span class="n">id_subj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_element</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">entities</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">entities_dict</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">id_subj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span> <span class="ow">or</span> <span class="n">id_pred</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">subs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">id_obj</span><span class="p">,</span> <span class="n">id_subj</span><span class="p">,</span> <span class="n">id_pred</span><span class="p">))</span>
+
+        <span class="n">callback</span><span class="p">()</span>
+        <span class="k">return</span></div>
+
+<div class="viewcode-block" id="Dataset.load_dataset_recurrently"><a class="viewcode-back" href="../modules/dataset.html#dataset.Dataset.load_dataset_recurrently">[docs]</a>    <span class="k">def</span> <span class="nf">load_dataset_recurrently</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">levels</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Loads to dataset all entities with BNE ID and their relations</span>
+
+<span class="sd">        Due to Wikidata endpoint cann&#39;t execute queries that take long time</span>
+<span class="sd">        to complete, it is necessary to consruct the dataset entity by entity,</span>
+<span class="sd">        without using SPARQL CONSTRUCT. This method will start concurrently</span>
+<span class="sd">        some threads to make several SPARQL SELECT queries.</span>
+
+<span class="sd">        :param integer levels: The depth to get triplets</span>
+<span class="sd">        :param integer verbose: The level of verbosity. 0 is low, and 2 is high</span>
+<span class="sd">        :return: True if operation was successful</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Count all Wikidata elements with a BNE entry</span>
+        <span class="n">count_query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            PREFIX wikibase: &lt;http://wikiba.se/ontology&gt;</span>
+<span class="s2">            SELECT (count(distinct ?wikidata) as ?count)</span>
+<span class="s2">            WHERE {</span>
+<span class="s2">                ?wikidata wdt:P950 ?bne .</span>
+<span class="s2">            }&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The count query is: </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">count_query</span><span class="p">)</span>
+        <span class="n">sts</span><span class="p">,</span> <span class="n">count_json</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">count_query</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">sts</span><span class="p">,</span> <span class="n">count_json</span><span class="p">)</span>
+
+        <span class="c1"># The number of elements</span>
+        <span class="n">entities_number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">count_json</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;count&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Found </span><span class="si">{}</span><span class="s2"> entities&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">entities_number</span><span class="p">))</span>
+
+        <span class="c1"># fill a list with wikidata entries related to BNE elements</span>
+        <span class="n">first_query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            PREFIX wikibase: &lt;http://wikiba.se/ontology&gt;</span>
+<span class="s2">            SELECT ?wikidata</span>
+<span class="s2">            WHERE {</span>
+<span class="s2">                ?wikidata wdt:P950 ?bne .</span>
+<span class="s2">            }</span>
+<span class="s2">            &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The first query is: </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">first_query</span><span class="p">)</span>
+        <span class="n">sts</span><span class="p">,</span> <span class="n">first_json</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">first_query</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">sts</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">first_json</span><span class="p">))</span>
+
+        <span class="c1"># Create a queue for wikidata elements to be scanned</span>
+        <span class="n">new_queue</span> <span class="o">=</span> <span class="p">[</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;wikidata&#39;</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">first_json</span><span class="p">]</span>
+        <span class="n">el_queue</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">status_thread</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="c1"># Initialize status variables</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;started&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;it_analyzed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;active&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;round_total&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">levels</span>
+            <span class="n">status_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
+                <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">control_thread</span><span class="p">,</span>
+                <span class="n">args</span><span class="o">=</span><span class="p">(),)</span>
+            <span class="n">status_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="c1"># Loop for depth levels</span>
+        <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">levels</span><span class="p">):</span>
+            <span class="c1"># Loop for every item on the queue</span>
+            <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Scanning level </span><span class="si">{}</span><span class="s2"> with </span><span class="si">{}</span><span class="s2"> elements&quot;</span>
+                      <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">level</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_queue</span><span class="p">)))</span>
+            <span class="n">el_queue</span> <span class="o">=</span> <span class="n">new_queue</span>
+            <span class="n">new_queue</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="c1"># Initialize some status variables</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;round_curr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">level</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;it_total&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">el_queue</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;it_analyzed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="c1"># pool for threads</span>
+            <span class="n">threads</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="c1"># Scan every entity on queue</span>
+            <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">el_queue</span><span class="p">:</span>
+                <span class="c1"># Generate n threads, start them and save into pool</span>
+
+                <span class="k">def</span> <span class="nf">func_callback</span><span class="p">():</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;it_analyzed&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">th_semaphore</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">th_semaphore</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
+                    <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">all_entity_triplet</span><span class="p">,</span>
+                    <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="p">),</span>
+                    <span class="n">kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;verbose&#39;</span><span class="p">:</span> <span class="n">verbose</span><span class="p">,</span>
+                            <span class="s1">&#39;append_queue&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">new_queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+                            <span class="s1">&#39;callback&#39;</span><span class="p">:</span> <span class="n">func_callback</span><span class="p">})</span>
+                <span class="n">threads</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+                <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Waiting all threads to end&quot;</span><span class="p">)</span>
+            <span class="c1"># Wait for threads to end</span>
+            <span class="k">for</span> <span class="n">th</span> <span class="ow">in</span> <span class="n">threads</span><span class="p">:</span>
+                <span class="n">th</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;active&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="Dataset.control_thread"><a class="viewcode-back" href="../modules/dataset.html#dataset.Dataset.control_thread">[docs]</a>    <span class="k">def</span> <span class="nf">control_thread</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Starts a loop waiting for user to request information about progress</span>
+
+<span class="sd">        This method should not be called from other method</span>
+<span class="sd">        distinct than &#39;load_dataset_recurrently&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;active&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;active&#39;</span><span class="p">]:</span>
+            <span class="n">ui</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Enter S to show status: &quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ui</span> <span class="ow">is</span> <span class="s2">&quot;s&quot;</span> <span class="ow">or</span> <span class="n">ui</span> <span class="ow">is</span> <span class="s2">&quot;S&quot;</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_status</span><span class="p">())</span>
+            <span class="k">elif</span> <span class="n">ui</span> <span class="ow">is</span> <span class="s2">&quot;q&quot;</span> <span class="ow">or</span> <span class="n">ui</span> <span class="ow">is</span> <span class="s2">&quot;Q&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;active&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="Dataset.get_status"><a class="viewcode-back" href="../modules/dataset.html#dataset.Dataset.get_status">[docs]</a>    <span class="k">def</span> <span class="nf">get_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a formated string with current progress</span>
+
+<span class="sd">        This is a helper method and should not be called from</span>
+<span class="sd">        other method distinct than &#39;load_dataset_recurrently&#39;</span>
+<span class="sd">        :return: Current download progress</span>
+<span class="sd">        :rtype: string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">elapsed</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;started&#39;</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">scanned</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;it_analyzed&#39;</span><span class="p">]</span> <span class="o">/</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;it_total&#39;</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">ZeroDivisionError</span><span class="p">:</span>
+            <span class="n">scanned</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">status_str</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Elapsed time: </span><span class="si">{0}</span><span class="s2">s. Depth </span><span class="si">{1}</span><span class="s2"> of </span><span class="si">{2}</span><span class="s2">.&quot;</span>
+                      <span class="s2">&quot; Entities scanned: </span><span class="si">{3:.2f}</span><span class="s2">% (</span><span class="si">{4}</span><span class="s2"> of </span><span class="si">{5}</span><span class="s2">)&quot;</span>
+                      <span class="s2">&quot; Active threads: </span><span class="si">{6}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                          <span class="n">elapsed</span><span class="o">.</span><span class="n">seconds</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;round_curr&#39;</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;round_total&#39;</span><span class="p">],</span>
+                          <span class="n">scanned</span><span class="p">,</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;it_analyzed&#39;</span><span class="p">],</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s1">&#39;it_total&#39;</span><span class="p">],</span>
+                          <span class="n">threading</span><span class="o">.</span><span class="n">active_count</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">status_str</span></div>
+
+<div class="viewcode-block" id="Dataset.save_to_binary"><a class="viewcode-back" href="../modules/dataset.html#dataset.Dataset.save_to_binary">[docs]</a>    <span class="k">def</span> <span class="nf">save_to_binary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Saves the dataset object on the disk</span>
+
+<span class="sd">        The dataset will be saved with the required format for reading</span>
+<span class="sd">        from the original library, and is prepared to be trained.</span>
+
+<span class="sd">        :param string filepath: The path of the file where should be saved</span>
+<span class="sd">        :return: True if operation was successful</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">subs2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_split</span><span class="p">()</span>
+        <span class="n">all_dataset</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;entities&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">entities</span><span class="p">,</span>
+            <span class="s1">&#39;relations&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">relations</span><span class="p">,</span>
+            <span class="s1">&#39;train_subs&#39;</span><span class="p">:</span> <span class="n">subs2</span><span class="p">[</span><span class="s1">&#39;train_subs&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;valid_subs&#39;</span><span class="p">:</span> <span class="n">subs2</span><span class="p">[</span><span class="s1">&#39;valid_subs&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;test_subs&#39;</span><span class="p">:</span> <span class="n">subs2</span><span class="p">[</span><span class="s1">&#39;test_subs&#39;</span><span class="p">]</span>
+        <span class="p">}</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;wb+&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The path you provided is not valid&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">all_dataset</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="Dataset.load_from_binary"><a class="viewcode-back" href="../modules/dataset.html#dataset.Dataset.load_from_binary">[docs]</a>    <span class="k">def</span> <span class="nf">load_from_binary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Loads the dataset object from the disk</span>
+
+<span class="sd">        Loads this dataset object with the binary file</span>
+
+<span class="sd">        :param string filepath: The path of the binary file</span>
+<span class="sd">        :return: True if operation was successful</span>
+<span class="sd">        :rtype: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The path you provided is not valid&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">all_dataset</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">entities</span> <span class="o">=</span> <span class="n">all_dataset</span><span class="p">[</span><span class="s1">&#39;entities&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relations</span> <span class="o">=</span> <span class="n">all_dataset</span><span class="p">[</span><span class="s1">&#39;relations&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subs</span> <span class="o">=</span> <span class="n">all_dataset</span><span class="p">[</span><span class="s1">&#39;train_subs&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">all_dataset</span><span class="p">[</span><span class="s1">&#39;valid_subs&#39;</span><span class="p">]</span> <span class="o">+</span>\
+            <span class="n">all_dataset</span><span class="p">[</span><span class="s1">&#39;test_subs&#39;</span><span class="p">]</span>
+        <span class="c1"># self.subs = all_dataset[&#39;subs&#39;]</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="Dataset.train_split"><a class="viewcode-back" href="../modules/dataset.html#dataset.Dataset.train_split">[docs]</a>    <span class="k">def</span> <span class="nf">train_split</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ratio</span><span class="o">=</span><span class="mf">0.8</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Split subs into three lists: train, valid and test</span>
+
+<span class="sd">        The triplets should have a specific name and size to be compatible</span>
+<span class="sd">        with the original library. Splits the original triplets (self.subs) in</span>
+<span class="sd">        three different lists: *train_subs*, *valid_subs* and *test_subs*.</span>
+<span class="sd">        The &#39;ratio&#39; param will leave that quantity for train_subs, and the</span>
+<span class="sd">        rest will be a half for valid and the other half for test</span>
+
+<span class="sd">        :param float ratio: The ratio of all triplets required for *train_subs*</span>
+<span class="sd">        :return: A dictionary with splited subs</span>
+<span class="sd">        :rtype: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subs</span><span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
+        <span class="n">train_samples</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="mi">1</span><span class="o">-</span><span class="n">ratio</span><span class="p">)</span> <span class="o">*</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">x_train</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[:</span><span class="o">-</span><span class="n">train_samples</span><span class="p">]]</span>
+        <span class="n">x_val</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span>
+                 <span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="n">train_samples</span><span class="p">:</span><span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="n">train_samples</span><span class="o">/</span><span class="mi">2</span><span class="p">)]]</span>
+        <span class="n">x_test</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="n">train_samples</span><span class="o">/</span><span class="mi">2</span><span class="p">):]]</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;train_subs&quot;</span><span class="p">:</span> <span class="n">x_train</span><span class="p">,</span>
+                <span class="s2">&quot;valid_subs&quot;</span><span class="p">:</span> <span class="n">x_val</span><span class="p">,</span>
+                <span class="s2">&quot;test_subs&quot;</span><span class="p">:</span> <span class="n">x_test</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="Dataset.execute_query"><a class="viewcode-back" href="../modules/dataset.html#dataset.Dataset.execute_query">[docs]</a>    <span class="k">def</span> <span class="nf">execute_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Accept&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span><span class="p">}):</span>
+        <span class="sd">&quot;&quot;&quot;Executes a SPARQL query to the endpoint</span>
+
+<span class="sd">        :param string query: The SPARQL query</span>
+<span class="sd">        :returns: A tuple compound of (http_status, json_or_error)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Thread limiter</span>
+        <span class="c1"># self.query_sem.acquire()</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">WIKIDATA_ENDPOINT</span><span class="o">+</span><span class="n">query</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
+        <span class="c1"># self.query_sem.release()</span>
+        <span class="c1"># if response.status_code is not 200:</span>
+        <span class="c1">#     raise Exception(&quot;Error on endpoint. HTTP status code: &quot;+</span>
+        <span class="c1">#                      str(response.status_code))</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="ow">is</span> <span class="ow">not</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;results&quot;</span><span class="p">][</span><span class="s2">&quot;bindings&quot;</span><span class="p">]</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Víctor Fernández Rico.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

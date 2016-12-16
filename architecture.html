@@ -153,13 +153,13 @@ three different containers:</p>
 <li><strong>Web container</strong>: This container exposes the only open port of all system.
 Provides a <code class="docutils literal"><span class="pre">gunicorn</span></code> web server that accepts HTTP requests to the REST API
 and responds to them.</li>
-<li><strong>Celery Container</strong>: This container is running on the background waiting for a task on
-its queue. It contains all library code and <code class="docutils literal"><span class="pre">celery</span></code>.</li>
+<li><strong>Celery Container</strong>: This container is running on the background waiting for
+a task on its queue. It contains all library code and <code class="docutils literal"><span class="pre">celery</span></code>.</li>
 <li><strong>Redis container</strong>: The redis key-value storage is a dependency from Celery.
 It also stores all the progress of the tasks running on Celery queue.</li>
 </ul>
 <div class="section" id="server-deployment">
-<h2>Server deployment<a class="headerlink" href="#server-deployment" title="Permalink to this headline">¶</a></h2>
+<span id="id1"></span><h2>Server deployment<a class="headerlink" href="#server-deployment" title="Permalink to this headline">¶</a></h2>
 <p>The old version of this repository didn&#8217;t had any Dockerfile or image available
 to run the code. This has changed, and two containers has been created to hold
 both web server and asyncronous task daemon (celery).</p>
@@ -211,7 +211,7 @@ some <code class="docutils literal"><span class="pre">python</span></code> libra
 exists one image to build this docs automatically, just running a docker container</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span>cd images/sphinx-doc
 docker build -t sphinx-doc .
-docker run -rm -v $PWD/../..:/home/kgeserver/kge-server sphinx-doc html
+docker run --rm -v $PWD/../..:/home/kgeserver/kge-server sphinx-doc html
 </pre></div>
 </div>
 <p>You may noticed the last argument called <code class="docutils literal"><span class="pre">html</span></code>. It is the argument that will

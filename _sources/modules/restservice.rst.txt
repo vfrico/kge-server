@@ -451,7 +451,7 @@ Triples prediction
                          This increase the result quality, but reduces the
                          performance of the request. By default is set to -1
     :statuscode 200: The request has been performed successfully
-    :statuscode 404: The dataset can't be found
+    :statuscode 404: The dataset or the entity can't be found
 
 .. http:post:: /datasets/(int:dataset_id)/distance
 
@@ -481,7 +481,7 @@ Triples prediction
 
     :param int dataset_id: Unique id of the dataset
     :statuscode 200: The request has been performed successfully
-    :statuscode 404: The dataset can't be found
+    :statuscode 404: The dataset or the entity can't be found
 
 .. TODO: It is unknown the method on kgeserver library to get the wanted value
     .. http:get:: /datasets/(int:dataset_id)/embedding_probability/(string:embedding)
