@@ -172,7 +172,7 @@
 <span class="sd">        :param string new_endpoint: The URI of the SPARQL endpoint</span>
 <span class="sd">        :param integer thread_limiter: The number of concurrent HTTP queries</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">WikidataDataset</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">sparql_endpoint</span><span class="o">=</span><span class="n">sparql_endpoint</span><span class="p">,</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">WikidataDataset</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">sparql_endpoint</span><span class="o">=</span><span class="n">sparql_endpoint</span><span class="p">,</span>
                                               <span class="n">thread_limiter</span><span class="o">=</span><span class="n">thread_limiter</span><span class="p">)</span>
         <span class="c1"># Compile regex to better performance</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">chk_digit</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;\d&#39;</span><span class="p">)</span>

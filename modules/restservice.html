@@ -271,8 +271,8 @@ been created. See Location header to get more information.</li>
 </dd></dl>
 
 <dl class="post">
-<dt id="post--dataset?type=(int-dataset_type)">
-<code class="descname">POST </code><code class="descname">/dataset?type=</code><span class="sig-paren">(</span><em class="property">int: </em><em>dataset_type</em><span class="sig-paren">)</span><a class="headerlink" href="#post--dataset?type=(int-dataset_type)" title="Permalink to this definition">¶</a></dt>
+<dt id="post--dataset?dataset_type=(int-dataset_type)">
+<code class="descname">POST </code><code class="descname">/dataset?dataset_type=</code><span class="sig-paren">(</span><em class="property">int: </em><em>dataset_type</em><span class="sig-paren">)</span><a class="headerlink" href="#post--dataset?dataset_type=(int-dataset_type)" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a new and empty dataset. To fill in you must use other requests.</p>
 <p>You also must provide <code class="docutils literal"><span class="pre">dataset_type</span></code> query param. This method will create
 a WikidataDataset (id: 1) by default, but you also can create different
@@ -516,6 +516,15 @@ the relative path to the created resource.</p>
 See the example below:</p>
 <p><strong>Sample request</strong></p>
 <p><code class="xref http http-post docutils literal"><span class="pre">POST</span> <span class="pre">/algorithms</span></code></p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span>
+        <span class="nt">&quot;algorithm&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;embedding_size&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+                <span class="nt">&quot;margin&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="nt">&quot;max_epochs&quot;</span><span class="p">:</span> <span class="mi">80</span>
+        <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />

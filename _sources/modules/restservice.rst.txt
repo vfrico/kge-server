@@ -119,7 +119,7 @@ a negative integer.
         :statuscode 200: Se muestran adecuadamente los tipos
 
 
-.. http:post:: /dataset?type=(int:dataset_type)
+.. http:post:: /dataset?dataset_type=(int:dataset_type)
 
     Creates a new and empty dataset. To fill in you must use other requests.
 
@@ -327,6 +327,7 @@ The hyperparameters that are allowed currently to tweak are:
     :http:post:`/algorithms`
 
     .. sourcecode:: json
+
         {
         	"algorithm": {
         		"embedding_size": 50,
