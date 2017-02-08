@@ -3,7 +3,7 @@
 # coding:utf-8
 #
 # routes.py: Falcon file to serve API routes
-# Copyright (C) 2016  Víctor Fernández Rico <vfrico@gmail.com>
+# Copyright (C) 2016 - 2017  Víctor Fernández Rico <vfrico@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -21,6 +21,7 @@
 import json
 import copy
 import falcon
+from falcon_cors import CORS
 import data_access
 import kgeserver.server as server
 import async_server.tasks as async_tasks
@@ -38,9 +39,11 @@ from endpoints.dataset_prediction import (PredictSimilarEntitiesResource,
 from endpoints.algorithms import AlgorithmFactory, AlgorithmResource
 from endpoints.tasks import TasksResource
 
+# CORS
+cors = CORS(allow_all_origins=True)
 
 # falcon.API instances are callable WSGI apps
-app = falcon.API()
+app = falcon.API(middleware=[cors.middleware])
 
 # Resources are represented by long-lived class instances
 dataset = DatasetResource()

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2016 Víctor Fernández Rico <vfrico@gmail.com>
+# Copyright (c) 2016 - 2017 Víctor Fernández Rico <vfrico@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -20,7 +20,8 @@ from setuptools import setup
 doc_build_requires = ['sphinx', 'sphinx_rtd_theme',
                       'sphinxcontrib-httpdomain']
 execution_requires = ['scikit-kge', 'annoy', 'nose']
-service_requires = ['gunicorn', 'falcon', 'celery>=4.0.0', 'redis']
+service_requires = ['gunicorn', 'falcon', 'falcon-cors',
+                    'celery>=4.0.0', 'redis']
 
 # You can tweak this to add or delete dependencies
 all_dependencies = doc_build_requires + execution_requires + service_requires
