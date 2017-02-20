@@ -22,7 +22,7 @@ RUN conda install --yes scikit-learn scipy cython &&\
 
 # Install kge-server and its dependencies
 RUN pip install --upgrade pip
-RUN pip install setuptools requests nose
+RUN pip install setuptools requests nose falcon
 RUN cd /home/$CONDA_USER/ && git clone https://github.com/vfrico/kge-server.git && \
     cd kge-server/ && python3 setup.py install
 
