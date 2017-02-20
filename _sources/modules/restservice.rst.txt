@@ -119,7 +119,7 @@ a negative integer.
         :statuscode 200: Se muestran adecuadamente los tipos
 
 
-.. http:post:: /dataset?type=(int:dataset_type)
+.. http:post:: /datasets?dataset_type=(int:dataset_type)
 
     Creates a new and empty dataset. To fill in you must use other requests.
 
@@ -127,8 +127,8 @@ a negative integer.
     a WikidataDataset (id: 1) by default, but you also can create different
     datasets providing a different dataset_type.
 
-    Inside the body of the request you can provide a name for the dataset. For
-    example:
+    Inside the body of the request you can provide a name and/or a description
+    for the dataset. The name must be unique. For example:
 
     **Sample request**
 
@@ -136,13 +136,31 @@ a negative integer.
 
     .. sourcecode:: json
 
-        {"name": "peliculas"}
+        {"name": "films", "description": "A dataset with favourite films"}
 
     :query int dataset_type: The dataset type to be created. 0 is for a simple
                              Dataset and 1 is for WikidataDataset (default).
     :statuscode 201: A new dataset has been created successfuly. See ``Location:``
                      header to get the id and the new resource path.
     :statuscode 409: The given name already exists on the server.
+
+
+.. http:put:: /datasets/(int:dataset_id)
+
+    Edits the description from a existing dataset.
+
+    **Sample request**
+
+    :http:put:`/datasets`
+
+    .. sourcecode:: json
+
+        {"description": "A dataset with most awarded films"}
+
+    :param int dataset_id: Unique *dataset_id*
+    :statuscode 200: The dataset has been updated successfully. The updated
+                     dataset will be returned in the response.
+    :statuscode 404: The provided *dataset_id* does not exist.
 
 
 .. http:post:: /datasets/(int:dataset_id)/triples
@@ -327,6 +345,7 @@ The hyperparameters that are allowed currently to tweak are:
     :http:post:`/algorithms`
 
     .. sourcecode:: json
+
         {
         	"algorithm": {
         		"embedding_size": 50,

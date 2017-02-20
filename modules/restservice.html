@@ -271,17 +271,17 @@ been created. See Location header to get more information.</li>
 </dd></dl>
 
 <dl class="post">
-<dt id="post--dataset?type=(int-dataset_type)">
-<code class="descname">POST </code><code class="descname">/dataset?type=</code><span class="sig-paren">(</span><em class="property">int: </em><em>dataset_type</em><span class="sig-paren">)</span><a class="headerlink" href="#post--dataset?type=(int-dataset_type)" title="Permalink to this definition">¶</a></dt>
+<dt id="post--datasets?dataset_type=(int-dataset_type)">
+<code class="descname">POST </code><code class="descname">/datasets?dataset_type=</code><span class="sig-paren">(</span><em class="property">int: </em><em>dataset_type</em><span class="sig-paren">)</span><a class="headerlink" href="#post--datasets?dataset_type=(int-dataset_type)" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a new and empty dataset. To fill in you must use other requests.</p>
 <p>You also must provide <code class="docutils literal"><span class="pre">dataset_type</span></code> query param. This method will create
 a WikidataDataset (id: 1) by default, but you also can create different
 datasets providing a different dataset_type.</p>
-<p>Inside the body of the request you can provide a name for the dataset. For
-example:</p>
+<p>Inside the body of the request you can provide a name and/or a description
+for the dataset. The name must be unique. For example:</p>
 <p><strong>Sample request</strong></p>
 <p><code class="xref http http-post docutils literal"><span class="pre">POST</span> <span class="pre">/datasets</span></code></p>
-<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;peliculas&quot;</span><span class="p">}</span>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;films&quot;</span><span class="p">,</span> <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;A dataset with favourite films&quot;</span><span class="p">}</span>
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
@@ -299,6 +299,35 @@ Dataset and 1 is for WikidataDataset (default).</li>
 <li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.2">201 Created</a> &#8211; A new dataset has been created successfuly. See <code class="docutils literal"><span class="pre">Location:</span></code>
 header to get the id and the new resource path.</li>
 <li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.10">409 Conflict</a> &#8211; The given name already exists on the server.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="put">
+<dt id="put--datasets-(int-dataset_id)">
+<code class="descname">PUT </code><code class="descname">/datasets/</code><span class="sig-paren">(</span><em class="property">int: </em><em>dataset_id</em><span class="sig-paren">)</span><a class="headerlink" href="#put--datasets-(int-dataset_id)" title="Permalink to this definition">¶</a></dt>
+<dd><p>Edits the description from a existing dataset.</p>
+<p><strong>Sample request</strong></p>
+<p><code class="xref http http-put docutils literal"><span class="pre">PUT</span> <span class="pre">/datasets</span></code></p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;A dataset with most awarded films&quot;</span><span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dataset_id</strong> (<em>int</em>) &#8211; Unique <em>dataset_id</em></li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Status Codes:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> &#8211; The dataset has been updated successfully. The updated
+dataset will be returned in the response.</li>
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a> &#8211; The provided <em>dataset_id</em> does not exist.</li>
 </ul>
 </td>
 </tr>
@@ -516,6 +545,15 @@ the relative path to the created resource.</p>
 See the example below:</p>
 <p><strong>Sample request</strong></p>
 <p><code class="xref http http-post docutils literal"><span class="pre">POST</span> <span class="pre">/algorithms</span></code></p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span>
+        <span class="nt">&quot;algorithm&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;embedding_size&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+                <span class="nt">&quot;margin&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="nt">&quot;max_epochs&quot;</span><span class="p">:</span> <span class="mi">80</span>
+        <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
