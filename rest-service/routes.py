@@ -26,6 +26,7 @@ import data_access
 import kgeserver.server as server
 import async_server.tasks as async_tasks
 import async_server.celery as celery_server
+import logging
 
 from endpoints.datasets import (DatasetFactory,
                                 DatasetResource,
@@ -40,7 +41,7 @@ from endpoints.algorithms import AlgorithmFactory, AlgorithmResource
 from endpoints.tasks import TasksResource
 
 # CORS
-cors = CORS(allow_all_origins=True)
+cors = CORS(allow_all_origins=True, allow_all_headers=True)
 
 # falcon.API instances are callable WSGI apps
 app = falcon.API(middleware=[cors.middleware])
