@@ -284,6 +284,19 @@ for the dataset. The name must be unique. For example:</p>
 <div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;films&quot;</span><span class="p">,</span> <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;A dataset with favourite films&quot;</span><span class="p">}</span>
 </pre></div>
 </div>
+<p><strong>Sample response</strong></p>
+<p>The <code class="docutils literal"><span class="pre">location:</span></code> header of the response will contain the relative URI for the
+created dataset. Additionally, the body of the response will contain a
+dataset object with only id argument filled in:</p>
+<blockquote>
+<div><code class="docutils literal"><span class="pre">location:</span> <span class="pre">/datasets/32</span></code></div></blockquote>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;dataset&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="mi">32</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />

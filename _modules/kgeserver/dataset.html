@@ -775,7 +775,7 @@
             <span class="s1">&#39;train_subs&#39;</span><span class="p">:</span> <span class="n">subs2</span><span class="p">[</span><span class="s1">&#39;train_subs&#39;</span><span class="p">],</span>
             <span class="s1">&#39;valid_subs&#39;</span><span class="p">:</span> <span class="n">subs2</span><span class="p">[</span><span class="s1">&#39;valid_subs&#39;</span><span class="p">],</span>
             <span class="s1">&#39;test_subs&#39;</span><span class="p">:</span> <span class="n">subs2</span><span class="p">[</span><span class="s1">&#39;test_subs&#39;</span><span class="p">],</span>
-            <span class="s1">&#39;__class__&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span>
+            <span class="s1">&#39;__class__&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span>
         <span class="p">}</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;w+b&quot;</span><span class="p">)</span>
@@ -809,8 +809,8 @@
         <span class="n">all_dataset</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
         <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span> <span class="o">=</span> <span class="n">all_dataset</span><span class="p">[</span><span class="s1">&#39;__class__&#39;</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span> <span class="o">=</span> <span class="n">all_dataset</span><span class="p">[</span><span class="s1">&#39;__class__&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="c1"># This is an old generated dataset</span>
             <span class="k">pass</span>
@@ -983,7 +983,7 @@
     <span class="sd">&quot;&quot;&quot;ExecuteQueryError&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Created when any error occurs when executing a query&quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">ExecuteQueryError</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ExecuteQueryError</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
 </pre></div>
 
            </div>

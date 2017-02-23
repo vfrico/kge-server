@@ -173,7 +173,7 @@
 <span class="sd">        :param integer thread_limiter: The number of concurrent HTTP queries</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">sparql_endpoint</span> <span class="o">=</span> <span class="s2">&quot;http://es.dbpedia.org/sparql?query=&quot;</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">ESDBpediaDataset</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">sparql_endpoint</span><span class="o">=</span><span class="n">sparql_endpoint</span><span class="p">,</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ESDBpediaDataset</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">sparql_endpoint</span><span class="o">=</span><span class="n">sparql_endpoint</span><span class="p">,</span>
                                                <span class="n">thread_limiter</span><span class="o">=</span><span class="n">thread_limiter</span><span class="p">)</span>
 
         <span class="c1"># Save all entities already explored by process_entity (saves time)</span>
