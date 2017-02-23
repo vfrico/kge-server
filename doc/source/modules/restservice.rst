@@ -138,6 +138,22 @@ a negative integer.
 
         {"name": "films", "description": "A dataset with favourite films"}
 
+    **Sample response**
+
+    The ``location:`` header of the response will contain the relative URI for the
+    created dataset. Additionally, the body of the response will contain a
+    dataset object with only id argument filled in:
+
+        ``location: /datasets/32``
+
+    .. sourcecode:: json
+
+        {
+            "dataset": {
+                "id": 32
+            }
+        }
+
     :query int dataset_type: The dataset type to be created. 0 is for a simple
                              Dataset and 1 is for WikidataDataset (default).
     :statuscode 201: A new dataset has been created successfuly. See ``Location:``

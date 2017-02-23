@@ -223,7 +223,7 @@ class DatasetFactory(object):
         else:
             # Dataset created, evrything is done
             resp.status = falcon.HTTP_201
-            resp.body = "Created"
+            resp.body = json.dumps({"dataset": {"id": id_dts}})
             resp.location = "/datasets/" + str(id_dts)
 
 
