@@ -43,6 +43,13 @@ def read_body_generate_triples(req, resp, resource, params):
             msg = ("The 'generate_triples' JSON object must contain"
                    "level attribute")
             raise falcon.HTTPInvalidParam(msg, "levels")
+        elif isinstance(params['gen_triples_param']['levels'], str):
+            try:
+                params['gen_triples_param']['levels'] = int(
+                    params['gen_triples_param']['levels'], 10)
+            except ValueError as err:
+                msg = ("The 'levels' attribute must be an integer")
+                raise falcon.HTTPInvalidParam(msg, "levels")
     except KeyError as err:
         raise falcon.HTTPMissingParam(err(str))
 
@@ -77,7 +84,7 @@ class GenerateTriplesResource():
         # Launch async task
         task = async_tasks.generate_dataset_from_sparql.delay(
             dataset_id, gen_triples_param.pop("graph_pattern"),
-            gen_triples_param.pop("levels"), batch_size=batch_size)
+            int(gen_triples_param.pop("levels")), batch_size=batch_size)
 
         # Create a new task
         task_dao = data_access.TaskDAO()
@@ -88,7 +95,7 @@ class GenerateTriplesResource():
         task_dao.update_task(task_obj)
 
         msg = "Task {} created successfuly".format(task_obj['id'])
-        textbody = {"status": 202, "message": msg}
+        textbody = {"status": 202, "message": msg, "task": task_dao.task}
         resp.location = "/tasks/" + str(task_obj['id'])
         resp.body = json.dumps(textbody)
         resp.content_type = 'application/json'
