@@ -70,11 +70,11 @@ def check_dataset_exsistence(req, resp, resource, params):
 def dataset_untrained_status(req, resp, resource, params):
     """Raises an error if dataset is not on an untrained state
     Must be executed after check_dataset_exsistence. This will not inform
-    about dataset existence, will return undefined error.
+    about dataset existence, instead will return an undefined error.
 
     If query param ignore_status is true, it will not raise any error
     """
-    status, dto = _get_dataset_status(params['dataset_id'])
+    status, dataset_dto = _get_dataset_status(params['dataset_id'])
     ignore_status = req.get_param_as_bool("ignore_status")
     if status != 0 and not ignore_status:
         raise falcon.HTTPConflict(
@@ -87,17 +87,17 @@ def dataset_untrained_status(req, resp, resource, params):
 def dataset_trained_status(req, resp, resource, params):
     """Raises an error if dataset is not on an trained state
     Must be executed after check_dataset_exsistence. This will not inform
-    about dataset existence, will return undefined error.
+    about dataset existence, instead will return an undefined error.
 
     If query param ignore_status is true, it will not raise any error
     """
-    status, dto = _get_dataset_status(params['dataset_id'])
+    status, dataset_dto = _get_dataset_status(params['dataset_id'])
     ignore_status = req.get_param_as_bool("ignore_status")
     if status != 1 and not ignore_status:
         raise falcon.HTTPConflict(
             title="The dataset is not in a correct state",
             description=("The dataset {id} has an status {status}, which "
-                         "is not valid to insert triples. Required is 1 "
+                         "is not valid to generate an index. Required is 1 "
                          ).format(**dataset_dto.to_dict()))
 
 
