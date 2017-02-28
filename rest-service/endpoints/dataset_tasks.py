@@ -3,7 +3,7 @@
 # coding:utf-8
 #
 # dataset_tasks.py: Falcon file to manage resources which creates tasks
-# Copyright (C) 2016  Víctor Fernández Rico <vfrico@gmail.com>
+# Copyright (C) 2016 - 2017 Víctor Fernández Rico <vfrico@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -93,6 +93,10 @@ class GenerateTriplesResource():
             raise falcon.HTTPNotFound(description=str(err))
         task_obj["next"] = "/datasets/" + dataset_id
         task_dao.update_task(task_obj)
+
+        # Store the task into DatasetDTO
+        dataset_dao = data_access.DatasetDAO()
+        dataset_dao.set_task(dataset_id, task_obj['id'])
 
         msg = "Task {} created successfuly".format(task_obj['id'])
         textbody = {"status": 202, "message": msg, "task": task_dao.task}

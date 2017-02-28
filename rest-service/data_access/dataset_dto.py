@@ -3,7 +3,7 @@
 # coding:utf-8
 #
 # dataset_dto.py: Contains the DTO for Datasets
-# Copyright (C) 2016  Víctor Fernández Rico <vfrico@gmail.com>
+# Copyright (C) 2016 - 2017 Víctor Fernández Rico <vfrico@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -36,6 +36,7 @@ class DatasetDTO(data_access_base.DTOClass):
     description = None
     dataset_type = None
     error = None
+    task = None
 
     _binary_dataset = None
     _binary_model = None
@@ -59,6 +60,7 @@ class DatasetDTO(data_access_base.DTOClass):
         self.description = result_dict['description']
         self.id = int(result_dict['id'])
         self.dataset_type = result_dict['dataset_type']
+        self.task = result_dict['task']
 
         if result_dict['triples'] is not None and\
            result_dict['relations'] is not None and\

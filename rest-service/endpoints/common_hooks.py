@@ -3,7 +3,7 @@
 # coding:utf-8
 #
 # common_hooks.py: Helper functions to read body requests
-# Copyright (C) 2016  Víctor Fernández Rico <vfrico@gmail.com>
+# Copyright (C) 2016 - 2017 Víctor Fernández Rico <vfrico@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by

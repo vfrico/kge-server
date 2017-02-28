@@ -3,7 +3,7 @@
 # coding:utf-8
 #
 # dataset_dao.py: Manages the persistence in database for dataset objects (DAO)
-# Copyright (C) 2016  Víctor Fernández Rico <vfrico@gmail.com>
+# Copyright (C) 2016 - 2017 Víctor Fernández Rico <vfrico@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -530,3 +530,20 @@ class DatasetDAO(data_access_base.MainDAO):
         else:
             res.close()
             return None, (404, "Some of your variables are not correct")
+
+    def set_task(self, dataset_id, task_id):
+        """Saves on database the task assigned to a dataset
+
+        :param int dataset_id: The id of the dataset
+        :param int task_id: The last task assigned to a dataset
+        """
+        # Substract to the model_path the relative bin_path
+        query = "UPDATE dataset SET task=? WHERE id=? ;"
+        res = self.execute_insertion(query, int(task_id), dataset_id)
+
+        if res.rowcount == 1:
+            res.close()
+            return True, None
+        else:
+            res.close()
+            return False, (400, "Failed when trying to save dataset on db")
