@@ -96,9 +96,11 @@ class AlgorithmFactory():
         if algorithm_id is None:
             raise falcon.HTTPBadRequest(title="Missing algorithm param",
                                         description=str(err))
+        # Return algorithm id or similar information
+        algorithm_dto = {"id": algorithm_id}
 
         msg = "Algorithm {} created successfuly".format(algorithm_id)
-        textbody = {"status": 202, "message": msg}
+        textbody = {"status": 202, "message": msg, "algorithm": algorithm_dto}
         resp.body = json.dumps(textbody)
         resource_path = "/algorithm/{}".format(algorithm_id)
         resp.location = resource_path
