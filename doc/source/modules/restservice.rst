@@ -255,17 +255,20 @@ a negative integer.
     **Sample response**
 
     The ``location:`` header of the response will contain the relative URI for the
-    created task resouce:
+    created task resouce. Additionally, it is possible to get the task id from
+    the response in json format.
 
         ``location: /tasks/32``
 
     .. sourcecode:: json
 
         {
+            "message": "Task 32 created successfuly",
             "status": 202,
-            "message": "Task 32 created successfuly"
+            "task": {
+                "id": 32
+            }
         }
-
     :param int dataset_id: Unique identifier of dataset
     :statuscode 404: The provided *dataset_id* does not exist.
     :statuscode 409: The *dataset_id* does not allow this operation
@@ -368,6 +371,23 @@ The hyperparameters that are allowed currently to tweak are:
         		"margin": 2,
         		"max_epochs": 80
         	}
+        }
+
+    **Sample successfull response**
+    The response when creating a new algorithm gives the location header filled
+    with the URI of the new resource. It also returns the HTTP 202 status code,
+    and the body has information about the request in json format.
+
+        ``location: /algorithm/2``
+
+    .. sourcecode:: json
+
+        {
+            "status": 202,
+            "algorithm": {
+                "id": 2
+            },
+            "message": "Algorithm 2 created successfuly"
         }
 
     :statuscode 201: The request has been processed successfuly and a new
