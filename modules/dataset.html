@@ -954,7 +954,7 @@ from the server.</p>
 
 <dl class="method">
 <dt id="kgeserver.wikidata_dataset.WikidataDataset.extract_entity">
-<code class="descname">extract_entity</code><span class="sig-paren">(</span><em>entity</em>, <em>filters={'bnode': False</em>, <em>'wdt-prop': True</em>, <em>'wdt-entity': True</em>, <em>'wdt-reference': False</em>, <em>'literal': False</em>, <em>'wdt-statement': False}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/wikidata_dataset.html#WikidataDataset.extract_entity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.wikidata_dataset.WikidataDataset.extract_entity" title="Permalink to this definition">¶</a></dt>
+<code class="descname">extract_entity</code><span class="sig-paren">(</span><em>entity</em>, <em>filters={'literal': False</em>, <em>'wdt-statement': False</em>, <em>'bnode': False</em>, <em>'wdt-reference': False</em>, <em>'wdt-entity': True</em>, <em>'wdt-prop': True}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/kgeserver/wikidata_dataset.html#WikidataDataset.extract_entity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#kgeserver.wikidata_dataset.WikidataDataset.extract_entity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given an entity, returns the valid representation, ready to be saved</p>
 <p>The filter argument allows to avoid adding elements into lists that
 will not be used. It is a dictionary with the shape: {&#8216;filter&#8217;: bool}.

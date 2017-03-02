@@ -431,8 +431,11 @@ created task resouce:</p>
 <blockquote>
 <div><code class="docutils literal"><span class="pre">location:</span> <span class="pre">/tasks/32</span></code></div></blockquote>
 <div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Task 32 created successfuly&quot;</span><span class="p">,</span>
     <span class="nt">&quot;status&quot;</span><span class="p">:</span> <span class="mi">202</span><span class="p">,</span>
-    <span class="nt">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Task 32 created successfuly&quot;</span>
+    <span class="nt">&quot;task&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="mi">32</span>
+    <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -564,6 +567,21 @@ See the example below:</p>
                 <span class="nt">&quot;margin&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
                 <span class="nt">&quot;max_epochs&quot;</span><span class="p">:</span> <span class="mi">80</span>
         <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Sample successfull response</strong>
+The response when creating a new algorithm gives the location header filled
+with the URI of the new resource. It also returns the HTTP 202 status code,
+and the body has information about the request in json format.</p>
+<blockquote>
+<div><code class="docutils literal"><span class="pre">location:</span> <span class="pre">/algorithm/2</span></code></div></blockquote>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;status&quot;</span><span class="p">:</span> <span class="mi">202</span><span class="p">,</span>
+    <span class="nt">&quot;algorithm&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="mi">2</span>
+    <span class="p">},</span>
+    <span class="nt">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Algorithm 2 created successfuly&quot;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
