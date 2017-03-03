@@ -179,6 +179,10 @@ class DatasetTrain():
         task_obj["next"] = "/datasets/" + dataset_id
         task_dao.update_task(task_obj)
 
+        # Store the task into DatasetDTO
+        dataset_dao = data_access.DatasetDAO()
+        dataset_dao.set_task(dataset_id, task_obj['id'])
+
         msg = "Task {} created successfuly".format(task_obj['id'])
         textbody = {"status": 202, "message": msg}
         resp.location = "/tasks/" + str(task_obj['id'])
