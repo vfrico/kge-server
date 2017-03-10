@@ -3,7 +3,7 @@
 # coding:utf-8
 #
 # WikidataDataset Class: Creates a data set from Wikidata
-# Copyright (C) 2016  Víctor Fernández Rico <vfrico@gmail.com>
+# Copyright (C) 2016 - 2017 Víctor Fernández Rico <vfrico@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -394,6 +394,46 @@ class WikidataDataset(kgeserver.dataset.Dataset):
                 return False
 
         return to_queue
+
+    def entity_labels(self, entity, langs=['es', 'en']):
+        """Saves the label for a given entity
+
+        Makes a SPARQL query to retrieve the entity's label(s) requested to use
+        them on other services.
+
+        Some SPARQL endpoints may return more languages than requested. E.g:
+        Wikidata will return 'en-ca', 'en-gb', 'en-us' and more if available
+        when 'en' has been requested. Those languages will also be returned
+        on this function.
+
+        Sample call: `wd.entity_labels("Q1", langs=['en', 'es'])`
+        Sample return value: {'en-ca': 'universe', 'es': 'universo',
+                              'en-gb': 'universe', 'en': 'universe'}
+
+        :param string entity: The entity to query for
+        :param list langs: The languages to be asked for
+        :return: The label on each requested language
+        :rtype: lang
+        """
+        # Create the FILTER section (to choose which langs to query)
+        langs = " || ".join(['LANGMATCHES(LANG(?label), "{0}")'.format(lang)
+                             for lang in langs])
+        label_query = """SELECT ?label
+            WHERE {{
+                wd:{0} rdfs:label ?label.
+                FILTER({1})
+        }}""".format(entity, langs)
+        # Perform the query
+        http_status, json_response = self.execute_query(label_query)
+        if http_status != 200:
+            raise kgeserver.dataset.ExecuteQueryError(
+                "HTTP Status {} is not correct".format(http_status))
+
+        # Build the result dict and return it
+        labels = {}
+        for lang in json_response:
+            labels[lang['label']['xml:lang']] = lang['label']['value']
+        return labels
 
     def is_statement(self, uri):
         """Check if an URI is a wikidata statement
