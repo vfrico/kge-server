@@ -223,6 +223,39 @@ def insert_triples_from_graph_pattern(self, dataset_path, graph_pattern):
 
 
 @app.task(bind=True)
+def build_autocomplete_index(self, dataset_id):
+    """Generates an autocomplete index
+
+    :param int dataset_id: The dataset ID
+    """
+    # Creates the progress object in redis
+    celery_uuid = self.request.id
+    progres_dao = data_access.ProgressDAO()
+    progres_dao.create_progress(celery_uuid, 10)
+    progres_dao.update_progress(celery_uuid, 0)
+
+    # Load binary dataset
+    dataset_dao = data_access.DatasetDAO()
+    dataset_path, err = dataset_dao.get_binary_path(dataset_id)
+    dtset = dataset.Dataset()
+    dtset.load_from_binary(dataset_path)
+    # Set working status
+    dataset_dao.set_status(dataset_id, -2)
+
+    def get_labels(entity):
+        dtset.entity_labels(entity)
+        progres_dao.update_progress(celery_uuid, 8)
+
+    with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
+        all_labels = p.map(get_labels, dtset.entities)
+
+    # Update values on DB
+    dataset_dao.set_status(dataset_id, 2)
+
+    return False
+
+
+@app.task(bind=True)
 def build_search_index(self, dataset_id, n_trees):
     """Builds the search index and stores in disk
 
