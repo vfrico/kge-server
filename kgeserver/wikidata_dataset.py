@@ -25,7 +25,7 @@ import math
 
 
 class WikidataDataset(kgeserver.dataset.Dataset):
-    def __init__(self, sparql_endpoint=None, thread_limiter=32):
+    def __init__(self, sparql_endpoint=None, thread_limiter=4):
         """Creates WikidataDataset class
 
         The default endpoint is the original from wikidata.

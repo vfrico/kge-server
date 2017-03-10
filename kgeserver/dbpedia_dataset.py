@@ -25,7 +25,7 @@ import math
 
 
 class ESDBpediaDataset(kgeserver.dataset.Dataset):
-    def __init__(self, thread_limiter=32):
+    def __init__(self, thread_limiter=2):
         """Creates WikidataDataset class
 
         The default endpoint is the original from wikidata.

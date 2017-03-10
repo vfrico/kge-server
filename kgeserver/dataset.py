@@ -53,7 +53,7 @@ class Dataset():
               'it_total': 0,
               'active': False}
 
-    def __init__(self, sparql_endpoint=None, thread_limiter=32):
+    def __init__(self, sparql_endpoint=None, thread_limiter=4):
         """Creates the dataset class
 
         The default endpoint is the original from wikidata.
@@ -652,7 +652,7 @@ class Dataset():
         f.close()
         return True
 
-    def load_from_binary(self, filepath):
+    def load_from_binary(self, filepath, **kwargs):
         """Loads the dataset object from the disk
 
         Loads this dataset object with the binary file
@@ -671,7 +671,7 @@ class Dataset():
         f.close()
         try:
             self.__class__ = all_dataset['__class__']
-            self.__init__()
+            self.__init__(**kwargs)
         except KeyError:
             # This is an old generated dataset
             pass
