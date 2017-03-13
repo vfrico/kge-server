@@ -3,7 +3,7 @@
 # coding:utf-8
 #
 # tasks.py: Contains several async tasks to be executed with Celery
-# Copyright (C) 2016  Víctor Fernández Rico <vfrico@gmail.com>
+# Copyright (C) 2016 - 2017 Víctor Fernández Rico <vfrico@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -19,6 +19,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import absolute_import, unicode_literals
 import os
+import multiprocessing
+from multiprocessing.pool import ThreadPool
 from .celery import app
 import time
 import json
@@ -223,7 +225,7 @@ def insert_triples_from_graph_pattern(self, dataset_path, graph_pattern):
 
 
 @app.task(bind=True)
-def build_autocomplete_index(self, dataset_id):
+def build_autocomplete_index(self, dataset_id, langs=['en', 'es']):
     """Generates an autocomplete index
 
     :param int dataset_id: The dataset ID
@@ -231,8 +233,6 @@ def build_autocomplete_index(self, dataset_id):
     # Creates the progress object in redis
     celery_uuid = self.request.id
     progres_dao = data_access.ProgressDAO()
-    progres_dao.create_progress(celery_uuid, 10)
-    progres_dao.update_progress(celery_uuid, 0)
 
     # Load binary dataset
     dataset_dao = data_access.DatasetDAO()
@@ -242,11 +242,17 @@ def build_autocomplete_index(self, dataset_id):
     # Set working status
     dataset_dao.set_status(dataset_id, -2)
 
-    def get_labels(entity):
-        dtset.entity_labels(entity)
-        progres_dao.update_progress(celery_uuid, 8)
+    # Update Progress
+    progres_dao.create_progress(celery_uuid, len(dtset.entities))
+    progres_dao.update_progress(celery_uuid, 0)
 
-    with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
+    def get_labels(entity):
+        labels = dtset.entity_labels(entity)
+        print(labels)
+        # TODO: Contact with elasticsearch and save the labels
+        progres_dao.add_progress(celery_uuid)
+
+    with ThreadPool(multiprocessing.cpu_count()) as p:
         all_labels = p.map(get_labels, dtset.entities)
 
     # Update values on DB

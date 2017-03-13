@@ -33,6 +33,7 @@ from endpoints.datasets import (DatasetFactory,
                                 EmbeddingResource,
                                 TriplesResource)
 from endpoints.dataset_tasks import (GenerateTriplesResource,
+                                     AutocompleteIndex,
                                      DatasetIndex,
                                      DatasetTrain)
 from endpoints.dataset_prediction import (PredictSimilarEntitiesResource,
@@ -57,7 +58,7 @@ triples_distance = DistanceTriples()
 dataset_train = DatasetTrain()
 dataset_index = DatasetIndex()
 dataset_embedding = EmbeddingResource()
-
+autocompleteIndex = AutocompleteIndex()
 task_resource = TasksResource()
 
 algorithm_resource = AlgorithmResource()
@@ -75,6 +76,8 @@ app.add_route('/datasets/{dataset_id}/similar_entities', similar_entities)
 app.add_route('/datasets/{dataset_id}/train', dataset_train)
 app.add_route('/datasets/{dataset_id}/generate_index', dataset_index)
 app.add_route('/datasets/{dataset_id}/embeddings', dataset_embedding)
+app.add_route('/datasets/{dataset_id}/generate_autocomplete_index',
+              autocompleteIndex)
 
 
 app.add_route('/tasks/{task_id}', task_resource)

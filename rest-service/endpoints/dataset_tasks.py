@@ -142,6 +142,38 @@ class DatasetIndex():
         resp.status = falcon.HTTP_202
 
 
+class AutocompleteIndex():
+    @falcon.before(common_hooks.check_dataset_exsistence)
+    def on_post(self, req, resp, dataset_id, dataset_dto):
+        """Generates an autocomplete index with desired lang
+
+        This request may take long time to complete, so it uses tasks.
+
+        :query list langs: A list with languages to be requested
+        :param id dataset_id: The dataset to insert triples into
+        :param DTO dataset_dto: The Dataset DTO from dataset_id (from hook)
+        """
+        # langs = req.get_param_as_int('langs')
+
+        # Call to the task
+        task = async_tasks.build_autocomplete_index.delay(dataset_id)
+
+        # Create the new task
+        task_dao = data_access.TaskDAO()
+        task_obj, err = task_dao.add_task_by_uuid(task.id)
+        if task_obj is None:
+            raise falcon.HTTPNotFound(description=str(err))
+        task_obj["next"] = "/datasets/" + dataset_id
+        task_dao.update_task(task_obj)
+
+        msg = "Task {} created successfuly".format(task_obj['id'])
+        textbody = {"status": 202, "message": msg}
+        resp.location = "/tasks/" + str(task_obj['id'])
+        resp.body = json.dumps(textbody)
+        resp.content_type = 'application/json'
+        resp.status = falcon.HTTP_202
+
+
 class DatasetTrain():
     # TODO: Test if works well
     @falcon.before(common_hooks.dataset_untrained_status)
