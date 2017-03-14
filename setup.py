@@ -21,7 +21,7 @@ doc_build_requires = ['sphinx', 'sphinx_rtd_theme',
                       'sphinxcontrib-httpdomain']
 execution_requires = ['scikit-kge', 'annoy', 'nose']
 service_requires = ['gunicorn', 'falcon', 'falcon-cors',
-                    'celery>=4.0.0', 'redis']
+                    'celery>=4.0.0', 'redis', 'elasticsearch>=5.0.0,<6.0.0']
 
 # You can tweak this to add or delete dependencies
 all_dependencies = doc_build_requires + execution_requires + service_requires
