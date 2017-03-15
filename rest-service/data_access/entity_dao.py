@@ -45,43 +45,46 @@ class EntityDAO():
                                 http_auth=self.ELASTIC_AUTH)
         self.index = "entities"
         self.type = "WikidataDataset"
+        # TODO: Test if index exists, and if not, create it
         self.generate_index(self.index)
 
     def generate_index(self, indexName):
-        body = {'mappings': {'WikidataDataset': {'properties': {},
-                                                 'dynamic': True}
-                             }}
-        # suggest_field = {
-        #     'type': 'term',
-        #     # 'analyzer': 'standard',
-        #     # 'search_analyzer': 'standard',
-        #     # 'preserve_separators': False,
-        #     # 'preserve_position_increments': False
-        # }
-        # fields = {
-        #     "trigram": {
-        #         "type": "text",
-        #         "analyzer": "trigram"
-        #     },
-        #     "reverse": {
-        #         "type": "text",
-        #         "analyzer": "reverse"
-        #     }
-        # }
+        body = {'mappings': {
+                            'WikidataDataset': {
+                                'properties': {},
+                                'dynamic': True
+                                }
+                             },
+                'settings': {
+                    'analysis': {
+                      'analyzer': {
+                        'my_custom_analyzer': {
+                          'type': 'custom',
+                          'tokenizer': 'standard',
+                          'filter': ['lowercase', 'my_ascii_folding']
+                        }
+                      },
+                      'filter': {
+                        'my_ascii_folding': {
+                            'type': 'asciifolding',
+                            'preserve_original': True
+                        }
+                      }
+                    }
+                  }}
         suggest_field = {
             'type': 'completion',
-            'analyzer': 'standard',
+            'analyzer': 'my_custom_analyzer',
             'search_analyzer': 'standard',
             'preserve_separators': False,
             'preserve_position_increments': False
         }
         body['mappings']['WikidataDataset']['properties'] = {
-            "entity": {'type': 'string'},
-            "description": {'type': 'object'},
-            "label": {'type': 'object'},
-            "label_suggest": suggest_field
+            'entity': {'type': 'string'},
+            'description': {'type': 'object'},
+            'label': {'type': 'object'},
+            'label_suggest': suggest_field
         }
-        print(body)
         try:
             self.es.indices.delete(index=indexName)
         except es_exceptions.NotFoundError:
@@ -89,15 +92,18 @@ class EntityDAO():
         self.es.indices.create(index=indexName, body=body)
 
     def suggest_entity(self, input_string):
+        """
+        Must return a list of entities
+        """
         # TODO: Make a query to elasticsearch to find what the user wants
         pass
 
     def insert_entity(self, entity):
-        # TODO: Insert information of an entity
+        # Entity document which will be stored on elasticsearch
         full_doc = {"entity": entity['entity'],
                     "description": entity['description'],
                     "label": entity['label'],
                     "label_suggest": list(entity['label'].values())}
-        print(full_doc)
-        self.es.create(index=self.index, doc_type=self.type, body=full_doc,
-                       id=str(uuid.uuid4()))
+        # print(full_doc)
+        return self.es.create(index=self.index, doc_type=self.type,
+                              body=full_doc, id=str(uuid.uuid4()))
