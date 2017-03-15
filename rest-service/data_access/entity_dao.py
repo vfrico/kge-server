@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # coding:utf-8
 #
-# search_dao.py: Manages elasticsearch access to search entities
+# entity_dao.py: Manages elasticsearch access to search entities
 # Copyright (C) 2017 Víctor Fernández Rico <vfrico@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -21,6 +21,8 @@
 import os
 import redis
 import json
+import uuid
+import elasticsearch.exceptions as es_exceptions
 from elasticsearch import Elasticsearch
 import kgeserver.dataset as dataset
 import kgeserver.wikidata_dataset as wikidata_dataset
@@ -41,10 +43,31 @@ class EntityDAO():
         # Create Elasticsearch object
         self.es = Elasticsearch(self.ELASTIC_ENDPOINT,
                                 http_auth=self.ELASTIC_AUTH)
+        self.index = "entities"
+        self.type = "WikidataDataset"
+        self.generate_index(self.index)
 
     def generate_index(self, indexName):
-        body = {'mappings': {'WikidataDataset': {'properties': {}}}}
-        entity = {'type': 'string'}
+        body = {'mappings': {'WikidataDataset': {'properties': {},
+                                                 'dynamic': True}
+                             }}
+        # suggest_field = {
+        #     'type': 'term',
+        #     # 'analyzer': 'standard',
+        #     # 'search_analyzer': 'standard',
+        #     # 'preserve_separators': False,
+        #     # 'preserve_position_increments': False
+        # }
+        # fields = {
+        #     "trigram": {
+        #         "type": "text",
+        #         "analyzer": "trigram"
+        #     },
+        #     "reverse": {
+        #         "type": "text",
+        #         "analyzer": "reverse"
+        #     }
+        # }
         suggest_field = {
             'type': 'completion',
             'analyzer': 'standard',
@@ -53,10 +76,16 @@ class EntityDAO():
             'preserve_position_increments': False
         }
         body['mappings']['WikidataDataset']['properties'] = {
-            "entity": entity,
+            "entity": {'type': 'string'},
+            "description": {'type': 'object'},
+            "label": {'type': 'object'},
             "label_suggest": suggest_field
         }
         print(body)
+        try:
+            self.es.indices.delete(index=indexName)
+        except es_exceptions.NotFoundError:
+            pass
         self.es.indices.create(index=indexName, body=body)
 
     def suggest_entity(self, input_string):
@@ -65,4 +94,10 @@ class EntityDAO():
 
     def insert_entity(self, entity):
         # TODO: Insert information of an entity
-        pass
+        full_doc = {"entity": entity['entity'],
+                    "description": entity['description'],
+                    "label": entity['label'],
+                    "label_suggest": list(entity['label'].values())}
+        print(full_doc)
+        self.es.create(index=self.index, doc_type=self.type, body=full_doc,
+                       id=str(uuid.uuid4()))

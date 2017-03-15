@@ -246,13 +246,19 @@ def build_autocomplete_index(self, dataset_id, langs=['en', 'es']):
     progres_dao.create_progress(celery_uuid, len(dtset.entities))
     progres_dao.update_progress(celery_uuid, 0)
 
-    def get_labels(entity):
-        labels = dtset.entity_labels(entity)
-        print(labels)
-        # TODO: Contact with elasticsearch and save the labels
-        progres_dao.add_progress(celery_uuid)
+    entity_dao = data_access.EntityDAO()
 
-    with ThreadPool(multiprocessing.cpu_count()) as p:
+    def get_labels(entity):
+        labels, descriptions = dtset.entity_labels(entity)
+        print(labels, descriptions)
+        progres_dao.add_progress(celery_uuid)
+        # TODO: Contact with elasticsearch and save the labels
+        entity_doc = {"entity": entity,
+                      "label": labels,
+                      "description": descriptions}
+        entity_dao.insert_entity(entity_doc)
+
+    with ThreadPool(1) as p:  # multiprocessing.cpu_count()
         all_labels = p.map(get_labels, dtset.entities)
 
     # Update values on DB

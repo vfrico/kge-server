@@ -28,9 +28,11 @@ import kgeserver.wikidata_dataset as wikidata_dataset
 import data_access.dataset_dao as dataset_dao
 import data_access.algorithm_dao as algorithm_dao
 import data_access.data_access_base as data_access_base
+import data_access.entity_dao as entity_dao
 DatasetDAO = dataset_dao.DatasetDAO
 AlgorithmDAO = algorithm_dao.AlgorithmDAO
 MainDAO = data_access_base.MainDAO
+EntityDAO = entity_dao.EntityDAO
 
 
 class RedisBackend:

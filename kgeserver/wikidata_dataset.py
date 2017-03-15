@@ -415,14 +415,22 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         :return: The label on each requested language
         :rtype: lang
         """
+        VAR_LABEL = "label"
+        VAR_DESCRIPTION = "description"
+        LANG_SELECTOR = 'LANGMATCHES(LANG(?{var}), "{language}")'
         # Create the FILTER section (to choose which langs to query)
-        langs = " || ".join(['LANGMATCHES(LANG(?label), "{0}")'.format(lang)
-                             for lang in langs])
-        label_query = """SELECT ?label
+        l_label = " || ".join([LANG_SELECTOR.format(language=lang, var=VAR_LABEL)
+                               for lang in langs])
+        l_desc = " || ".join([LANG_SELECTOR.format(language=lang, var=VAR_DESCRIPTION)
+                              for lang in langs])
+        # print(l_label, l_desc)
+        label_query = """SELECT ?label ?description
             WHERE {{
                 wd:{0} rdfs:label ?label.
-                FILTER({1})
-        }}""".format(entity, langs)
+                wd:{0} schema:description ?description.
+                FILTER({1}) .
+                FILTER({2})
+        }}""".format(entity, l_label, l_desc)
         # Perform the query
         http_status, json_response = self.execute_query(label_query)
         if http_status != 200:
@@ -430,10 +438,13 @@ class WikidataDataset(kgeserver.dataset.Dataset):
                 "HTTP Status {} is not correct".format(http_status))
 
         # Build the result dict and return it
+        # print(json_response)
         labels = {}
+        descriptions = {}
         for lang in json_response:
-            labels[lang['label']['xml:lang']] = lang['label']['value']
-        return labels
+            labels[lang[VAR_LABEL]['xml:lang']] = lang[VAR_LABEL]['value']
+            descriptions[lang[VAR_DESCRIPTION]['xml:lang']] = lang[VAR_DESCRIPTION]['value']
+        return labels, descriptions
 
     def is_statement(self, uri):
         """Check if an URI is a wikidata statement
