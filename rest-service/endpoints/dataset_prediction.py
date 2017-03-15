@@ -221,3 +221,20 @@ class DistanceTriples():
         resp.body = json.dumps({"distance": dist})
         resp.content_type = 'application/json'
         resp.status = falcon.HTTP_200
+
+
+class SuggestEntityName():
+    @falcon.before(common_hooks.check_dataset_exsistence)
+    def on_post(self, req, resp, dataset_id, dataset_dto):
+        try:
+            body = common_hooks.read_body_as_json(req)
+            input_text = body['input']
+        except KeyError as err:
+            raise falcon.HTTPMissingParam("input")
+
+        entity_dao = data_access.EntityDAO()
+        suggestion = entity_dao.suggest_entity(input_text)
+
+        resp.body = json.dumps(suggestion)
+        resp.content_type = 'application/json'
+        resp.status = falcon.HTTP_200

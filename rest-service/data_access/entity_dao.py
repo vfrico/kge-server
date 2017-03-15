@@ -45,8 +45,9 @@ class EntityDAO():
                                 http_auth=self.ELASTIC_AUTH)
         self.index = "entities"
         self.type = "WikidataDataset"
-        # TODO: Test if index exists, and if not, create it
-        self.generate_index(self.index)
+        # Test if index exists, and if not, creates it
+        if not self.es.indices.exists(index=self.index):
+            self.generate_index(self.index)
 
     def generate_index(self, indexName):
         body = {'mappings': {
@@ -95,15 +96,26 @@ class EntityDAO():
         """
         Must return a list of entities
         """
-        # TODO: Make a query to elasticsearch to find what the user wants
-        pass
+        # Make a query to elasticsearch to find what the user wants
+        request = {
+          "entities": {
+            "text": input_string,
+            "completion": {
+                "field": "label_suggest"
+            }
+          }
+        }
+        resp = self.es.suggest(index=self.index, body=request)
+        # print(resp)
+        return resp
 
     def insert_entity(self, entity):
         # Entity document which will be stored on elasticsearch
         full_doc = {"entity": entity['entity'],
                     "description": entity['description'],
                     "label": entity['label'],
-                    "label_suggest": list(entity['label'].values())}
+                    "label_suggest": list(entity['label'].values())
+                    }
         # print(full_doc)
         return self.es.create(index=self.index, doc_type=self.type,
                               body=full_doc, id=str(uuid.uuid4()))

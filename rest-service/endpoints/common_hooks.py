@@ -59,6 +59,8 @@ def check_dataset_exsistence(req, resp, resource, params):
     """
     dataset_dao = data_access.DatasetDAO()
     cache = req.get_param_as_bool("use_cache", blank_as_true=True)
+    if cache is None:
+        cache = True
     params["dataset_dto"], err = dataset_dao.get_dataset_by_id(
         params['dataset_id'], use_cache=cache)
     if params["dataset_dto"] is None:
