@@ -231,10 +231,12 @@ class SuggestEntityName():
             input_text = body['input']
         except KeyError as err:
             raise falcon.HTTPMissingParam("input")
+        entity_dao = data_access.EntityDAO(dataset_dto.dataset_type)
 
-        entity_dao = data_access.EntityDAO()
+        # Extract suggestion from elasticsearch
         suggestion = entity_dao.suggest_entity(input_text)
-
+        print(dataset_dto.dataset_type)
+        # Return a response
         resp.body = json.dumps(suggestion)
         resp.content_type = 'application/json'
         resp.status = falcon.HTTP_200
