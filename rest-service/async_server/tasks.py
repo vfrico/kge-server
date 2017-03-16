@@ -261,7 +261,8 @@ def build_autocomplete_index(self, dataset_id, langs=['en', 'es']):
         Receives only one entity and stores on search Index
         """
         # Get the labels from endpoint
-        labels, descriptions, alt_labels = dtset.entity_labels(entity)
+        labels, descriptions, alt_labels = dtset.entity_labels(entity,
+                                                               langs=langs)
 
         # track progress: add one more step
         progres_dao.add_progress(celery_uuid)

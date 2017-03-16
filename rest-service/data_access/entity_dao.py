@@ -21,7 +21,6 @@
 import os
 import redis
 import json
-import uuid
 import elasticsearch.exceptions as es_exceptions
 from elasticsearch import Elasticsearch
 import kgeserver.dataset as dataset
@@ -121,6 +120,10 @@ class EntityDAO():
                     "alt_label": entity['alt_label'],
                     "label_suggest": suggestions
                     }
-        # print(full_doc)
-        return self.es.create(index=self.index, doc_type=self.type,
-                              body=full_doc, id=str(uuid.uuid4()))
+        # TODO: Could be useful to use a hash function or similar to avoid
+        #       possible URL encoding issues with some entities ID's
+        entity_uuid = entity['entity']
+
+        return self.es.update(index=self.index, doc_type=self.type,
+                              body={"doc": full_doc, "doc_as_upsert": True},
+                              id=entity_uuid)

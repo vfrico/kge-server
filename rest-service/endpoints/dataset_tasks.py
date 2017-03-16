@@ -153,11 +153,20 @@ class AutocompleteIndex():
         :param id dataset_id: The dataset to insert triples into
         :param DTO dataset_dto: The Dataset DTO from dataset_id (from hook)
         """
-        # langs = req.get_param_as_int('langs')
+        try:
+            body = common_hooks.read_body_as_json(req)
+            languages = body['langs']
+            if not isinstance(languages, list):
+                raise falcon.HTTPInvalidParam(
+                    ("A list with languages in ISO 639-1 code was expected"),
+                    "langs")
+        except KeyError as err:
+            raise falcon.HTTPMissingParam("langs")
 
+        entity_dao = data_access.EntityDAO(dataset_dto.dataset_type)
         # Call to the task
-        task = async_tasks.build_autocomplete_index.delay(dataset_id)
-
+        task = async_tasks.build_autocomplete_index.delay(dataset_id,
+                                                          langs=languages)
         # Create the new task
         task_dao = data_access.TaskDAO()
         task_obj, err = task_dao.add_task_by_uuid(task.id)
