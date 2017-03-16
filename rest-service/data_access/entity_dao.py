@@ -30,8 +30,8 @@ import kgeserver.wikidata_dataset as wikidata_dataset
 
 
 class EntityDAO():
-    def __init__(self):
-        """
+    def __init__(self, dataset_type):
+        """Data Access Object to interact with
         """
         # TODO: Generate an index on elasticsearch with allowed fields
         # The entity must be loaded with a dataset
@@ -44,14 +44,14 @@ class EntityDAO():
         self.es = Elasticsearch(self.ELASTIC_ENDPOINT,
                                 http_auth=self.ELASTIC_AUTH)
         self.index = "entities"
-        self.type = "WikidataDataset"
+        self.type = dataset_type
         # Test if index exists, and if not, creates it
         if not self.es.indices.exists(index=self.index):
             self.generate_index(self.index)
 
     def generate_index(self, indexName):
         body = {'mappings': {
-                            'WikidataDataset': {
+                            self.type: {
                                 'properties': {},
                                 'dynamic': True
                                 }
@@ -80,10 +80,11 @@ class EntityDAO():
             'preserve_separators': False,
             'preserve_position_increments': False
         }
-        body['mappings']['WikidataDataset']['properties'] = {
+        body['mappings'][self.type]['properties'] = {
             'entity': {'type': 'string'},
             'description': {'type': 'object'},
             'label': {'type': 'object'},
+            'alt_label': {'type': 'object'},
             'label_suggest': suggest_field
         }
         try:
@@ -110,11 +111,15 @@ class EntityDAO():
         return resp
 
     def insert_entity(self, entity):
+        # Suggestions to be stored
+        suggestions = list(entity['label'].values()) +\
+                      list(entity['alt_label'].values())
         # Entity document which will be stored on elasticsearch
         full_doc = {"entity": entity['entity'],
                     "description": entity['description'],
                     "label": entity['label'],
-                    "label_suggest": list(entity['label'].values())
+                    "alt_label": entity['alt_label'],
+                    "label_suggest": suggestions
                     }
         # print(full_doc)
         return self.es.create(index=self.index, doc_type=self.type,

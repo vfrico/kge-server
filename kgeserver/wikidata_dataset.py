@@ -417,20 +417,27 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         """
         VAR_LABEL = "label"
         VAR_DESCRIPTION = "description"
+        VAR_ALTLABEL = "altLabel"
         LANG_SELECTOR = 'LANGMATCHES(LANG(?{var}), "{language}")'
         # Create the FILTER section (to choose which langs to query)
-        l_label = " || ".join([LANG_SELECTOR.format(language=lang, var=VAR_LABEL)
-                               for lang in langs])
-        l_desc = " || ".join([LANG_SELECTOR.format(language=lang, var=VAR_DESCRIPTION)
-                              for lang in langs])
+        l_label = " || ".join([LANG_SELECTOR.format(language=lang,
+                              var=VAR_LABEL) for lang in langs])
+        l_desc = " || ".join([LANG_SELECTOR.format(language=lang,
+                             var=VAR_DESCRIPTION) for lang in langs])
+        l_alt = " || ".join([LANG_SELECTOR.format(language=lang,
+                            var=VAR_ALTLABEL) for lang in langs])
         # print(l_label, l_desc)
-        label_query = """SELECT ?label ?description
+        label_query = """SELECT ?{1} ?{3} ?{5}
             WHERE {{
-                wd:{0} rdfs:label ?label.
-                wd:{0} schema:description ?description.
-                FILTER({1}) .
-                FILTER({2})
-        }}""".format(entity, l_label, l_desc)
+                wd:{entity} rdfs:label ?{1}.
+                wd:{entity} schema:description ?{3}.
+                wd:{entity} skos:altLabel ?{5}
+                FILTER({0}) .
+                FILTER({2}) .
+                FILTER({4})
+        }}""".format(l_label, VAR_LABEL,
+                     l_desc, VAR_DESCRIPTION,
+                     l_alt, VAR_ALTLABEL, entity=entity)
         # Perform the query
         http_status, json_response = self.execute_query(label_query)
         if http_status != 200:
@@ -438,13 +445,18 @@ class WikidataDataset(kgeserver.dataset.Dataset):
                 "HTTP Status {} is not correct".format(http_status))
 
         # Build the result dict and return it
-        # print(json_response)
         labels = {}
         descriptions = {}
+        alt_labels = {}
         for lang in json_response:
             labels[lang[VAR_LABEL]['xml:lang']] = lang[VAR_LABEL]['value']
-            descriptions[lang[VAR_DESCRIPTION]['xml:lang']] = lang[VAR_DESCRIPTION]['value']
-        return labels, descriptions
+
+            descriptions[lang[VAR_DESCRIPTION]['xml:lang']] =\
+                lang[VAR_DESCRIPTION]['value']
+
+            alt_labels[lang[VAR_ALTLABEL]['xml:lang']] =\
+                lang[VAR_ALTLABEL]['value']
+        return labels, descriptions, alt_labels
 
     def is_statement(self, uri):
         """Check if an URI is a wikidata statement

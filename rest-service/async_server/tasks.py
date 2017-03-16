@@ -226,9 +226,15 @@ def insert_triples_from_graph_pattern(self, dataset_path, graph_pattern):
 
 @app.task(bind=True)
 def build_autocomplete_index(self, dataset_id, langs=['en', 'es']):
-    """Generates an autocomplete index
+    """Generates an autocomplete index from a dataset using choosen languages
+
+    This method extracts labels, descriptions and other useful information
+    from sparql endpoint (or any other source) and stores it on the search
+    database (elasticsearch). As the dataset may contain too much information
+    in many languages, this will only use the selected languages.
 
     :param int dataset_id: The dataset ID
+    :param list langs: A list of languages in ISO 639-1 format
     """
     # Creates the progress object in redis
     celery_uuid = self.request.id
@@ -237,31 +243,41 @@ def build_autocomplete_index(self, dataset_id, langs=['en', 'es']):
     # Load binary dataset
     dataset_dao = data_access.DatasetDAO()
     dataset_path, err = dataset_dao.get_binary_path(dataset_id)
+    dataset_dto, err = dataset_dao.get_dataset_by_id(dataset_id)
     dtset = dataset.Dataset()
     dtset.load_from_binary(dataset_path)
     # Set working status
+    # TODO: status is the same as when building search index
     dataset_dao.set_status(dataset_id, -2)
-
     # Update Progress
     progres_dao.create_progress(celery_uuid, len(dtset.entities))
     progres_dao.update_progress(celery_uuid, 0)
 
-    entity_dao = data_access.EntityDAO()
+    entity_dao = data_access.EntityDAO(dataset_dto.dataset_type)
 
     def get_labels(entity):
-        labels, descriptions = dtset.entity_labels(entity)
-        print(labels, descriptions)
+        """Auxiliar method to wrap dtset.entity_labels.
+
+        Receives only one entity and stores on search Index
+        """
+        # Get the labels from endpoint
+        labels, descriptions, alt_labels = dtset.entity_labels(entity)
+
+        # track progress: add one more step
         progres_dao.add_progress(celery_uuid)
-        # TODO: Contact with elasticsearch and save the labels
+
+        # Create the doc to be stored on elasticsearch and insert it
         entity_doc = {"entity": entity,
                       "label": labels,
+                      "alt_label": alt_labels,
                       "description": descriptions}
         entity_dao.insert_entity(entity_doc)
 
-    with ThreadPool(1) as p:  # multiprocessing.cpu_count()
+    # Execute get_labels concurrently, using as many processes as cpu cores
+    with ThreadPool(multiprocessing.cpu_count()) as p:
         all_labels = p.map(get_labels, dtset.entities)
 
-    # Update values on DB
+    # Update status on DB when finished
     dataset_dao.set_status(dataset_id, 2)
 
     return False
