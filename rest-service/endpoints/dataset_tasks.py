@@ -163,7 +163,8 @@ class AutocompleteIndex():
         except KeyError as err:
             raise falcon.HTTPMissingParam("langs")
 
-        entity_dao = data_access.EntityDAO(dataset_dto.dataset_type)
+        entity_dao = data_access.EntityDAO(dataset_dto.dataset_type,
+                                           dataset_id)
         # Call to the task
         task = async_tasks.build_autocomplete_index.delay(dataset_id,
                                                           langs=languages)

@@ -29,8 +29,11 @@ import kgeserver.wikidata_dataset as wikidata_dataset
 
 
 class EntityDAO():
-    def __init__(self, dataset_type):
-        """Data Access Object to interact with
+    def __init__(self, dataset_type, dataset_id):
+        """Data Access Object to interact with autocomplete
+
+        The autocomplete is provided by Elasticsearch, and it is not divided
+        by datasets, instead it is divided by dataset type.
         """
         # TODO: Generate an index on elasticsearch with allowed fields
         # The entity must be loaded with a dataset
@@ -44,6 +47,7 @@ class EntityDAO():
                                 http_auth=self.ELASTIC_AUTH)
         self.index = "entities"
         self.type = dataset_type
+        self.dataset_id = dataset_id
         # Test if index exists, and if not, creates it
         if not self.es.indices.exists(index=self.index):
             self.generate_index(self.index)
@@ -106,7 +110,8 @@ class EntityDAO():
           }
         }
         resp = self.es.suggest(index=self.index, body=request)
-        # print(resp)
+
+        # TODO: Should return only entities present on dataset_id
         return resp
 
     def insert_entity(self, entity):
@@ -124,6 +129,22 @@ class EntityDAO():
         #       possible URL encoding issues with some entities ID's
         entity_uuid = entity['entity']
 
-        return self.es.update(index=self.index, doc_type=self.type,
-                              body={"doc": full_doc, "doc_as_upsert": True},
-                              id=entity_uuid)
+        insert = self.es.update(index=self.index, doc_type=self.type,
+                                body={"doc": full_doc, "doc_as_upsert": True},
+                                id=entity_uuid)
+
+        # Script to update dataset id
+        script = {"inline": "",         # Filled below due to high size
+                  "lang": "painless",   # Elasticsearch language
+                  "params": {
+                      "dataset": self.dataset_id
+                  }}
+
+        script['inline'] = """if (ctx._source.datasets == null) {
+            ctx._source.datasets = [params.dataset]
+        } else if(!ctx._source.datasets.contains(params.dataset)) {
+            ctx._source.datasets.add(params.dataset)
+        }"""
+        # TODO: To avoid having two update queries, mix both in one script
+        update = self.es.update(index=self.index, doc_type=self.type,
+                                body={"script": script}, id=entity_uuid)

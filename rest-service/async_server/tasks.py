@@ -253,7 +253,7 @@ def build_autocomplete_index(self, dataset_id, langs=['en', 'es']):
     progres_dao.create_progress(celery_uuid, len(dtset.entities))
     progres_dao.update_progress(celery_uuid, 0)
 
-    entity_dao = data_access.EntityDAO(dataset_dto.dataset_type)
+    entity_dao = data_access.EntityDAO(dataset_dto.dataset_type, dataset_id)
 
     def get_labels(entity):
         """Auxiliar method to wrap dtset.entity_labels.

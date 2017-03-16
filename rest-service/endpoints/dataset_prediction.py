@@ -226,16 +226,31 @@ class DistanceTriples():
 class SuggestEntityName():
     @falcon.before(common_hooks.check_dataset_exsistence)
     def on_post(self, req, resp, dataset_id, dataset_dto):
+        """Return suggests to use with autocomplete
+
+        This method will return suggestions to be used on frontend while users
+        input the entity name.
+
+        TODO: this should only return entities that exists on dataset, right
+        now returns all possible entities.
+
+        :param int dataset_id: The id of the dataset to autocomplete
+        :param DTO dataset_dto: The Dataset DTO from dataset_id (from hook)
+        :param str input: The input to autocomplete (from body)
+        :returns: A list with entities and full text
+        :rtype: Object
+        """
         try:
             body = common_hooks.read_body_as_json(req)
             input_text = body['input']
         except KeyError as err:
             raise falcon.HTTPMissingParam("input")
-        entity_dao = data_access.EntityDAO(dataset_dto.dataset_type)
+        entity_dao = data_access.EntityDAO(dataset_dto.dataset_type,
+                                           dataset_id)
 
         # Extract suggestion from elasticsearch
         suggestion = entity_dao.suggest_entity(input_text)
-        print(dataset_dto.dataset_type)
+
         # Return a response
         resp.body = json.dumps(suggestion)
         resp.content_type = 'application/json'
