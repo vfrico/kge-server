@@ -33,6 +33,7 @@ DatasetDAO = dataset_dao.DatasetDAO
 AlgorithmDAO = algorithm_dao.AlgorithmDAO
 MainDAO = data_access_base.MainDAO
 EntityDAO = entity_dao.EntityDAO
+EntityDTO = entity_dao.EntityDTO
 
 
 class RedisBackend:

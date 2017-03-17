@@ -23,9 +23,20 @@ import redis
 import json
 import elasticsearch.exceptions as es_exceptions
 from elasticsearch import Elasticsearch
-import kgeserver.dataset as dataset
-import kgeserver.wikidata_dataset as wikidata_dataset
-# import data_access.data_access_base as data_access_base
+import data_access.data_access_base as data_access_base
+
+
+class EntityDTO(data_access_base.DTOClass):
+    entity = ""
+    label = {}
+    description = {}
+    alt_label = {}
+
+    def __init__(self, entity_dict):
+        self.entity = entity_dict['entity']
+        self.label = entity_dict['label']
+        self.description = entity_dict['description']
+        self.alt_label = entity_dict['alt_label']
 
 
 class EntityDAO():
@@ -116,7 +127,9 @@ class EntityDAO():
                 try:
                     # Append to entities if dataset_id appears on result
                     if self.dataset_id in entity['_source']['datasets']:
-                        entities.append(entity)
+                        es_entity = EntityDTO(entity['_source'])
+                        entities.append({"entity": es_entity.to_dict(),
+                                         "text": entity['text']})
                 except KeyError as invalid_key:
                     # If dataset info is not present, just skip it
                     if str(invalid_key) != "datasets":
@@ -144,7 +157,6 @@ class EntityDAO():
         # TODO: Could be useful to use a hash function or similar to avoid
         #       possible URL encoding issues with some entities ID's
         entity_uuid = entity['entity']
-
         insert = self.es.update(index=self.index, doc_type=self.type,
                                 body={"doc": full_doc, "doc_as_upsert": True},
                                 id=entity_uuid)
