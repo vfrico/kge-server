@@ -77,10 +77,16 @@ class PredictSimilarEntitiesResource(object):
         if dataset_dto is None:
             raise falcon.HTTPNotFound(description=str(err))
 
+        # Ignore dataset status. May produce unpredictable results
+        ignore = req.get_param_as_bool("ignore_status")
+        if ignore is None:
+            ignore = False
+
         dataset = dataset_dao.build_dataset_object(dataset_dto)  # TODO: design
 
         # Get server to do 'queries'
-        search_index, err = dataset_dao.get_search_index(dataset_dto)
+        search_index, err = dataset_dao.get_search_index(dataset_dto,
+                                                         ignore_status=ignore)
         if search_index is None:
             msg_title = "Dataset not ready perform search operation"
             raise falcon.HTTPConflict(title=msg_title, description=str(err))

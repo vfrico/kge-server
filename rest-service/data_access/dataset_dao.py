@@ -290,14 +290,14 @@ class DatasetDAO(data_access_base.MainDAO):
             res.close()
             return False, (400, "Failed when trying to save index on db")
 
-    def get_search_index(self, dataset_dto):
+    def get_search_index(self, dataset_dto, ignore_status=False):
         """Returns an instantiated search index from choosen dataset.
 
         This method will test if dataset has a generated index.
         :returns: The search index or None
         :rtype: tuple
         """
-        if dataset_dto.status < 2:
+        if dataset_dto.status < 2 and not ignore_status:
             return None, (409, "Dataset {id} has {status} status and is not "
                           "ready for search".format(**dataset_dto.to_dict()))
         try:
