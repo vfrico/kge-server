@@ -97,8 +97,7 @@ class EntityDAO():
         self.es.indices.create(index=indexName, body=body)
 
     def suggest_entity(self, input_string):
-        """
-        Must return a list of entities
+        """Must return a list of entities, if exists on dataset
         """
         # Make a query to elasticsearch to find what the user wants
         request = {
@@ -111,8 +110,24 @@ class EntityDAO():
         }
         resp = self.es.suggest(index=self.index, body=request)
 
-        # TODO: Should return only entities present on dataset_id
-        return resp
+        entities = []
+        try:
+            for entity in resp['entities'][0]['options']:
+                try:
+                    # Append to entities if dataset_id appears on result
+                    if self.dataset_id in entity['_source']['datasets']:
+                        entities.append(entity)
+                except KeyError as invalid_key:
+                    # If dataset info is not present, just skip it
+                    if str(invalid_key) != "datasets":
+                        # Re-Raise the error if KeyError is not from 'datasets'
+                        raise
+
+        except KeyError as invalid_key:
+            if str(invalid_key) == "entities":
+                # Will not match with any entity. Return empty list
+                entities = []
+        return entities
 
     def insert_entity(self, entity):
         # Suggestions to be stored
