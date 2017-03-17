@@ -131,8 +131,9 @@ class EntityDAO():
 
     def insert_entity(self, entity):
         # Suggestions to be stored
+        alt_labels = entity['alt_label'].values()
         suggestions = list(entity['label'].values()) +\
-                      list(entity['alt_label'].values())
+            list([item for sublist in alt_labels for item in sublist])
         # Entity document which will be stored on elasticsearch
         full_doc = {"entity": entity['entity'],
                     "description": entity['description'],

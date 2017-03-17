@@ -22,6 +22,7 @@ import kgeserver
 import kgeserver.dataset
 import re
 import math
+import collections
 
 
 class WikidataDataset(kgeserver.dataset.Dataset):
@@ -447,16 +448,22 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         # Build the result dict and return it
         labels = {}
         descriptions = {}
-        alt_labels = {}
-        for lang in json_response:
-            labels[lang[VAR_LABEL]['xml:lang']] = lang[VAR_LABEL]['value']
+        # A single entity could have multiple alt_labels
+        alt_labels = collections.defaultdict(set)
+        for row in json_response:
+            labels[row[VAR_LABEL]['xml:lang']] = row[VAR_LABEL]['value']
 
-            descriptions[lang[VAR_DESCRIPTION]['xml:lang']] =\
-                lang[VAR_DESCRIPTION]['value']
+            descriptions[row[VAR_DESCRIPTION]['xml:lang']] =\
+                row[VAR_DESCRIPTION]['value']
 
-            alt_labels[lang[VAR_ALTLABEL]['xml:lang']] =\
-                lang[VAR_ALTLABEL]['value']
-        return labels, descriptions, alt_labels
+            alt_labels[row[VAR_ALTLABEL]['xml:lang']].add(
+                row[VAR_ALTLABEL]['value'])
+
+        # Using a set avoids duplicated strings, but need a conversion
+        for lang in alt_labels:
+            alt_labels[lang] = list(alt_labels[lang])
+
+        return labels, descriptions, dict(alt_labels)
 
     def is_statement(self, uri):
         """Check if an URI is a wikidata statement
