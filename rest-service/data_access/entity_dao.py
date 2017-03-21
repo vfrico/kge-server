@@ -64,6 +64,13 @@ class EntityDAO():
             self.generate_index(self.index)
 
     def generate_index(self, indexName):
+        """Generates the index on Elasticsearch
+
+        This method is intended to be used internally. It creates an index
+        using certains parameters to get a better search performance.
+
+        :params str indexName: Name of the new index
+        """
         body = {'mappings': {
                             self.type: {
                                 'properties': {},
@@ -108,7 +115,15 @@ class EntityDAO():
         self.es.indices.create(index=indexName, body=body)
 
     def suggest_entity(self, input_string):
-        """Must return a list of entities, if exists on dataset
+        """Calls Elasticsearch to get an autocomplete suggestion
+
+        Given an input string, calls Elasticsearch to get autocomplete
+        suggestions based on "completion" suggester. Gives the results filtered
+        for an specific dataset (already choosen on constructor).
+
+        :param str input_string: The string to be asked for
+        :rtype: list(EntityDTO)
+        :returns: a list of EntityDTO
         """
         # Make a query to elasticsearch to find what the user wants
         request = {
@@ -121,6 +136,7 @@ class EntityDAO():
         }
         resp = self.es.suggest(index=self.index, body=request)
 
+        # Filter entities to return only the entities for self.dataset_id
         entities = []
         try:
             for entity in resp['entities'][0]['options']:
@@ -143,6 +159,13 @@ class EntityDAO():
         return entities
 
     def insert_entity(self, entity):
+        """Insert an entity on Elasticsearch
+
+        Inserts the entity on Elasticsearch and stores the dataset it is, in
+        order to get better performance when getting autocomplete predictions
+
+        :param dict entity: The entity to be inserted
+        """
         # Suggestions to be stored
         alt_labels = entity['alt_label'].values()
         suggestions = list(entity['label'].values()) +\
