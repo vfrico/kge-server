@@ -142,7 +142,7 @@
 <span class="c1"># coding:utf-8</span>
 <span class="c1">#</span>
 <span class="c1"># WikidataDataset Class: Creates a data set from Wikidata</span>
-<span class="c1"># Copyright (C) 2016  Víctor Fernández Rico &lt;vfrico@gmail.com&gt;</span>
+<span class="c1"># Copyright (C) 2016 - 2017 Víctor Fernández Rico &lt;vfrico@gmail.com&gt;</span>
 <span class="c1">#</span>
 <span class="c1"># This program is free software: you can redistribute it and/or modify</span>
 <span class="c1"># it under the terms of the GNU Lesser General Public License as published by</span>
@@ -161,10 +161,11 @@
 <span class="kn">import</span> <span class="nn">kgeserver.dataset</span>
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">collections</span>
 
 
 <div class="viewcode-block" id="WikidataDataset"><a class="viewcode-back" href="../../modules/dataset.html#kgeserver.wikidata_dataset.WikidataDataset">[docs]</a><span class="k">class</span> <span class="nc">WikidataDataset</span><span class="p">(</span><span class="n">kgeserver</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">Dataset</span><span class="p">):</span>
-<div class="viewcode-block" id="WikidataDataset.__init__"><a class="viewcode-back" href="../../modules/dataset.html#kgeserver.wikidata_dataset.WikidataDataset.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sparql_endpoint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">thread_limiter</span><span class="o">=</span><span class="mi">32</span><span class="p">):</span>
+<div class="viewcode-block" id="WikidataDataset.__init__"><a class="viewcode-back" href="../../modules/dataset.html#kgeserver.wikidata_dataset.WikidataDataset.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sparql_endpoint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">thread_limiter</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Creates WikidataDataset class</span>
 
 <span class="sd">        The default endpoint is the original from wikidata.</span>
@@ -533,6 +534,75 @@
                 <span class="k">return</span> <span class="kc">False</span>
 
         <span class="k">return</span> <span class="n">to_queue</span></div>
+
+<div class="viewcode-block" id="WikidataDataset.entity_labels"><a class="viewcode-back" href="../../modules/dataset.html#kgeserver.wikidata_dataset.WikidataDataset.entity_labels">[docs]</a>    <span class="k">def</span> <span class="nf">entity_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">,</span> <span class="n">langs</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;es&#39;</span><span class="p">,</span> <span class="s1">&#39;en&#39;</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;Saves the label for a given entity</span>
+
+<span class="sd">        Makes a SPARQL query to retrieve the entity&#39;s label(s) requested to use</span>
+<span class="sd">        them on other services.</span>
+
+<span class="sd">        Some SPARQL endpoints may return more languages than requested. E.g:</span>
+<span class="sd">        Wikidata will return &#39;en-ca&#39;, &#39;en-gb&#39;, &#39;en-us&#39; and more if available</span>
+<span class="sd">        when &#39;en&#39; has been requested. Those languages will also be returned</span>
+<span class="sd">        on this function.</span>
+
+<span class="sd">        Sample call: `wd.entity_labels(&quot;Q1&quot;, langs=[&#39;en&#39;, &#39;es&#39;])`</span>
+<span class="sd">        Sample return value: {&#39;en-ca&#39;: &#39;universe&#39;, &#39;es&#39;: &#39;universo&#39;,</span>
+<span class="sd">                              &#39;en-gb&#39;: &#39;universe&#39;, &#39;en&#39;: &#39;universe&#39;}</span>
+
+<span class="sd">        :param string entity: The entity to query for</span>
+<span class="sd">        :param list langs: The languages to be asked for</span>
+<span class="sd">        :return: The label on each requested language</span>
+<span class="sd">        :rtype: lang</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">VAR_LABEL</span> <span class="o">=</span> <span class="s2">&quot;label&quot;</span>
+        <span class="n">VAR_DESCRIPTION</span> <span class="o">=</span> <span class="s2">&quot;description&quot;</span>
+        <span class="n">VAR_ALTLABEL</span> <span class="o">=</span> <span class="s2">&quot;altLabel&quot;</span>
+        <span class="n">LANG_SELECTOR</span> <span class="o">=</span> <span class="s1">&#39;LANGMATCHES(LANG(?</span><span class="si">{var}</span><span class="s1">), &quot;</span><span class="si">{language}</span><span class="s1">&quot;)&#39;</span>
+        <span class="c1"># Create the FILTER section (to choose which langs to query)</span>
+        <span class="n">l_label</span> <span class="o">=</span> <span class="s2">&quot; || &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">LANG_SELECTOR</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">language</span><span class="o">=</span><span class="n">lang</span><span class="p">,</span>
+                              <span class="n">var</span><span class="o">=</span><span class="n">VAR_LABEL</span><span class="p">)</span> <span class="k">for</span> <span class="n">lang</span> <span class="ow">in</span> <span class="n">langs</span><span class="p">])</span>
+        <span class="n">l_desc</span> <span class="o">=</span> <span class="s2">&quot; || &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">LANG_SELECTOR</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">language</span><span class="o">=</span><span class="n">lang</span><span class="p">,</span>
+                             <span class="n">var</span><span class="o">=</span><span class="n">VAR_DESCRIPTION</span><span class="p">)</span> <span class="k">for</span> <span class="n">lang</span> <span class="ow">in</span> <span class="n">langs</span><span class="p">])</span>
+        <span class="n">l_alt</span> <span class="o">=</span> <span class="s2">&quot; || &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">LANG_SELECTOR</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">language</span><span class="o">=</span><span class="n">lang</span><span class="p">,</span>
+                            <span class="n">var</span><span class="o">=</span><span class="n">VAR_ALTLABEL</span><span class="p">)</span> <span class="k">for</span> <span class="n">lang</span> <span class="ow">in</span> <span class="n">langs</span><span class="p">])</span>
+        <span class="c1"># print(l_label, l_desc)</span>
+        <span class="n">label_query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;SELECT ?</span><span class="si">{1}</span><span class="s2"> ?</span><span class="si">{3}</span><span class="s2"> ?</span><span class="si">{5}</span><span class="s2"></span>
+<span class="s2">            WHERE {{</span>
+<span class="s2">                wd:</span><span class="si">{entity}</span><span class="s2"> rdfs:label ?</span><span class="si">{1}</span><span class="s2">.</span>
+<span class="s2">                wd:</span><span class="si">{entity}</span><span class="s2"> schema:description ?</span><span class="si">{3}</span><span class="s2">.</span>
+<span class="s2">                wd:</span><span class="si">{entity}</span><span class="s2"> skos:altLabel ?</span><span class="si">{5}</span><span class="s2"></span>
+<span class="s2">                FILTER(</span><span class="si">{0}</span><span class="s2">) .</span>
+<span class="s2">                FILTER(</span><span class="si">{2}</span><span class="s2">) .</span>
+<span class="s2">                FILTER(</span><span class="si">{4}</span><span class="s2">)</span>
+<span class="s2">        }}&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">l_label</span><span class="p">,</span> <span class="n">VAR_LABEL</span><span class="p">,</span>
+                     <span class="n">l_desc</span><span class="p">,</span> <span class="n">VAR_DESCRIPTION</span><span class="p">,</span>
+                     <span class="n">l_alt</span><span class="p">,</span> <span class="n">VAR_ALTLABEL</span><span class="p">,</span> <span class="n">entity</span><span class="o">=</span><span class="n">entity</span><span class="p">)</span>
+        <span class="c1"># Perform the query</span>
+        <span class="n">http_status</span><span class="p">,</span> <span class="n">json_response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">execute_query</span><span class="p">(</span><span class="n">label_query</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">http_status</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">kgeserver</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">ExecuteQueryError</span><span class="p">(</span>
+                <span class="s2">&quot;HTTP Status </span><span class="si">{}</span><span class="s2"> is not correct&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">http_status</span><span class="p">))</span>
+
+        <span class="c1"># Build the result dict and return it</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">descriptions</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># A single entity could have multiple alt_labels</span>
+        <span class="n">alt_labels</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">set</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">json_response</span><span class="p">:</span>
+            <span class="n">labels</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="n">VAR_LABEL</span><span class="p">][</span><span class="s1">&#39;xml:lang&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">VAR_LABEL</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span>
+
+            <span class="n">descriptions</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="n">VAR_DESCRIPTION</span><span class="p">][</span><span class="s1">&#39;xml:lang&#39;</span><span class="p">]]</span> <span class="o">=</span>\
+                <span class="n">row</span><span class="p">[</span><span class="n">VAR_DESCRIPTION</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span>
+
+            <span class="n">alt_labels</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="n">VAR_ALTLABEL</span><span class="p">][</span><span class="s1">&#39;xml:lang&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                <span class="n">row</span><span class="p">[</span><span class="n">VAR_ALTLABEL</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">])</span>
+
+        <span class="c1"># Using a set avoids duplicated strings, but need a conversion</span>
+        <span class="k">for</span> <span class="n">lang</span> <span class="ow">in</span> <span class="n">alt_labels</span><span class="p">:</span>
+            <span class="n">alt_labels</span><span class="p">[</span><span class="n">lang</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">alt_labels</span><span class="p">[</span><span class="n">lang</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">labels</span><span class="p">,</span> <span class="n">descriptions</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">alt_labels</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="WikidataDataset.is_statement"><a class="viewcode-back" href="../../modules/dataset.html#kgeserver.wikidata_dataset.WikidataDataset.is_statement">[docs]</a>    <span class="k">def</span> <span class="nf">is_statement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Check if an URI is a wikidata statement</span>

@@ -427,7 +427,8 @@ the LIMIT statement when doing this queries.</p>
 </div>
 <p><strong>Sample response</strong></p>
 <p>The <code class="docutils literal"><span class="pre">location:</span></code> header of the response will contain the relative URI for the
-created task resouce:</p>
+created task resouce. Additionally, it is possible to get the task id from
+the response in json format.</p>
 <blockquote>
 <div><code class="docutils literal"><span class="pre">location:</span> <span class="pre">/tasks/32</span></code></div></blockquote>
 <div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span>
@@ -512,6 +513,54 @@ similar entities given a different embedding vector.</p>
 <li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> &#8211; Operation was successful</li>
 <li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a> &#8211; The dataset ID does not exist</li>
 <li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.10">409 Conflict</a> &#8211; The dataset is not on a correct status</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="post">
+<dt id="post--datasets-(int-dataset_id)-generate_autocomplete_index">
+<code class="descname">POST </code><code class="descname">/datasets/</code><span class="sig-paren">(</span><em class="property">int: </em><em>dataset_id</em><span class="sig-paren">)</span><code class="descname">/generate_autocomplete_index</code><a class="headerlink" href="#post--datasets-(int-dataset_id)-generate_autocomplete_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a task to build an autocomplete index</p>
+<p>The task will perform a request to SPARQL endpoint for each entity. This
+will extract the labels, description and altLabels and store it on an
+Elasticsearch database.</p>
+<p>It is also possible give the languages desired to build the autocomplete
+index, allowing not only having english language, but others available on
+the endpoint. You must specify in the body a param named <cite>langs</cite> with a list
+with all language codes in ISO 639-1 format.</p>
+<p><strong>Sample request</strong></p>
+<p><code class="xref http http-post docutils literal"><span class="pre">POST</span> <span class="pre">/datasets/6/generate_autocomplete_index</span></code></p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;langs&quot;</span> <span class="p">:</span>  <span class="p">[</span>
+        <span class="s2">&quot;en&quot;</span><span class="p">,</span> <span class="s2">&quot;es&quot;</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Sample response</strong></p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;status&quot;</span><span class="p">:</span> <span class="mi">202</span><span class="p">,</span>
+    <span class="nt">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Task 73 created successfuly&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dataset_id</strong> (<em>int</em>) &#8211; Unique id of the dataset</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Status Codes:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.3">202 Accepted</a> &#8211; The request has been accepted in the system and a task has
+been created. See Location header to get more information.</li>
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a> &#8211; The dataset can&#8217;t be found.</li>
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.10">409 Conflict</a> &#8211; The dataset cannot be trained due to it&#8217;s status.</li>
 </ul>
 </td>
 </tr>
@@ -728,8 +777,8 @@ performance of the request. By default is set to -1</li>
 <dl class="post">
 <dt id="post--datasets-(int-dataset_id)-distance">
 <code class="descname">POST </code><code class="descname">/datasets/</code><span class="sig-paren">(</span><em class="property">int: </em><em>dataset_id</em><span class="sig-paren">)</span><code class="descname">/distance</code><a class="headerlink" href="#post--datasets-(int-dataset_id)-distance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the distance between two elements. The lower this is, most probable
-to be both the same triple. The minimum distance is 0.</p>
+<dd><p>Returns the distance between two elements. The lower the number is,
+most probable to be both the same triple. The minimum distance is 0.</p>
 <p><strong>Request Example</strong></p>
 <p><code class="xref http http-post docutils literal"><span class="pre">POST</span> <span class="pre">/datasets/0/similar_entities</span></code></p>
 <div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span>
@@ -744,6 +793,69 @@ to be both the same triple. The minimum distance is 0.</p>
 <div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span>
     <span class="nt">&quot;distance&quot;</span><span class="p">:</span> <span class="mf">1.460597038269043</span>
 <span class="p">}</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dataset_id</strong> (<em>int</em>) &#8211; Unique id of the dataset</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Status Codes:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.1">200 OK</a> &#8211; The request has been performed successfully</li>
+<li><a class="reference external" href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">404 Not Found</a> &#8211; The dataset or the entity can&#8217;t be found</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="post">
+<dt id="post--datasets-(int-dataset_id)-suggest_name">
+<code class="descname">POST </code><code class="descname">/datasets/</code><span class="sig-paren">(</span><em class="property">int: </em><em>dataset_id</em><span class="sig-paren">)</span><code class="descname">/suggest_name</code><a class="headerlink" href="#post--datasets-(int-dataset_id)-suggest_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives a list of autocomplete suggestions. For each entity, this will show
+labels on every language available, descriptions and altLabels.</p>
+<p>If any suggestion is available, this will return an empty list.</p>
+<p><strong>Request Example</strong></p>
+<p><code class="xref http http-post docutils literal"><span class="pre">POST</span> <span class="pre">/datasets/7/suggest_name</span></code></p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;input&quot;</span><span class="p">:</span> <span class="s2">&quot;human&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><em>HTTP Response</em></p>
+<div class="highlight-json"><div class="highlight"><pre><span></span><span class="p">[</span>
+    <span class="p">{</span>
+        <span class="nt">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;humano&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;entity&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="nt">&quot;alt_label&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;es&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="s2">&quot;humano&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;Homo sapiens sapiens&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;persona&quot;</span><span class="p">,</span>
+                <span class="p">],</span>
+                <span class="nt">&quot;en&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="s2">&quot;people&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;person&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;human being&quot;</span>
+                <span class="p">]</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;label&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;en&quot;</span><span class="p">:</span> <span class="s2">&quot;human&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;es&quot;</span><span class="p">:</span> <span class="s2">&quot;ser humano&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="nt">&quot;entity&quot;</span><span class="p">:</span> <span class="s2">&quot;Q5&quot;</span><span class="p">,</span>
+            <span class="nt">&quot;description&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="nt">&quot;en&quot;</span><span class="p">:</span> <span class="s2">&quot;common name of Homo sapiens (Q15978631), unique extant species of the genus Homo&quot;</span><span class="p">,</span>
+                <span class="nt">&quot;es&quot;</span><span class="p">:</span> <span class="s2">&quot;especie animal perteneciente a la familia Hominidae, única superviviente del género Homo&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">]</span>
 </pre></div>
 </div>
 <table class="docutils field-list" frame="void" rules="none">

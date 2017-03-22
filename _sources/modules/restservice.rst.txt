@@ -255,7 +255,8 @@ a negative integer.
     **Sample response**
 
     The ``location:`` header of the response will contain the relative URI for the
-    created task resouce:
+    created task resouce. Additionally, it is possible to get the task id from
+    the response in json format.
 
         ``location: /tasks/32``
 
@@ -326,6 +327,49 @@ a negative integer.
     :statuscode 200: Operation was successful
     :statuscode 404: The dataset ID does not exist
     :statuscode 409: The dataset is not on a correct status
+
+
+.. http:post:: /datasets/(int:dataset_id)/generate_autocomplete_index
+
+    Creates a task to build an autocomplete index
+
+    The task will perform a request to SPARQL endpoint for each entity. This
+    will extract the labels, description and altLabels and store it on an
+    Elasticsearch database.
+
+    It is also possible give the languages desired to build the autocomplete
+    index, allowing not only having english language, but others available on
+    the endpoint. You must specify in the body a param named `langs` with a list
+    with all language codes in ISO 639-1 format.
+
+    **Sample request**
+
+    :http:post:`/datasets/6/generate_autocomplete_index`
+
+    .. sourcecode:: json
+
+        {
+            "langs" :  [
+                "en", "es"
+            ]
+        }
+
+    **Sample response**
+
+    .. sourcecode:: json
+
+        {
+            "status": 202,
+            "message": "Task 73 created successfuly"
+        }
+
+
+    :param int dataset_id: Unique id of the dataset
+    :statuscode 202: The request has been accepted in the system and a task has
+                     been created. See Location header to get more information.
+    :statuscode 404: The dataset can't be found.
+    :statuscode 409: The dataset cannot be trained due to it's status.
+
 
 
 Algorithms
@@ -509,8 +553,8 @@ Triples prediction
 
 .. http:post:: /datasets/(int:dataset_id)/distance
 
-    Returns the distance between two elements. The lower this is, most probable
-    to be both the same triple. The minimum distance is 0.
+    Returns the distance between two elements. The lower the number is,
+    most probable to be both the same triple. The minimum distance is 0.
 
     **Request Example**
 
@@ -547,3 +591,58 @@ Triples prediction
         :todo: 501 Not Implemented
         :param int dataset_id: Unique id of the dataset
         :param list embedding: Vector de *embedding* a obtener su probabilidad
+
+
+.. http:post:: /datasets/(int:dataset_id)/suggest_name
+
+    Gives a list of autocomplete suggestions. For each entity, this will show
+    labels on every language available, descriptions and altLabels.
+
+    If any suggestion is available, this will return an empty list.
+
+    **Request Example**
+
+    :http:post:`/datasets/7/suggest_name`
+
+    .. sourcecode:: json
+
+        {
+            "input": "human"
+        }
+
+    *HTTP Response*
+
+    .. sourcecode:: json
+
+        [
+            {
+                "text": "humano",
+                "entity": {
+                    "alt_label": {
+                        "es": [
+                            "humano",
+                            "Homo sapiens sapiens",
+                            "persona",
+                        ],
+                        "en": [
+                            "people",
+                            "person",
+                            "human being"
+                        ]
+                    },
+                    "label": {
+                        "en": "human",
+                        "es": "ser humano",
+                    },
+                    "entity": "Q5",
+                    "description": {
+                        "en": "common name of Homo sapiens (Q15978631), unique extant species of the genus Homo",
+                        "es": "especie animal perteneciente a la familia Hominidae, única superviviente del género Homo",
+                    }
+                }
+            }
+        ]
+
+    :param int dataset_id: Unique id of the dataset
+    :statuscode 200: The request has been performed successfully
+    :statuscode 404: The dataset or the entity can't be found

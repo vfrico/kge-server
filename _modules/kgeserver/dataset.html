@@ -192,7 +192,7 @@
               <span class="s1">&#39;it_total&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
               <span class="s1">&#39;active&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
 
-<div class="viewcode-block" id="Dataset.__init__"><a class="viewcode-back" href="../../modules/dataset.html#kgeserver.dataset.Dataset.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sparql_endpoint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">thread_limiter</span><span class="o">=</span><span class="mi">32</span><span class="p">):</span>
+<div class="viewcode-block" id="Dataset.__init__"><a class="viewcode-back" href="../../modules/dataset.html#kgeserver.dataset.Dataset.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sparql_endpoint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">thread_limiter</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Creates the dataset class</span>
 
 <span class="sd">        The default endpoint is the original from wikidata.</span>
@@ -791,7 +791,7 @@
         <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="Dataset.load_from_binary"><a class="viewcode-back" href="../../modules/dataset.html#kgeserver.dataset.Dataset.load_from_binary">[docs]</a>    <span class="k">def</span> <span class="nf">load_from_binary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+<div class="viewcode-block" id="Dataset.load_from_binary"><a class="viewcode-back" href="../../modules/dataset.html#kgeserver.dataset.Dataset.load_from_binary">[docs]</a>    <span class="k">def</span> <span class="nf">load_from_binary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Loads the dataset object from the disk</span>
 
 <span class="sd">        Loads this dataset object with the binary file</span>
@@ -810,7 +810,7 @@
         <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span> <span class="o">=</span> <span class="n">all_dataset</span><span class="p">[</span><span class="s1">&#39;__class__&#39;</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="c1"># This is an old generated dataset</span>
             <span class="k">pass</span>
