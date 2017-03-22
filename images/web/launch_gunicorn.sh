@@ -10,4 +10,4 @@ cd $WORKING_DIR_EX
 echo "$WORKING_DIR_EX"
 
 echo "Launch gunicorn"
-exec gunicorn -b 0.0.0.0:8000 routes:app --reload -t 120 --log-level debug --access-logfile '-'
+exec gunicorn -b 0.0.0.0:8000 routes:app -w 4 --threads 4 --reload -t 120 --log-level debug --access-logfile '-'
