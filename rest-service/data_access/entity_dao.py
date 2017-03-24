@@ -24,16 +24,23 @@ import json
 import elasticsearch.exceptions as es_exceptions
 from elasticsearch import Elasticsearch
 import data_access.data_access_base as data_access_base
+import logging
+import hashlib
 
 
 class EntityDTO(data_access_base.DTOClass):
-    entity = ""
+    entity_id = ""
+    entity_uri = ""
     label = {}
     description = {}
     alt_label = {}
 
     def __init__(self, entity_dict):
-        self.entity = entity_dict['entity']
+        if entity_dict == {}:
+            return
+
+        self.entity_id = entity_dict['entity_id']
+        self.entity_uri = entity_dict['entity_uri']
         self.label = entity_dict['label']
         self.description = entity_dict['description']
         self.alt_label = entity_dict['alt_label']
@@ -102,7 +109,8 @@ class EntityDAO():
             'preserve_position_increments': False
         }
         body['mappings'][self.type]['properties'] = {
-            'entity': {'type': 'string'},
+            'entity_id': {'type': 'string'},
+            'entity_uri': {'type': 'string'},
             'description': {'type': 'object'},
             'label': {'type': 'object'},
             'alt_label': {'type': 'object'},
@@ -171,7 +179,8 @@ class EntityDAO():
         suggestions = list(entity['label'].values()) +\
             list([item for sublist in alt_labels for item in sublist])
         # Entity document which will be stored on elasticsearch
-        full_doc = {"entity": entity['entity'],
+        full_doc = {"entity_id": entity['entity_id'],
+                    "entity_uri": entity['entity_uri'],
                     "description": entity['description'],
                     "label": entity['label'],
                     "alt_label": entity['alt_label'],
@@ -179,10 +188,11 @@ class EntityDAO():
                     }
         # TODO: Could be useful to use a hash function or similar to avoid
         #       possible URL encoding issues with some entities ID's
-        entity_uuid = entity['entity']
+        e_uuid = hashlib.md5(entity['entity_uri'].encode('utf-8')).hexdigest()
+
         insert = self.es.update(index=self.index, doc_type=self.type,
                                 body={"doc": full_doc, "doc_as_upsert": True},
-                                id=entity_uuid)
+                                id=e_uuid)
 
         # Script to update dataset id
         script = {"inline": "",         # Filled below due to high size
@@ -198,4 +208,17 @@ class EntityDAO():
         }"""
         # TODO: To avoid having two update queries, mix both in one script
         update = self.es.update(index=self.index, doc_type=self.type,
-                                body={"script": script}, id=entity_uuid)
+                                body={"script": script}, id=e_uuid)
+
+    def get_entity_dto(self, entity_uri):
+        """Returns an EntityDAO given an entity_id
+        """
+        e_uuid = hashlib.md5(entity_uri.encode('utf-8')).hexdigest()
+
+        try:
+            entity = self.es.get(index=self.index, doc_type=self.type,
+                                 id=e_uuid)
+            return EntityDTO(entity['_source'])
+
+        except es_exceptions.NotFoundError:
+            return EntityDTO({})

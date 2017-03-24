@@ -119,6 +119,8 @@ class PredictSimilarEntitiesResource(object):
             }
         # If looking for similar_entities given an entity
         else:
+            entity_dao = data_access.EntityDAO(dataset_dto.dataset_type,
+                                               dataset_id)
             entity_id = dataset.get_entity_id(entity)
             if entity_id is None:
                 raise falcon.HTTPNotFound(
@@ -126,9 +128,20 @@ class PredictSimilarEntitiesResource(object):
                     .format(entity))
             sim_entities = search_server.similarity_by_id(
                 entity_id, limit, search_k=search_k)
-            similar_entities = [{"entity": dataset.get_entity(e_id),
-                                 "distance": dist}
-                                for e_id, dist in sim_entities]
+
+            def getEntityDTO(e_id):
+                entity = dataset.check_entity(dataset.get_entity(e_id))
+                entity_dto = entity_dao.get_entity_dto(entity)
+                return entity_dto.to_dict()
+            if req.get_param_as_bool('object'):
+                similar_entities = [{"entity": dataset.get_entity(e_id),
+                                     "object": getEntityDTO(e_id),
+                                     "distance": dist}
+                                    for e_id, dist in sim_entities]
+            else:
+                similar_entities = [{"entity": dataset.get_entity(e_id),
+                                     "distance": dist}
+                                    for e_id, dist in sim_entities]
             entity_used = {
                 "value": dataset.get_entity(entity_id),
                 "type": "uri"

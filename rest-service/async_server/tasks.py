@@ -268,7 +268,8 @@ def build_autocomplete_index(self, dataset_id, langs=['en', 'es']):
         progres_dao.add_progress(celery_uuid)
 
         # Create the doc to be stored on elasticsearch and insert it
-        entity_doc = {"entity": entity,
+        entity_doc = {"entity_id": entity,
+                      "entity_uri": dtset.check_entity(entity),
                       "label": labels,
                       "alt_label": alt_labels,
                       "description": descriptions}
