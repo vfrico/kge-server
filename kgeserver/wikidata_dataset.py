@@ -23,6 +23,7 @@ import kgeserver.dataset
 import re
 import math
 import collections
+import logging
 
 
 class WikidataDataset(kgeserver.dataset.Dataset):
@@ -442,8 +443,14 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         # Perform the query
         http_status, json_response = self.execute_query(label_query)
         if http_status != 200:
-            raise kgeserver.dataset.ExecuteQueryError(
-                "HTTP Status {} is not correct".format(http_status))
+            logging.error(("HTTP Status {} is not correct. \n\n"
+                           "Query executed:\n {}\n\n"
+                           "Response:\n {}\n\n").format(http_status,
+                                                        label_query,
+                                                        json_response))
+            return {}, {}, {}
+            # raise kgeserver.dataset.ExecuteQueryError(
+            #     "HTTP Status {} is not correct".format(http_status))
 
         # Build the result dict and return it
         labels = {}
