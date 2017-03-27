@@ -19,7 +19,7 @@
 from setuptools import setup
 doc_build_requires = ['sphinx', 'sphinx_rtd_theme',
                       'sphinxcontrib-httpdomain']
-execution_requires = ['scikit-kge', 'annoy', 'nose']
+execution_requires = ['scikit-kge>=0.9.2', 'annoy', 'nose']
 service_requires = ['gunicorn', 'falcon', 'falcon-cors',
                     'celery>=4.0.0', 'redis', 'elasticsearch>=5.0.0,<6.0.0']
 
@@ -36,10 +36,12 @@ setup(name='kgeserver',
 
       packages=['kgeserver'],
       dependency_links=[
-       'https://github.com/vfrico/scikit-kge/tarball/v0.9#egg=scikit-kge-0.9'
+       'https://github.com/vfrico/scikit-kge/tarball/v0.9.2#egg=scikit-kge-0.9.2'
       ],
       install_requires=all_dependencies,
       keywords=('Knowledge graph, Embeddings, Machine learning,'
                 'nearest neighbors, approximate nearest neighbors, ann'
                 'rest, service'),
       )
+
+# 'https://github.com/vfrico/scikit-kge/tarball/v0.9#egg=scikit-kge-0.9'
