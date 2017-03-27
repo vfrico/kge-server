@@ -1,4 +1,4 @@
-FROM continuumio/miniconda3
+FROM continuumio/miniconda3:4.2.12
 
 MAINTAINER Víctor Fernández <vfrico@gmail.com>
 
