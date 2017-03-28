@@ -431,12 +431,14 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         # print(l_label, l_desc)
         label_query = """SELECT ?{1} ?{3} ?{5}
             WHERE {{
-                wd:{entity} rdfs:label ?{1}.
-                wd:{entity} schema:description ?{3}.
-                wd:{entity} skos:altLabel ?{5}
-                FILTER({0}) .
-                FILTER({2}) .
-                FILTER({4})
+                wd:{entity} rdfs:label ?{1} . FILTER({0}) .
+                OPTIONAL {
+                    wd:{entity} schema:description ?{3} .
+                    FILTER({2}) .
+                } OPTIONAL {
+                    wd:{entity} skos:altLabel ?{5} .
+                    FILTER({4}) .
+                }
         }}""".format(l_label, VAR_LABEL,
                      l_desc, VAR_DESCRIPTION,
                      l_alt, VAR_ALTLABEL, entity=entity)
