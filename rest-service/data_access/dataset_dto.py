@@ -24,6 +24,11 @@ import kgeserver.dataset as dataset
 from data_access.algorithm_dao import AlgorithmDAO
 # from data_access.dataset_dao import DatasetDAO
 
+RUNNING_TASK_MASK = 0b0001
+TRAINED_MASK = 0b0010
+INDEXED_MASK = 0b0100
+SEARCHINDEXED_MASK = 0b1000
+
 
 class DatasetDTO(data_access_base.DTOClass):
     id = None
@@ -101,14 +106,14 @@ class DatasetDTO(data_access_base.DTOClass):
     def is_untrained(self):
         """Check if dataset is in untrained state
 
-        Should return True if status is 0 or 1
+        Returns true if 0b0010 bit is 0 from the dataset status.
 
         :return: True if dataset is in untrained state
         :rtype: boolean
         """
         if self.status is None:
             return None
-        elif self.status < 2 and self.status >= 0:
+        elif self.status & TRAINED_MASK == 0:
             return True
         else:
             return False
@@ -116,14 +121,14 @@ class DatasetDTO(data_access_base.DTOClass):
     def is_trained(self):
         """Check if dataset is in untrained state
 
-        Should return True if status is 1
+        Return True if status has bit 0b0010 on.
 
         :return: True if dataset is in untrained state
         :rtype: boolean
         """
         if self.status is None:
             return None
-        elif self.status >= 1:
+        elif self.status & TRAINED_MASK == TRAINED_MASK:
             return True
         else:
             return False

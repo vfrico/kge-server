@@ -32,6 +32,11 @@ import data_access.data_access_base as data_access_base
 from data_access.dataset_dto import DatasetDTO
 from data_access.algorithm_dao import AlgorithmDAO
 
+RUNNING_TASK_MASK = 0b0001
+TRAINED_MASK = 0b0010
+INDEXED_MASK = 0b0100
+SEARCHINDEXED_MASK = 0b1000
+
 
 class DatasetDAO(data_access_base.MainDAO):
     """Object to interact between the data storage and returns valid objects
@@ -297,7 +302,8 @@ class DatasetDAO(data_access_base.MainDAO):
         :returns: The search index or None
         :rtype: tuple
         """
-        if dataset_dto.status < 2 and not ignore_status:
+        # Dataset must be on indexed status
+        if dataset_dto.status & INDEXED_MASK != 0 and not ignore_status:
             return None, (409, "Dataset {id} has {status} status and is not "
                           "ready for search".format(**dataset_dto.to_dict()))
         try:
@@ -422,16 +428,28 @@ class DatasetDAO(data_access_base.MainDAO):
     def set_untrained(self, dataset_dto):
         """Set dataset_dto in untrained state
         """
-        if dataset_dto.status is None or dataset_dto.status > 0:
+        print("dataset_dao.set_untrained() is DEPRECATED")
+        if dataset_dto.status is None or\
+           dataset_dto.status & RUNNING_TASK_MASK != 0:
             return None, (409, "Dataset can not be updated to untrained state")
         else:
             ret, err = self.set_status(self.dataset["id"], 0)
             return ret, err
 
-    def set_status(self, id_dataset, status):
-        """Set the dataset in untrained status
+    def update_status(self, id_dataset, status):
+        """Mask the actual dataset status with a new one"""
+        pass
 
-        The status must be between [-2, 2].
+    def set_status(self, id_dataset, status):
+        """Changes the dataset status to new status
+
+        Status must be a binary integer, between 0b0000 and 0b1111
+            * bit 0b0001: Running task
+            * bit 0b0010: Trained dataset
+            * bit 0b0100: Service indexed (Annoy)
+            * bit 0b1000: Search indexed (Elasticsearch)
+
+        Any of this binary values can be & to indicate a multi-status.
 
         :param int id_dataset: The id of the dataset to be changed
         :param int status: The new status of the dataset
@@ -439,8 +457,8 @@ class DatasetDAO(data_access_base.MainDAO):
         :rtype: tuple
         """
         try:
-            if status >= 3:
-                return False, (409, "The status must be an integer [-2, 2]")
+            if 0 <= status < 16:
+                return False, (409, "The status must be an integer [0, 15]")
         except TypeError:
             return False, (409, "The status must be an integer or valid type")
 

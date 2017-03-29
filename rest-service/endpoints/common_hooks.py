@@ -78,7 +78,8 @@ def dataset_untrained_status(req, resp, resource, params):
     """
     status, dataset_dto = _get_dataset_status(params['dataset_id'])
     ignore_status = req.get_param_as_bool("ignore_status")
-    if status != 0 and not ignore_status:
+    # Dataset is trained if 0b0010 bit is on
+    if status & 0b0010 != 0 and not ignore_status:
         raise falcon.HTTPConflict(
             title="The dataset is not in a correct state",
             description=("The dataset {id} has an status {status}, which "
@@ -95,7 +96,9 @@ def dataset_trained_status(req, resp, resource, params):
     """
     status, dataset_dto = _get_dataset_status(params['dataset_id'])
     ignore_status = req.get_param_as_bool("ignore_status")
-    if status != 1 and not ignore_status:
+    # Trained status is 0b0010.
+    # The status must be pair for the task to be finished
+    if status & 0b0010 != 0 and status & 0b0001 != 0 and not ignore_status:
         raise falcon.HTTPConflict(
             title="The dataset is not in a correct state",
             description=("The dataset {id} has an status {status}, which "
@@ -110,4 +113,4 @@ def _get_dataset_status(dataset_id):
     """
     d_dao = data_access.DatasetDAO()
     d_dto, err = d_dao.get_dataset_by_id(dataset_id, use_cache=True)
-    return d_dto.status, d_dto
+    return int(d_dto.status), d_dto
