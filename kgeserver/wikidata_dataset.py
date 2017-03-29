@@ -432,13 +432,11 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         label_query = """SELECT ?{1} ?{3} ?{5}
             WHERE {{
                 wd:{entity} rdfs:label ?{1} . FILTER({0}) .
-                OPTIONAL {
-                    wd:{entity} schema:description ?{3} .
-                    FILTER({2}) .
-                } OPTIONAL {
-                    wd:{entity} skos:altLabel ?{5} .
-                    FILTER({4}) .
-                }
+                OPTIONAL {{
+                    wd:{entity} schema:description ?{3} .  FILTER({2}) .
+                }} OPTIONAL {{
+                    wd:{entity} skos:altLabel ?{5} .  FILTER({4}) .
+                }}
         }}""".format(l_label, VAR_LABEL,
                      l_desc, VAR_DESCRIPTION,
                      l_alt, VAR_ALTLABEL, entity=entity)
@@ -460,13 +458,23 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         # A single entity could have multiple alt_labels
         alt_labels = collections.defaultdict(set)
         for row in json_response:
-            labels[row[VAR_LABEL]['xml:lang']] = row[VAR_LABEL]['value']
+            try:
+                labels[row[VAR_LABEL]['xml:lang']] = row[VAR_LABEL]['value']
+            except KeyError:
+                pass
 
-            descriptions[row[VAR_DESCRIPTION]['xml:lang']] =\
-                row[VAR_DESCRIPTION]['value']
+            try:
+                descriptions[row[VAR_DESCRIPTION]['xml:lang']] =\
+                    row[VAR_DESCRIPTION]['value']
+            except KeyError:
+                pass
 
-            alt_labels[row[VAR_ALTLABEL]['xml:lang']].add(
-                row[VAR_ALTLABEL]['value'])
+            try:
+                # If language is not available or is empty, return empty
+                alt_labels[row[VAR_ALTLABEL]['xml:lang']].add(
+                    row[VAR_ALTLABEL]['value'])
+            except KeyError:
+                pass
 
         # Using a set avoids duplicated strings, but need a conversion
         for lang in alt_labels:
