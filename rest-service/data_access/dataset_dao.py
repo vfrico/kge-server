@@ -303,7 +303,7 @@ class DatasetDAO(data_access_base.MainDAO):
         :rtype: tuple
         """
         # Dataset must be on indexed status
-        if dataset_dto.status & INDEXED_MASK != 0 and not ignore_status:
+        if dataset_dto.status & INDEXED_MASK == 0 and not ignore_status:
             return None, (409, "Dataset {id} has {status} status and is not "
                           "ready for search".format(**dataset_dto.to_dict()))
         try:
@@ -436,9 +436,15 @@ class DatasetDAO(data_access_base.MainDAO):
             ret, err = self.set_status(self.dataset["id"], 0)
             return ret, err
 
-    def update_status(self, id_dataset, status):
+    def update_status(self, id_dataset, newStatus, statusAnd=0b1111):
         """Mask the actual dataset status with a new one"""
-        pass
+        query = "SELECT status FROM dataset WHERE id=? ;"
+        res = self.execute_query(query, id_dataset)
+        if res is None or len(res) < 1:
+            return None, (404, "Status of dataset (id:{}) not found".
+                          format(id_dataset))
+        return self.set_status(id_dataset,
+                               (res[0]['status'] | newStatus) & statusAnd)
 
     def set_status(self, id_dataset, status):
         """Changes the dataset status to new status
@@ -457,7 +463,7 @@ class DatasetDAO(data_access_base.MainDAO):
         :rtype: tuple
         """
         try:
-            if 0 <= status < 16:
+            if not 0 <= status < 16:
                 return False, (409, "The status must be an integer [0, 15]")
         except TypeError:
             return False, (409, "The status must be an integer or valid type")

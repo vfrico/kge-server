@@ -60,7 +60,7 @@ def generate_dataset_from_sparql(self, dataset_id, graph_pattern, levels,
     """
     from celery import current_task  # in task definition
     dataset_dao = data_access.DatasetDAO()
-    dataset_dao.set_status(dataset_id, RUNNING_TASK_MASK)
+    dataset_dao.update_status(dataset_id, RUNNING_TASK_MASK)
 
     dataset_path, err = dataset_dao.get_binary_path(dataset_id)
     if dataset_path is None:
@@ -155,7 +155,7 @@ def train_dataset_from_algorithm(self, dataset_id, algorithm_dict):
 
     # If it all goes ok, add id of algorithm to db
     dataset_dao.set_algorithm(dataset_id, algorithm_dict["id"])
-    dataset_dao.set_status(dataset_id, RUNNING_TASK_MASK & TRAINED_MASK)
+    dataset_dao.update_status(dataset_id, RUNNING_TASK_MASK | TRAINED_MASK)
 
     dataset_dto, err = dataset_dao.get_dataset_by_id(dataset_id)
     # Generate the filepath to the dataset
@@ -208,7 +208,7 @@ def train_dataset_from_algorithm(self, dataset_id, algorithm_dict):
     modeloentrenado.save(model_path)
 
     # Update values on DB when model training has finished
-    dataset_dao.set_status(dataset_id, TRAINED_MASK)
+    dataset_dao.update_status(dataset_id, TRAINED_MASK, statusAnd=0b1110)
     dataset_dao.set_model(dataset_id, model_path)
 
     return False
@@ -254,7 +254,8 @@ def build_autocomplete_index(self, dataset_id, langs=['en', 'es']):
     dtset.load_from_binary(dataset_path)
     # Set working status
     # TODO: update status, not overwrite it
-    dataset_dao.set_status(dataset_id, SEARCHINDEXED_MASK & RUNNING_TASK_MASK)
+    dataset_dao.update_status(dataset_id,
+                              SEARCHINDEXED_MASK | RUNNING_TASK_MASK)
     # Update Progress
     progres_dao.create_progress(celery_uuid, len(dtset.entities))
     progres_dao.update_progress(celery_uuid, 0)
@@ -286,7 +287,7 @@ def build_autocomplete_index(self, dataset_id, langs=['en', 'es']):
         all_labels = p.map(get_labels, dtset.entities)
 
     # Update status on DB when finished
-    dataset_dao.set_status(dataset_id, SEARCHINDEXED_MASK)
+    dataset_dao.update_status(dataset_id, SEARCHINDEXED_MASK, statusAnd=0b1110)
 
     return False
 
@@ -310,7 +311,7 @@ def build_search_index(self, dataset_id, n_trees):
 
     dataset_dao = data_access.DatasetDAO()
     # Set working status
-    dataset_dao.set_status(dataset_id, INDEXED_MASK & RUNNING_TASK_MASK)
+    dataset_dao.update_status(dataset_id, INDEXED_MASK | RUNNING_TASK_MASK)
     model_path, err = dataset_dao.get_model(dataset_id)
     # Load the model and initialize the search index
     model = skge.TransE.load(model_path)
@@ -327,7 +328,7 @@ def build_search_index(self, dataset_id, n_trees):
     progres_dao.update_progress(celery_uuid, 3)
 
     # Update values on DB
-    dataset_dao.set_status(dataset_id, INDEXED_MASK)
+    dataset_dao.update_status(dataset_id, INDEXED_MASK, statusAnd=0b1110)
     dataset_dao.set_search_index(dataset_id, search_index_file)
 
     return False
