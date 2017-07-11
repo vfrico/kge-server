@@ -23,3 +23,10 @@ services:
     environment:
      - "http.host=0.0.0.0"
      - "transport.host=127.0.0.1"
+     - bootstrap.memory_lock=true
+     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 1g
