@@ -1,5 +1,13 @@
 # Knowledge Graphs Embedding server
 
+## Try the webapp now
+
+Thanks to [OEG-UPM](https://github.com/oeg-upm) there are a server available where you can
+try out the webapp and the service itself.
+
+* Webapp: http://wiener.dia.fi.upm.es:9393/
+* Service: http://wiener.dia.fi.upm.es:6789/
+
 ## What are Knowledge Graphs?
 
 There are many knowledge databases nowadays, and they are growing very
