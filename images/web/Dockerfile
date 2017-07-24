@@ -6,9 +6,7 @@ USER root
 
 # Install some dependencies and updates
 RUN apt-get update && \
-    apt-get install -y gcc g++ && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y gcc g++
 
 # Add user for run server
 ENV CONDA_USER_UID 1001
@@ -28,7 +26,9 @@ RUN cd /home/$CONDA_USER/ && git clone https://github.com/vfrico/kge-server.git 
 
 # Once tools to build Annoy are used, uninstall them
 RUN apt-get remove gcc g++ -y && \
-    apt-get autoremove -y
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Init system and launch script
 ENTRYPOINT ["tini", "--"]
@@ -38,5 +38,5 @@ COPY launch_gunicorn.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/launch_gunicorn.sh
 
 # Exit from root user
-USER $CONDA_USER
+#USER $CONDA_USER
 ENV PATH /opt/conda/bin:$PATH

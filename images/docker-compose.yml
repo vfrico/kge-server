@@ -1,13 +1,15 @@
 version: '2'
 services:
   celery:
-    image: vfrico/kge-server_celery
+    build: celery/
+    #image: vfrico/kge-server_celery
     volumes:
      - kgedata:/home/kgeserver/kge-server/datasets
     depends_on:
      - redis
   web:
-    image: vfrico/kge-server_web
+    build: web/
+    #image: vfrico/kge-server_web
     ports:
      - "6789:8000"
     volumes:
@@ -17,7 +19,7 @@ services:
   webapp-kge:
     image: vfrico/kge-webapp
     ports:
-     - "8080:3000"
+     - "9393:3000"
   redis:
     image: redis:alpine
   elasticsearch:
