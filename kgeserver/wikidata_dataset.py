@@ -397,7 +397,7 @@ class WikidataDataset(kgeserver.dataset.Dataset):
 
         return to_queue
 
-    def entity_labels(self, entity, langs=['es', 'en']):
+    def entity_labels(self, entity, langs=['es', 'en'], tries=1):
         """Saves the label for a given entity
 
         Makes a SPARQL query to retrieve the entity's label(s) requested to use
@@ -440,47 +440,56 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         }}""".format(l_label, VAR_LABEL,
                      l_desc, VAR_DESCRIPTION,
                      l_alt, VAR_ALTLABEL, entity=entity)
-        # Perform the query
-        http_status, json_response = self.execute_query(label_query)
-        if http_status != 200:
-            logging.error(("HTTP Status {} is not correct. \n\n"
-                           "Query executed:\n {}\n\n"
-                           "Response:\n {}\n\n").format(http_status,
-                                                        label_query,
-                                                        json_response))
-            return {}, {}, {}
-            # raise kgeserver.dataset.ExecuteQueryError(
-            #     "HTTP Status {} is not correct".format(http_status))
+        try:
+            # Perform the query
+            http_status, json_response = self.execute_query(label_query)
+            if http_status != 200:
+                logging.error(("HTTP Status {} is not correct. \n\n"
+                               "Query executed:\n {}\n\n"
+                               "Response:\n {}\n\n").format(http_status,
+                                                            label_query,
+                                                            json_response))
+                return {}, {}, {}
+                # raise kgeserver.dataset.ExecuteQueryError(
+                #     "HTTP Status {} is not correct".format(http_status))
 
-        # Build the result dict and return it
-        labels = {}
-        descriptions = {}
-        # A single entity could have multiple alt_labels
-        alt_labels = collections.defaultdict(set)
-        for row in json_response:
-            try:
-                labels[row[VAR_LABEL]['xml:lang']] = row[VAR_LABEL]['value']
-            except KeyError:
-                pass
+            # Build the result dict and return it
+            labels = {}
+            descriptions = {}
+            # A single entity could have multiple alt_labels
+            alt_labels = collections.defaultdict(set)
+            for row in json_response:
+                try:
+                    labels[row[VAR_LABEL]['xml:lang']] = row[VAR_LABEL]['value']
+                except KeyError:
+                    pass
 
-            try:
-                descriptions[row[VAR_DESCRIPTION]['xml:lang']] =\
-                    row[VAR_DESCRIPTION]['value']
-            except KeyError:
-                pass
+                try:
+                    descriptions[row[VAR_DESCRIPTION]['xml:lang']] =\
+                        row[VAR_DESCRIPTION]['value']
+                except KeyError:
+                    pass
 
-            try:
-                # If language is not available or is empty, return empty
-                alt_labels[row[VAR_ALTLABEL]['xml:lang']].add(
-                    row[VAR_ALTLABEL]['value'])
-            except KeyError:
-                pass
+                try:
+                    # If language is not available or is empty, return empty
+                    alt_labels[row[VAR_ALTLABEL]['xml:lang']].add(
+                        row[VAR_ALTLABEL]['value'])
+                except KeyError:
+                    pass
 
-        # Using a set avoids duplicated strings, but need a conversion
-        for lang in alt_labels:
-            alt_labels[lang] = list(alt_labels[lang])
+            # Using a set avoids duplicated strings, but need a conversion
+            for lang in alt_labels:
+                alt_labels[lang] = list(alt_labels[lang])
 
-        return labels, descriptions, dict(alt_labels)
+            return labels, descriptions, dict(alt_labels)
+        except Exception as exc:
+            if tries <= 10:
+                time.sleep(30)  # Wait some time if error dismiss
+                tries += 1
+                return entity_labels(entity, langs, tries)
+            else:
+                raise kgeserver.dataset.MaxTriesExceededError(
+                    "Tried {} times".format(tries))
 
     def is_statement(self, uri):
         """Check if an URI is a wikidata statement

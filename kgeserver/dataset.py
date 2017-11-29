@@ -840,6 +840,13 @@ class Dataset():
             raise ExecuteQueryError("Error on JSON decoder")
 
 
+class MaxTriesExceededError(Exception):
+    "MaxTriesExceededError"
+    def __init__(self, message):
+        "Create error if max tries has been exceeded"
+        super(MaxTriesExceededError, self).__init__(message)
+
+
 class ExecuteQueryError(Exception):
     """ExecuteQueryError"""
     def __init__(self, message):
