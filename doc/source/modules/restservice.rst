@@ -329,6 +329,35 @@ a negative integer.
     :statuscode 409: The dataset is not on a correct status
 
 
+.. http:post:: /datasets/(int:dataset_id)/generate_index?n_trees=(int:n_trees)
+
+    Generates an Spotify Annoy index to use dataset services. The execution
+    of this action is needed to use triples-prediction_ services.
+
+    See more info on Server module.
+
+    **Sample request**
+
+    :http:post:`/datasets/1/generate_index`
+
+    **Sample response**
+
+    .. sourcecode:: json
+
+        {
+            "status": 202,
+            "message": "Task 4 created successfuly"
+        }
+
+
+    :param int dataset_id: Unique id of the dataset
+    :param int n_trees: Number of trees to generate with Annoy
+    :statuscode 202: The request has been accepted in the system and a task has
+                     been created. See Location header to get more information.
+    :statuscode 404: The dataset can't be found.
+    :statuscode 409: The dataset cannot be trained due to it's status.
+
+
 .. http:post:: /datasets/(int:dataset_id)/generate_autocomplete_index
 
     Creates a task to build an autocomplete index
