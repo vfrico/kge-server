@@ -24,6 +24,7 @@ import re
 import math
 import collections
 import logging
+import time
 
 
 class WikidataDataset(kgeserver.dataset.Dataset):
