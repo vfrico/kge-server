@@ -484,11 +484,15 @@ class WikidataDataset(kgeserver.dataset.Dataset):
 
             return labels, descriptions, dict(alt_labels)
         except Exception as exc:
+            print("Error {} {} times when downloading entity_labels for {}".format(
+                exc, tries, entity))
             if tries <= 10:
                 time.sleep(30)  # Wait some time if error dismiss
                 tries += 1
                 return entity_labels(entity, langs, tries)
             else:
+                print("Leaving entity_labels({}) after {} tries".format(
+                    entity, tries))
                 raise kgeserver.dataset.MaxTriesExceededError(
                     "Tried {} times".format(tries))
 
