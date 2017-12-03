@@ -91,6 +91,12 @@ Then rebuild the images with: `docker-compose build --no-cache`
 See more instructions about deployment at the
 [docs](https://vfrico.github.io/kge-server/architecture.html#server-deployment).
 
+## API client
+On the development process, the [Insomnia](https://github.com/getinsomnia/insomnia)
+Client has been used. To test all the endpoints, an Insomnia Workspace can be
+found on this repository (`.InsomniaWorkspace.json`).
+On some methods, more information can be found on the docs tab.
+
 ## Supported environment
 
 The whole project has been built using Python 3.5 distributed by Anaconda,

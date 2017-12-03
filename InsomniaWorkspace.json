@@ -1,0 +1,746 @@
+{
+	"_type": "export",
+	"__export_format": 3,
+	"__export_date": "2017-12-03T00:46:53.854Z",
+	"__export_source": "insomnia.desktop.app:v5.5.2",
+	"resources": [
+		{
+			"_id": "wrk_a44ac23623c24ee29f67123756fe3113",
+			"parentId": null,
+			"modified": 1489052687707,
+			"created": 1479115497000,
+			"name": "kge-server",
+			"description": "",
+			"certificates": [],
+			"_type": "workspace"
+		},
+		{
+			"_id": "env_349f24bf3cc14357a58d88ec9ee88871",
+			"parentId": "wrk_a44ac23623c24ee29f67123756fe3113",
+			"modified": 1499768576265,
+			"created": 1479115501782,
+			"name": "Base Environment",
+			"data": {
+				"base_url": "http://127.0.0.1:6789/"
+			},
+			"color": null,
+			"_type": "environment"
+		},
+		{
+			"_id": "jar_741a490fbdad48d6a30de58a22b91c5b",
+			"parentId": "wrk_a44ac23623c24ee29f67123756fe3113",
+			"modified": 1495583197249,
+			"created": 1479115546825,
+			"name": "Default Jar",
+			"cookies": [],
+			"_type": "cookie_jar"
+		},
+		{
+			"_id": "fld_296d6acaff9e47a7960f7b6eaf8b4d3b",
+			"parentId": "wrk_a44ac23623c24ee29f67123756fe3113",
+			"modified": 1479469969895,
+			"created": 1479469969895,
+			"name": "Datasets",
+			"description": "",
+			"environment": {},
+			"metaSortKey": -1479469969895,
+			"_type": "request_group"
+		},
+		{
+			"_id": "fld_e31e0eca7f204d38bf1f7776f5a7b91e",
+			"parentId": "wrk_a44ac23623c24ee29f67123756fe3113",
+			"modified": 1489580178092,
+			"created": 1479470014732,
+			"name": "Algorithms",
+			"description": "",
+			"environment": {},
+			"metaSortKey": -1479470014732,
+			"_type": "request_group"
+		},
+		{
+			"_id": "fld_2e647f210b4a400d937dcd0935a36daf",
+			"parentId": "wrk_a44ac23623c24ee29f67123756fe3113",
+			"modified": 1489664731769,
+			"created": 1479470043016,
+			"name": "Tasks",
+			"description": "",
+			"environment": {},
+			"metaSortKey": -1479470043016,
+			"_type": "request_group"
+		},
+		{
+			"_id": "fld_19940778fe6849feba5976549f8fd4ed",
+			"parentId": "wrk_a44ac23623c24ee29f67123756fe3113",
+			"modified": 1479470550537,
+			"created": 1479470525835,
+			"name": "Services Provided",
+			"description": "",
+			"environment": {},
+			"metaSortKey": -1479470525835,
+			"_type": "request_group"
+		},
+		{
+			"_id": "env_69079568e24c4ed4ade3e37bf5e3a962",
+			"parentId": "env_349f24bf3cc14357a58d88ec9ee88871",
+			"modified": 1512260398019,
+			"created": 1479718298310,
+			"name": "valdemoro",
+			"data": {
+				"base_url": "http://valdemoro.dia.fi.upm.es:6789",
+				"extra": [
+					{
+						"peliculas": "Q11424",
+						"otro": "Q4830453",
+						"distros": "Q131669"
+					},
+					{
+						"base_graph_pattern": "{ ?subject wdt:P31 wd:Q131669 . ?subject ?predicate ?object }",
+						"bne_gp": "?subject wdt:P950 ?bne . ?subject ?predicate ?object",
+						"dbpedia_gp": "?subject dcterms:subject <http://es.dbpedia.org/resource/Categoría:Trenes_de_alta_velocidad> . ?subject ?predicate ?object",
+						"politicians": "{ ?subject wdt:P39/wdt:P279* wd:Q82955 . ?subject ?predicate ?object }",
+						"politicos_espana": "{ ?subject wdt:P39/wdt:P279* wd:Q82955 . { ?subject wdt:P27 wd:Q29 } UNION {?subject wdt:P19 ?lugar . ?lugar wdt:P17 wd:Q29 } . ?subject ?predicate ?object }"
+					}
+				]
+			},
+			"color": "#5b39db",
+			"_type": "environment"
+		},
+		{
+			"_id": "env_379c4f5983af4fb7860ac89fdc5f5b5e",
+			"parentId": "env_349f24bf3cc14357a58d88ec9ee88871",
+			"modified": 1512260410795,
+			"created": 1490605354950,
+			"name": "Local",
+			"data": {
+				"base_url": "http://127.0.0.1:6789/"
+			},
+			"color": "#ee3b3b",
+			"_type": "environment"
+		},
+		{
+			"_id": "env_1280b7927cb844b99952b725240f51a5",
+			"parentId": "env_349f24bf3cc14357a58d88ec9ee88871",
+			"modified": 1512260435948,
+			"created": 1512174794486,
+			"name": "lab-oeg",
+			"data": {
+				"base_url": "http://kge.lab.oeg-upm.net/api/"
+			},
+			"color": "#2ebe46",
+			"_type": "environment"
+		},
+		{
+			"_id": "req_5d1bbb4482264da59d9ec5df22f58863",
+			"parentId": "fld_296d6acaff9e47a7960f7b6eaf8b4d3b",
+			"modified": 1511910079252,
+			"created": 1479115588638,
+			"url": "{{ base_url }}/datasets",
+			"name": "Create empty dataset",
+			"description": "",
+			"method": "POST",
+			"body": {
+				"mimeType": "application/json",
+				"text": "{\"name\": \"canciones3\", \"description\": \"Música de todo tipo en Wikidata. 3 niveles\"}"
+			},
+			"parameters": [
+				{
+					"name": "dataset_type",
+					"value": "1",
+					"id": "pair_f350ed0a7e3a44d09717805d37447e0c"
+				}
+			],
+			"headers": [
+				{
+					"name": "Content-Type",
+					"value": "application/json",
+					"id": "pair_4c532ce663bd49239997a261b2f2f3d1"
+				}
+			],
+			"authentication": {},
+			"metaSortKey": -1479115664397,
+			"settingStoreCookies": true,
+			"settingSendCookies": true,
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"_type": "request"
+		},
+		{
+			"_id": "req_152d9aaf3634492689a6bd441019ab58",
+			"parentId": "fld_296d6acaff9e47a7960f7b6eaf8b4d3b",
+			"modified": 1499858929850,
+			"created": 1479115664422,
+			"url": "{{ base_url }}/datasets/1",
+			"name": "GET dataset",
+			"description": "",
+			"method": "GET",
+			"body": {},
+			"parameters": [
+				{
+					"name": "use_cache",
+					"value": "False",
+					"id": "pair_e37691ac0bfc4b00a3ad1b909b921538"
+				},
+				{
+					"name": "",
+					"value": "",
+					"id": "pair_633165928317447a9a4eebc84fa43f48"
+				}
+			],
+			"headers": [],
+			"authentication": {},
+			"metaSortKey": -1479115664447,
+			"settingStoreCookies": true,
+			"settingSendCookies": true,
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"_type": "request"
+		},
+		{
+			"_id": "req_a5fcba0f15174d0db2b0cfefe9138bea",
+			"parentId": "fld_296d6acaff9e47a7960f7b6eaf8b4d3b",
+			"modified": 1499775608146,
+			"created": 1479128539724,
+			"url": "{{ base_url}}/datasets/",
+			"name": "All Datasets",
+			"description": "",
+			"method": "GET",
+			"body": {},
+			"parameters": [
+				{
+					"name": "use_cache",
+					"value": "True",
+					"id": "pair_abb6ff0da8dd48c68154b6ced6a171e8"
+				}
+			],
+			"headers": [],
+			"authentication": {},
+			"metaSortKey": -1479115664472,
+			"settingStoreCookies": true,
+			"settingSendCookies": true,
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"_type": "request"
+		},
+		{
+			"_id": "req_80a93c5a73e3406cb0f74696e8c9e033",
+			"parentId": "fld_296d6acaff9e47a7960f7b6eaf8b4d3b",
+			"modified": 1489749709890,
+			"created": 1479300826065,
+			"url": "{{ base_url }}/datasets/46/triples",
+			"name": "Add triples to dataset manually",
+			"description": "",
+			"method": "POST",
+			"body": {
+				"mimeType": "application/json",
+				"text": "[\n\t{\n\t\t\"subject\": \"Q39259\",\n\t\t\"predicate\": \"P31\",\n\t\t\"object\": \"Q5\"\n\t}\n]\n\n/*[\n\t{\n\t\t\"subject\": \"Q1492\",\n\t\t\"predicate\": \"P17\",\n\t\t\"object\": \"Q29\"\n\t},\n\t{\n\t\t\"subject\": \"Q90\",\n\t\t\"predicate\": \"P17\",\n\t\t\"object\": \"Q142\"\n\t},\n\t{\n\t\t\"subject\": \"Q2807\",\n\t\t\"predicate\": \"P17\",\n\t\t\"object\": \"Q29\"\n\t}\n]*/"
+			},
+			"parameters": [],
+			"headers": [
+				{
+					"name": "Content-Type",
+					"value": "application/json"
+				}
+			],
+			"authentication": {},
+			"metaSortKey": -1479115664522,
+			"settingStoreCookies": true,
+			"settingSendCookies": true,
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"_type": "request"
+		},
+		{
+			"_id": "req_3b3a54248ac4400e9917497dfd4ccac5",
+			"parentId": "fld_296d6acaff9e47a7960f7b6eaf8b4d3b",
+			"modified": 1487674651160,
+			"created": 1479385119399,
+			"url": "{{ base_url }}/datasets/5",
+			"name": "Change dataset name",
+			"description": "",
+			"method": "PUT",
+			"body": {
+				"mimeType": "application/json",
+				"text": "{\n\t\"description\": \"La descripción ahora ya no cambia!!!!\"\n}"
+			},
+			"parameters": [],
+			"headers": [
+				{
+					"name": "Content-Type",
+					"value": "application/json"
+				}
+			],
+			"authentication": {},
+			"metaSortKey": -1479115664372,
+			"settingStoreCookies": true,
+			"settingSendCookies": true,
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"_type": "request"
+		},
+		{
+			"_id": "req_09bc319a31164232a0ac4b46c9532131",
+			"parentId": "fld_296d6acaff9e47a7960f7b6eaf8b4d3b",
+			"modified": 1490865078211,
+			"created": 1480332758584,
+			"url": "{{ base_url }}/datasets/51",
+			"name": "DELETE Dataset",
+			"description": "",
+			"method": "DELETE",
+			"body": {},
+			"parameters": [],
+			"headers": [],
+			"authentication": {},
+			"metaSortKey": -1479115664422,
+			"settingStoreCookies": true,
+			"settingSendCookies": true,
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"_type": "request"
+		},
+		{
+			"_id": "req_41a1c3919ab04987a8a848c8d75a078f",
+			"parentId": "fld_e31e0eca7f204d38bf1f7776f5a7b91e",
+			"modified": 1495533252937,
+			"created": 1479119421178,
+			"url": "{{ base_url }}/algorithms/",
+			"name": "Create Algorithm",
+			"description": "",
+			"method": "POST",
+			"body": {
+				"mimeType": "application/json",
+				"text": "{\n\t\"algorithm\": {\n\t\t\"embedding_size\": 3,\n\t\t\"margin\": 2,\n\t\t\"max_epochs\": 100\n\t}\n}"
+			},
+			"parameters": [],
+			"headers": [
+				{
+					"name": "Content-Type",
+					"value": "application/json"
+				}
+			],
+			"authentication": {},
+			"metaSortKey": -1479119924824,
+			"settingStoreCookies": true,
+			"settingSendCookies": true,
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"_type": "request"
+		},
+		{
+			"_id": "req_9c37883b2d314caf81f02087e857ad22",
+			"parentId": "fld_e31e0eca7f204d38bf1f7776f5a7b91e",
+			"modified": 1479718392498,
+			"created": 1479119924774,
+			"url": "{{ base_url }}/algorithms/",
+			"name": "Algorithms",
+			"description": "",
+			"method": "GET",
+			"body": {},
+			"parameters": [],
+			"headers": [],
+			"authentication": {},
+			"metaSortKey": -1479119924774,
+			"settingStoreCookies": true,
+			"settingSendCookies": true,
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"_type": "request"
+		},
+		{
+			"_id": "req_130cfc59ecd24454941bb8e2b91eefa5",
+			"parentId": "fld_e31e0eca7f204d38bf1f7776f5a7b91e",
+			"modified": 1495533266890,
+			"created": 1479904350023,
+			"url": "{{ base_url }}/algorithms/3",
+			"name": "Get algorithm by id",
+			"description": "",
+			"method": "GET",
+			"body": {},
+			"parameters": [],
+			"headers": [],
+			"authentication": {},
+			"metaSortKey": -1479904350023,
+			"settingStoreCookies": true,
+			"settingSendCookies": true,
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"_type": "request"
+		},
+		{
+			"_id": "req_7044cd4f7940439cb58a80539f3cd47a",
+			"parentId": "fld_2e647f210b4a400d937dcd0935a36daf",
+			"modified": 1512261424626,
+			"created": 1479119037348,
+			"url": "{{ base_url }}/datasets/5/train",
+			"name": "Train dataset",
+			"description": "This method should be executed after populating the dataset with, for example, with Generate Triples",
+			"method": "POST",
+			"body": {},
+			"parameters": [
+				{
+					"name": "algorithm_id",
+					"value": "3",
+					"id": "pair_d996236e14ec45ba9fe3720321fa0d07"
+				},
+				{
+					"name": "ignore_status",
+					"value": "True",
+					"disabled": true,
+					"id": "pair_c71589b1928e44a59ed8d20affa79103"
+				}
+			],
+			"headers": [],
+			"authentication": {},
+			"metaSortKey": -1479201016164,
+			"settingStoreCookies": true,
+			"settingSendCookies": true,
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"_type": "request"
+		},
+		{
+			"_id": "req_ab0ab6f8223343cfaaadb3575a7b2db2",
+			"parentId": "fld_2e647f210b4a400d937dcd0935a36daf",
+			"modified": 1512261495025,
+			"created": 1479201016139,
+			"url": "{{ base_url }}/datasets/1/generate_index",
+			"name": "Generate Index",
+			"description": "After training a dataset, to use prediction and similarity services, we should first generate a search index to accelerate the process.\n\nThe index is an Annoy index",
+			"method": "POST",
+			"body": {},
+			"parameters": [
+				{
+					"name": "n_trees",
+					"value": "100",
+					"id": "pair_7eb141b9e4f047d0a5dd92601b59e5ff"
+				},
+				{
+					"name": "ignore_status",
+					"value": "True",
+					"id": "pair_90518c5d4c9741de9b9cd44d84722008"
+				}
+			],
+			"headers": [],
+			"authentication": {},
+			"metaSortKey": -1479201016139,
+			"settingStoreCookies": true,
+			"settingSendCookies": true,
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"_type": "request"
+		},
+		{
+			"_id": "req_bbb0da3a7a8c453e8792527d918e4144",
+			"parentId": "fld_2e647f210b4a400d937dcd0935a36daf",
+			"modified": 1512261438369,
+			"created": 1479299920876,
+			"url": "{{ base_url }}/tasks/12",
+			"name": "Task",
+			"description": "Get the status of a task",
+			"method": "GET",
+			"body": {
+				"text": ""
+			},
+			"parameters": [
+				{
+					"name": "get_debug_info",
+					"value": "true",
+					"id": "pair_eee56feb7c004a25927a1e222881d28f",
+					"disabled": true
+				},
+				{
+					"name": "no_redirect",
+					"value": "true",
+					"disabled": false,
+					"id": "pair_6f1adf0b6497489585d16b50e6eca1c5"
+				}
+			],
+			"headers": [],
+			"authentication": {},
+			"metaSortKey": -1479201016151.5,
+			"settingStoreCookies": true,
+			"settingSendCookies": true,
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"_type": "request"
+		},
+		{
+			"_id": "req_475582b3584546439d8ea536abde0cea",
+			"parentId": "fld_2e647f210b4a400d937dcd0935a36daf",
+			"modified": 1512261551510,
+			"created": 1489398868655,
+			"url": "{{ base_url }}/datasets/1/generate_autocomplete_index",
+			"name": "Generate search index",
+			"description": "To provide autocomplete service we should run first this task. This task can be run in parallel with Generate Index, and does not block any other task on the system.",
+			"method": "POST",
+			"body": {
+				"mimeType": "application/json",
+				"text": "{ \"langs\" :  [\"en\", \"es\"] }"
+			},
+			"parameters": [],
+			"headers": [
+				{
+					"name": "Content-Type",
+					"value": "application/json",
+					"id": "pair_45639237f51845748462a9be80f6ece0"
+				}
+			],
+			"authentication": {},
+			"metaSortKey": -1489398868654,
+			"settingStoreCookies": true,
+			"settingSendCookies": true,
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"_type": "request"
+		},
+		{
+			"_id": "req_d88b245134a945dca120765ca32e6dbc",
+			"parentId": "fld_2e647f210b4a400d937dcd0935a36daf",
+			"modified": 1512261356295,
+			"created": 1499772225289,
+			"url": "{{ base_url}}/datasets/2/generate_triples",
+			"name": "Generate triples",
+			"description": "This API call produces a deep graph exploration using all elements given a class. For example, to examine all instances of Musical Composition (Q207628) on WikiData, the graph pattern we should use would be this:\n\n`?subject wdt:P31/wdt:P279* wd:Q207628 . ?subject ?predicate ?object`\n\nInside the service, this first would make a query to obtain all instances of `?subject` that unifies with this graph pattern.\n\nOnce all those instances have been found, the service will iterate to find all connected entities and populating the local dataset. Those new discovered entities will be used to find new ones with a limit of `n` deep levels.\n\nWhen specifying `wdt:P31/wdt:P279*` we are forcing to retrieve all entities which are instances from any subclass of Q207628. If, for example, we only want instances of two different classes, we could specify an UNION operator:\n\n`{?subject wdt:P31 wd:Q29168811} UNION {?subject wdt:P31 wd:Q202866}. ?subject ?predicate ?object`\n\nWe could even make more complicated queries. For example: to get all spanish politicians on WikiData:\n\n`  { ?subject wdt:P39/wdt:P279* wd:Q82955 . \n   { ?subject wdt:P27 wd:Q29 } UNION {?subject wdt:P19 ?lugar . ?lugar wdt:P17 wd:Q29 } . \n   ?subject ?predicate ?object }`\n",
+			"method": "POST",
+			"body": {
+				"mimeType": "application/json",
+				"text": "{\n\t\"generate_triples\": {\n\t\t\"levels\": 3,\n\t\t\"graph_pattern\": \"?subject wdt:P31/wdt:P279* wd:Q207628 . ?subject ?predicate ?object\"\n\t}\n}"
+			},
+			"parameters": [
+				{
+					"name": "ignore_status",
+					"value": "true",
+					"id": "pair_617cf649490d4b24ae1342e84c6839e8"
+				}
+			],
+			"headers": [
+				{
+					"name": "Content-Type",
+					"value": "application/json",
+					"id": "pair_c8c1fc778105421694a759c5df1bd869"
+				}
+			],
+			"authentication": {},
+			"metaSortKey": -1479201016176.5,
+			"settingStoreCookies": true,
+			"settingSendCookies": true,
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"_type": "request"
+		},
+		{
+			"_id": "req_7228b866e31d4e1f9b87d99bd88d446a",
+			"parentId": "fld_19940778fe6849feba5976549f8fd4ed",
+			"modified": 1512261732724,
+			"created": 1479115524488,
+			"url": "{{ base_url }}/datasets/3/embeddings",
+			"name": "Get Embeddings vector",
+			"description": "Gets the embedding vector of an Entity. This can be useful to make arithmetic operations with them outside the system and use similar_entities (with embedding) to find similar entities with an embedding vector",
+			"method": "POST",
+			"body": {
+				"mimeType": "application/json",
+				"text": "{\n\t\"entities\": [\n\t\t\"http://www.wikidata.org/entity/Q179673\"\n\t]\n}"
+			},
+			"parameters": [],
+			"headers": [
+				{
+					"name": "Content-Type",
+					"value": "application/json",
+					"id": "pair_4b63fe12eb3a4f03acf067585369ff5c"
+				}
+			],
+			"authentication": {},
+			"metaSortKey": -1479201016189,
+			"settingStoreCookies": true,
+			"settingSendCookies": true,
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"_type": "request"
+		},
+		{
+			"_id": "req_c0cdc61e786a43eaac3ceda5ca892fe7",
+			"parentId": "fld_19940778fe6849feba5976549f8fd4ed",
+			"modified": 1512261579632,
+			"created": 1479116358572,
+			"url": "{{ base_url }}/datasets/44/similar_entities/Q381",
+			"name": "Similar entities",
+			"description": "Deprecated: Best use POST /similar_entities",
+			"method": "GET",
+			"body": {},
+			"parameters": [
+				{
+					"name": "limit",
+					"value": "100",
+					"id": "pair_cd758c2cc56049e2b83423b1bb29666e"
+				}
+			],
+			"headers": [],
+			"authentication": {},
+			"metaSortKey": -1479201016089,
+			"settingStoreCookies": true,
+			"settingSendCookies": true,
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"_type": "request"
+		},
+		{
+			"_id": "req_b38df71c5149413ca99700ca375f07a4",
+			"parentId": "fld_19940778fe6849feba5976549f8fd4ed",
+			"modified": 1512261661623,
+			"created": 1479117121426,
+			"url": "{{ base_url }}/datasets/3/distance",
+			"name": "distance",
+			"description": "Finds the euclidean distance (*) on the dataset between two entities\n\n(*) The distance as provided by Annoy",
+			"method": "POST",
+			"body": {
+				"mimeType": "application/json",
+				"text": "{\n\t\"distance\": [\n\t\t\"http://www.wikidata.org/entity/Q170035\",\n\t\t\"http://www.wikidata.org/entity/Q30\"\n\t]\n}"
+			},
+			"parameters": [],
+			"headers": [
+				{
+					"name": "Content-Type",
+					"value": "application/json",
+					"id": "pair_42561131697a416a9957a8e4609400b7"
+				}
+			],
+			"authentication": {},
+			"metaSortKey": -1479201016139,
+			"settingStoreCookies": true,
+			"settingSendCookies": true,
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"_type": "request"
+		},
+		{
+			"_id": "req_917b788182e04b7d89956510106412bd",
+			"parentId": "fld_19940778fe6849feba5976549f8fd4ed",
+			"modified": 1512261607850,
+			"created": 1479117615137,
+			"url": "{{ base_url }}/datasets/1/similar_entities",
+			"name": "Similar Entities (w/body)",
+			"description": "Allows to find similar entities given an Entity URI",
+			"method": "POST",
+			"body": {
+				"mimeType": "application/json",
+				"text": "{\n\t\"entity\": {\n\t\t\"value\": \"http://www.wikidata.org/entity/Q8355\",\n\t\t\"type\": \"uri\"\n\t}\n}"
+			},
+			"parameters": [
+				{
+					"name": "limit",
+					"value": "10",
+					"disabled": true,
+					"id": "pair_e7528432c4824bec8bf6693fa0f460b9"
+				},
+				{
+					"name": "search_k",
+					"value": "9000000",
+					"disabled": true,
+					"id": "pair_6e3b7b3830d64d7c957dfdf9310dfd59"
+				},
+				{
+					"name": "ignore_status",
+					"value": "True",
+					"disabled": false,
+					"id": "pair_a0f372be2c3c4c3c8031773b6ea84d56"
+				},
+				{
+					"name": "object",
+					"value": "True",
+					"disabled": false,
+					"id": "pair_22a881b8c9df405dabac693b4484a1d7"
+				}
+			],
+			"headers": [
+				{
+					"name": "Content-Type",
+					"value": "application/json",
+					"id": "pair_2794818cc0ce42a38dfc0e402532051f"
+				}
+			],
+			"authentication": {
+				"username": "",
+				"password": ""
+			},
+			"metaSortKey": -1479201016114,
+			"settingStoreCookies": true,
+			"settingSendCookies": true,
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"_type": "request"
+		},
+		{
+			"_id": "req_4effdfcb25e4413ebe16c31667096853",
+			"parentId": "fld_19940778fe6849feba5976549f8fd4ed",
+			"modified": 1512261772864,
+			"created": 1479386334845,
+			"url": "{{ base_url }}/datasets/1/similar_entities",
+			"name": "Similar Entities (w/embedding)",
+			"description": "Given an embedding vector (in the same space of the trained dataset), find the nearest entity to that point.",
+			"method": "POST",
+			"body": {
+				"mimeType": "application/json",
+				"text": "{\n\t\"entity\": {\n\t\t\"value\": [\n\t\t\t\t-0.03438457468728246,\n\t\t\t\t0.152628930472753,\n\t\t\t\t0.05127330954600074,\n\t\t\t\t0.19956980540494967,\n\t\t\t\t0.19935828620136561,\n\t\t\t\t-0.14735582676019834,\n\t\t\t\t0.1274509283531571,\n\t\t\t\t-0.04553087162554978,\n\t\t\t\t-0.10332548867329737,\n\t\t\t\t-0.0006443962011377761,\n\t\t\t\t0.06277303680829321,\n\t\t\t\t-0.06462550297036042,\n\t\t\t\t0.07801366820044496,\n\t\t\t\t0.05920479964250532,\n\t\t\t\t0.06053499355852408,\n\t\t\t\t0.20509850385259096,\n\t\t\t\t0.098954446979069,\n\t\t\t\t0.0909044113747385,\n\t\t\t\t0.10070898621277129,\n\t\t\t\t-0.1083366333639695,\n\t\t\t\t0.046134687221745956,\n\t\t\t\t-0.05428539295352839,\n\t\t\t\t0.03983151674012056,\n\t\t\t\t-0.04040906702757588,\n\t\t\t\t0.0649031386267373,\n\t\t\t\t-0.004241118536697506,\n\t\t\t\t0.034391574856582764,\n\t\t\t\t-0.019508560325428994,\n\t\t\t\t0.08516574610649727,\n\t\t\t\t-0.15495759037093104,\n\t\t\t\t-0.07228855340816942,\n\t\t\t\t0.1628870746060087,\n\t\t\t\t-0.12227170931330525,\n\t\t\t\t-0.09403243695834701,\n\t\t\t\t-0.01309854068800604,\n\t\t\t\t-0.05852214074647318,\n\t\t\t\t-0.016249671100719613,\n\t\t\t\t-0.0898030290624328,\n\t\t\t\t-0.019482464386954716,\n\t\t\t\t0.022343158433798905,\n\t\t\t\t0.1578665024716045,\n\t\t\t\t0.08425600608974664,\n\t\t\t\t0.010754476477790495,\n\t\t\t\t-0.09748195218404218,\n\t\t\t\t0.023510668665561937,\n\t\t\t\t-0.026285630420524512,\n\t\t\t\t0.01918466654547068,\n\t\t\t\t0.18383227663656632,\n\t\t\t\t0.06076681422633003,\n\t\t\t\t0.17139588598890393,\n\t\t\t\t0.06417334341958307,\n\t\t\t\t-0.14101247503065015,\n\t\t\t\t0.03696676520388258,\n\t\t\t\t0.05351636342913406,\n\t\t\t\t-0.1779698672270204,\n\t\t\t\t-0.035865490186601214,\n\t\t\t\t-0.052095967434949306,\n\t\t\t\t0.009760671144059777,\n\t\t\t\t0.0798443883442122,\n\t\t\t\t0.15044453047636994,\n\t\t\t\t0.08939811529390147,\n\t\t\t\t-0.04310998735076335,\n\t\t\t\t-0.12944044531822535,\n\t\t\t\t-0.013766711719801648,\n\t\t\t\t-0.01803152511226707,\n\t\t\t\t-0.20076685384538975,\n\t\t\t\t-0.1267881469220359,\n\t\t\t\t-0.04021705805255099,\n\t\t\t\t-0.0845219336371199,\n\t\t\t\t-0.04146303908875482,\n\t\t\t\t0.03756097002378399,\n\t\t\t\t0.12713611134493424,\n\t\t\t\t0.01929459103603292,\n\t\t\t\t0.167477553319762,\n\t\t\t\t-0.049241484818882277,\n\t\t\t\t0.012165459443540937,\n\t\t\t\t-0.054956354124287315,\n\t\t\t\t-0.07594815700318197,\n\t\t\t\t-0.060641495107864665,\n\t\t\t\t0.02320408077940649,\n\t\t\t\t0.013944029979451456,\n\t\t\t\t0.06321508354745066,\n\t\t\t\t-0.21294958820097926,\n\t\t\t\t0.0478546890796543,\n\t\t\t\t0.15480821747001622,\n\t\t\t\t-0.057216895060345246,\n\t\t\t\t0.13033848757623653,\n\t\t\t\t0.123101476213347,\n\t\t\t\t0.013093717058554975,\n\t\t\t\t0.16812299844035458,\n\t\t\t\t-0.0500359320109249,\n\t\t\t\t-0.17251046701177597,\n\t\t\t\t0.03706351054898446,\n\t\t\t\t0.1367326192229911,\n\t\t\t\t0.029262298941839782,\n\t\t\t\t-0.017208180364092097,\n\t\t\t\t-0.05649490756184399,\n\t\t\t\t0.23448862491037148,\n\t\t\t\t-0.06273435334283897,\n\t\t\t\t0.10774479523578522\n\t\t\t],\n\t\t\"type\": \"embedding\"\n\t}\n}\n"
+			},
+			"parameters": [
+				{
+					"name": "limit",
+					"value": "3",
+					"id": "pair_b7d25779ed5147178a7a762edc7570c8"
+				},
+				{
+					"name": "search_k",
+					"value": "100000",
+					"id": "pair_88e0c4ac228e447eb12ecc0ce1fef900"
+				},
+				{
+					"name": "",
+					"value": "",
+					"id": "pair_1b57e07856364ed4ab0a65fecea1de2c"
+				}
+			],
+			"headers": [
+				{
+					"name": "Content-Type",
+					"value": "application/json",
+					"id": "pair_5b0849d3908f450a95394f14d125389a"
+				}
+			],
+			"authentication": {},
+			"metaSortKey": -1479201016039,
+			"settingStoreCookies": true,
+			"settingSendCookies": true,
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"_type": "request"
+		},
+		{
+			"_id": "req_41d17c9931de4ca09d6edc568a366db4",
+			"parentId": "fld_19940778fe6849feba5976549f8fd4ed",
+			"modified": 1512261840570,
+			"created": 1489580190545,
+			"url": "{{ base_url }}/datasets/1/suggest_name",
+			"name": "Suggest Name",
+			"description": "Once the dataset has finished (or started) generating the autocomplete index, this service can provide autocomplete service.",
+			"method": "POST",
+			"body": {
+				"mimeType": "application/json",
+				"text": "{\n\t\"input\": \"violin\"\n}"
+			},
+			"parameters": [],
+			"headers": [
+				{
+					"name": "Content-Type",
+					"value": "application/json",
+					"id": "pair_4742d7ca29c645cba178d47afc3932df"
+				}
+			],
+			"authentication": {},
+			"metaSortKey": -1489580190545,
+			"settingStoreCookies": true,
+			"settingSendCookies": true,
+			"settingDisableRenderRequestBody": false,
+			"settingEncodeUrl": true,
+			"_type": "request"
+		}
+	]
+}
