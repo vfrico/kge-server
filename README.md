@@ -5,8 +5,8 @@
 Thanks to [OEG-UPM](https://github.com/oeg-upm) there are a server available where you can
 try out the webapp and the service itself.
 
-* Webapp: http://wiener.dia.fi.upm.es:9393/
-* Service: http://wiener.dia.fi.upm.es:6789/
+* Webapp: http://kge.lab.oeg-upm.net/
+* Service: http://kge.lab.oeg-upm.net/api/
 
 ## What are Knowledge Graphs?
 
@@ -93,9 +93,15 @@ See more instructions about deployment at the
 
 ## API client
 On the development process, the [Insomnia](https://github.com/getinsomnia/insomnia)
-Client has been used. To test all the endpoints, an Insomnia Workspace can be
-found on this repository (`.InsomniaWorkspace.json`).
+Client has been used. To test all the endpoints, an
+[Insomnia Workspace](https://raw.githubusercontent.com/vfrico/kge-server/master/InsomniaWorkspace.json)
+can be found on this repository at `./InsomniaWorkspace.json`.
 On some methods, more information can be found on the docs tab.
+
+Insomnia also support different variable environments. Those can be changed from
+the upper left button.
+
+![Insomnia snapshot](https://raw.githubusercontent.com/vfrico/kge-server/master/insomnia.png)
 
 ## Supported environment
 
