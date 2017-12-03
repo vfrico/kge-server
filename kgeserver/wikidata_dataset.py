@@ -399,7 +399,7 @@ class WikidataDataset(kgeserver.dataset.Dataset):
         return to_queue
 
     def entity_labels(self, entity, langs=['es', 'en'], tries=1):
-        """Saves the label for a given entity
+        """Save the label for a given entity
 
         Makes a SPARQL query to retrieve the entity's label(s) requested to use
         them on other services.
@@ -484,12 +484,12 @@ class WikidataDataset(kgeserver.dataset.Dataset):
 
             return labels, descriptions, dict(alt_labels)
         except Exception as exc:
-            print("Error {} {} times when downloading entity_labels for {}".format(
-                exc, tries, entity))
+            print("Error {}, {} times when downloading" +
+                  "entity_labels for {}".format(exc, tries, entity))
             if tries <= 10:
                 time.sleep(30)  # Wait some time if error dismiss
                 tries += 1
-                return entity_labels(entity, langs, tries)
+                return self.entity_labels(entity, langs, tries)
             else:
                 print("Leaving entity_labels({}) after {} tries".format(
                     entity, tries))
