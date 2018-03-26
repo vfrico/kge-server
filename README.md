@@ -31,7 +31,7 @@ similar entities. With some embeddings models you can also do some simple
 algebraic operations with those arrays like adding them or substract and predict
 new entities.
 
-## What is this server?
+## What is this server for?
 
 This server provides a vertical solution on the machine learning area,
 going from the creation of datasets wich represents those knowledge graphs,
