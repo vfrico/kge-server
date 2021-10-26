@@ -5,8 +5,8 @@
 Thanks to [OEG-UPM](https://github.com/oeg-upm) there are a server available where you can
 try out the webapp and the service itself.
 
-* Webapp: http://kge.lab.oeg-upm.net/
-* Service: http://kge.lab.oeg-upm.net/api/
+* Webapp: (service dead) http://kge.lab.oeg-upm.net/
+* Service: (service dead) http://kge.lab.oeg-upm.net/api/
 
 ## What are Knowledge Graphs?
 
